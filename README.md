@@ -56,18 +56,21 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 ## 📖 Usage Examples
 
 ### Calculate IRR
+
 - **Initial Investment**: $10,000
 - **Outcome Amount**: $15,000
 - **Time Period**: 60 months (5 years)
 - **Result**: 8.45% IRR
 
 ### Calculate Future Value
+
 - **Initial Investment**: $10,000
 - **IRR**: 8.5%
 - **Time Period**: 60 months (5 years)
 - **Result**: $15,000.00
 
 ### Calculate Required Initial Investment
+
 - **Target Outcome**: $15,000
 - **IRR**: 8.5%
 - **Time Period**: 60 months (5 years)
@@ -77,31 +80,33 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 
 ### IRR Calculation
 
-```
+```text
 IRR = (Outcome/Initial)^(1/Years) - 1
 ```
 
 ### Future Value Calculation
 
-```
+```text
 Future Value = Initial × (1 + IRR)^Years
 ```
 
 ### Initial Investment Calculation
 
-```
+```text
 Initial = Outcome / (1 + IRR)^Years
 ```
 
 ## 🛠 Technical Details
 
 ### Architecture
+
 - **Framework**: SwiftUI
 - **Platform**: iOS 17.0+, macOS 14.0+
 - **Language**: Swift 5.9+
 - **Design Pattern**: MVVM with State Management
 
 ### Key Components
+
 - `ContentView`: Main app interface with mode selection
 - `IRRCalculationView`: IRR calculation form
 - `OutcomeCalculationView`: Future value calculation form
@@ -110,6 +115,7 @@ Initial = Outcome / (1 + IRR)^Years
 - `ResultCard`: Results display component
 
 ### Features Implementation
+
 - **Number Formatting**: Custom `NumberFormatter` with comma separators
 - **Input Validation**: Real-time validation with visual feedback
 - **State Management**: SwiftUI `@State` properties for reactive UI
@@ -117,7 +123,7 @@ Initial = Outcome / (1 + IRR)^Years
 
 ## 📸 Screenshots
 
-*Screenshots will be added here once the app is running*
+## Screenshots will be added here once the app is running
 
 ## 🎯 Use Cases
 
@@ -131,7 +137,7 @@ Initial = Outcome / (1 + IRR)^Years
 
 ### Project Structure
 
-```
+```text
 IRR Genius/
 ├── IRR Genius/
 │   ├── IRR_GeniusApp.swift      # App entry point
@@ -142,6 +148,7 @@ IRR Genius/
 ```
 
 ### Building for Release
+
 1. Select **Product** → **Archive** in Xcode
 2. Choose **Distribute App**
 3. Select **App Store Connect**
@@ -161,7 +168,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍💻 Author
 
-**Raja Mukerji**
+## Raja Mukerji
+
 - GitHub: [@rajamukerji](https://github.com/rajamukerji)
 - Created: July 1, 2025
 
@@ -173,4 +181,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-⭐ **Star this repository if you find it helpful!** 
+⭐ **Star this repository if you find it helpful!**
