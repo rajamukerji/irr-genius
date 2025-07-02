@@ -534,7 +534,7 @@ struct InputField: View {
             TextField(placeholder, text: $value)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .font(.body)
-                .onChange(of: value) { newValue in
+                .onChange(of: value) { _, newValue in
                     if isCurrency {
                         value = formatCurrencyInput(newValue)
                     } else {
