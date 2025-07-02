@@ -518,6 +518,8 @@ struct InputField: View {
     let icon: String
     let isCurrency: Bool
     
+    @FocusState private var isFocused: Bool
+    
     init(title: String, placeholder: String, value: Binding<String>, icon: String, isCurrency: Bool = false) {
         self.title = title
         self.placeholder = placeholder
@@ -539,6 +541,11 @@ struct InputField: View {
             TextField(placeholder, text: $value)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .font(.body)
+                .focused($isFocused)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(isFocused ? Color.blue : Color.clear, lineWidth: 2)
+                )
                 .onChange(of: value) { _, newValue in
                     if isCurrency {
                         value = formatCurrencyInput(newValue)
