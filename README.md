@@ -7,7 +7,7 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 ### 🧮 Three Calculation Modes
 
 1. **Calculate IRR** - Find the internal rate of return given initial investment, outcome amount, and time period
-2. **Calculate Outcome** - Determine future value based on initial investment, IRR, and time period  
+2. **Calculate Outcome** - Determine future value based on initial investment, IRR, and time period
 3. **Calculate Initial Investment** - Find required initial investment to reach a target outcome with given IRR and time
 
 ### 🎨 User Experience
@@ -37,12 +37,14 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/rajamukerji/irr-genius.git
    cd irr-genius
    ```
 
 2. **Open in Xcode**
+
    ```bash
    open "IRR Genius.xcodeproj"
    ```
@@ -55,7 +57,7 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 
 ### Calculate IRR
 - **Initial Investment**: $10,000
-- **Outcome Amount**: $15,000  
+- **Outcome Amount**: $15,000
 - **Time Period**: 60 months (5 years)
 - **Result**: 8.45% IRR
 
@@ -74,16 +76,19 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 ## 🧮 Mathematical Formulas
 
 ### IRR Calculation
+
 ```
 IRR = (Outcome/Initial)^(1/Years) - 1
 ```
 
 ### Future Value Calculation
+
 ```
 Future Value = Initial × (1 + IRR)^Years
 ```
 
 ### Initial Investment Calculation
+
 ```
 Initial = Outcome / (1 + IRR)^Years
 ```
@@ -125,6 +130,7 @@ Initial = Outcome / (1 + IRR)^Years
 ## 🔧 Development
 
 ### Project Structure
+
 ```
 IRR Genius/
 ├── IRR Genius/
