@@ -38,79 +38,86 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Header
-                    VStack(spacing: 8) {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 60))
-                            .foregroundColor(.blue)
-                        
-                        Text("IRR Genius")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                        
-                        Text("Financial Calculator")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.top, 20)
-                    
-                    // Mode Selector
-                    Picker("Calculation Mode", selection: $selectedMode) {
-                        ForEach(CalculationMode.allCases, id: \.self) { mode in
-                            Text(mode.rawValue).tag(mode)
+            HStack {
+                Spacer(minLength: 0)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Header
+                        VStack(spacing: 8) {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .font(.system(size: 60))
+                                .foregroundColor(.blue)
+                            
+                            Text("IRR Genius")
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                            
+                            Text("Financial Calculator")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
                         }
+                        .padding(.top, 20)
+                        
+                        // Mode Selector
+                        Picker("Calculation Mode", selection: $selectedMode) {
+                            ForEach(CalculationMode.allCases, id: \.self) { mode in
+                                Text(mode.rawValue).tag(mode)
+                            }
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        .padding(.horizontal)
+                        
+                        // Input Form based on selected mode
+                        switch selectedMode {
+                        case .calculateIRR:
+                            IRRCalculationView(
+                                initialInvestment: $initialInvestment,
+                                outcomeAmount: $outcomeAmount,
+                                timeInMonths: $timeInMonths,
+                                calculatedResult: $calculatedResult,
+                                isCalculating: $isCalculating,
+                                errorMessage: $errorMessage,
+                                onCalculate: calculateIRR
+                            )
+                        case .calculateOutcome:
+                            OutcomeCalculationView(
+                                initialInvestment: $outcomeInitialInvestment,
+                                irr: $outcomeIRR,
+                                timeInMonths: $outcomeTimeInMonths,
+                                calculatedResult: $calculatedResult,
+                                isCalculating: $isCalculating,
+                                errorMessage: $errorMessage,
+                                onCalculate: calculateOutcome
+                            )
+                        case .calculateInitial:
+                            InitialCalculationView(
+                                outcomeAmount: $initialOutcomeAmount,
+                                irr: $initialIRR,
+                                timeInMonths: $initialTimeInMonths,
+                                calculatedResult: $calculatedResult,
+                                isCalculating: $isCalculating,
+                                errorMessage: $errorMessage,
+                                onCalculate: calculateInitialInvestment
+                            )
+                        }
+                        
+                        // Results Section
+                        if let result = calculatedResult {
+                            ResultCard(
+                                mode: selectedMode,
+                                result: result,
+                                inputs: getInputsForMode()
+                            )
+                        }
+                        
+                        Spacer(minLength: 50)
                     }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .padding(.horizontal)
-                    
-                    // Input Form based on selected mode
-                    switch selectedMode {
-                    case .calculateIRR:
-                        IRRCalculationView(
-                            initialInvestment: $initialInvestment,
-                            outcomeAmount: $outcomeAmount,
-                            timeInMonths: $timeInMonths,
-                            calculatedResult: $calculatedResult,
-                            isCalculating: $isCalculating,
-                            errorMessage: $errorMessage,
-                            onCalculate: calculateIRR
-                        )
-                    case .calculateOutcome:
-                        OutcomeCalculationView(
-                            initialInvestment: $outcomeInitialInvestment,
-                            irr: $outcomeIRR,
-                            timeInMonths: $outcomeTimeInMonths,
-                            calculatedResult: $calculatedResult,
-                            isCalculating: $isCalculating,
-                            errorMessage: $errorMessage,
-                            onCalculate: calculateOutcome
-                        )
-                    case .calculateInitial:
-                        InitialCalculationView(
-                            outcomeAmount: $initialOutcomeAmount,
-                            irr: $initialIRR,
-                            timeInMonths: $initialTimeInMonths,
-                            calculatedResult: $calculatedResult,
-                            isCalculating: $isCalculating,
-                            errorMessage: $errorMessage,
-                            onCalculate: calculateInitialInvestment
-                        )
-                    }
-                    
-                    // Results Section
-                    if let result = calculatedResult {
-                        ResultCard(
-                            mode: selectedMode,
-                            result: result,
-                            inputs: getInputsForMode()
-                        )
-                    }
-                    
-                    Spacer(minLength: 50)
+                    .frame(maxWidth: 420)
+                    .padding(.vertical, 32)
                 }
+                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .center)
         }
     }
     
