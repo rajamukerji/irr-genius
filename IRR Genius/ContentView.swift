@@ -15,19 +15,52 @@ enum CalculationMode: String, CaseIterable {
     case calculateBlendedIRR = "Calculate Blended IRR"
 }
 
+enum ValuationType: String, CaseIterable {
+    case computed = "Computed (based on IRR)"
+    case specified = "Specified Valuation"
+}
+
+enum TimingType: String, CaseIterable {
+    case absoluteDate = "Specific Date"
+    case relativeTime = "Relative to Initial Investment"
+}
+
+enum TimeUnit: String, CaseIterable {
+    case days = "Days"
+    case months = "Months"
+    case years = "Years"
+}
+
 // Data structure for follow-on investments
 struct FollowOnInvestment: Identifiable {
     let id = UUID()
-    var date: Date
+    var timingType: TimingType
+    var date: Date // Used when timingType is .absoluteDate
+    var relativeAmount: String // Used when timingType is .relativeTime
+    var relativeUnit: TimeUnit // Used when timingType is .relativeTime
     var amount: String
     var valuationType: ValuationType
     var valuation: String // Either computed based on IRR or specified directly
     var irr: String // Used for computed valuation
-}
-
-enum ValuationType: String, CaseIterable {
-    case computed = "Computed (based on IRR)"
-    case specified = "Specified Valuation"
+    
+    // Computed property to get the actual investment date
+    var investmentDate: Date {
+        switch timingType {
+        case .absoluteDate:
+            return date
+        case .relativeTime:
+            let amount = Double(relativeAmount) ?? 0
+            let calendar = Calendar.current
+            switch relativeUnit {
+            case .days:
+                return calendar.date(byAdding: .day, value: Int(amount), to: Date()) ?? Date()
+            case .months:
+                return calendar.date(byAdding: .month, value: Int(amount), to: Date()) ?? Date()
+            case .years:
+                return calendar.date(byAdding: .year, value: Int(amount), to: Date()) ?? Date()
+            }
+        }
+    }
 }
 
 struct ContentView: View {
@@ -325,7 +358,7 @@ struct ContentView: View {
         totalTimeInYears: Double
     ) -> Double {
         // Sort investments by date
-        let sortedInvestments = followOnInvestments.sorted { $0.date < $1.date }
+        let sortedInvestments = followOnInvestments.sorted { $0.investmentDate < $1.investmentDate }
         
         // Calculate total invested capital (time-weighted)
         var totalInvested = initialInvestment * totalTimeInYears // Initial investment for full period
@@ -338,7 +371,7 @@ struct ContentView: View {
                   let valuation = Double(cleanValuation) else { continue }
             
             // Calculate time from investment date to final date
-            let monthsFromInvestment = Calendar.current.dateComponents([.month], from: investment.date, to: Date()).month ?? 0
+            let monthsFromInvestment = Calendar.current.dateComponents([.month], from: investment.investmentDate, to: Date()).month ?? 0
             let yearsFromInvestment = Double(monthsFromInvestment) / 12.0
             
             // Add time-weighted investment amount
@@ -444,51 +477,41 @@ struct ContentView: View {
         months: Int
     ) -> [GrowthPoint] {
         var growthPoints: [GrowthPoint] = []
-        var currentValue = initial
         
-        // Add initial investment point
-        growthPoints.append(GrowthPoint(month: 0, value: currentValue))
+        // Calculate the blended IRR rate
+        let totalYears = Double(months) / 12.0
+        let blendedIRR = calculateBlendedIRRValue(
+            initialInvestment: initial,
+            followOnInvestments: followOnInvestments,
+            finalValuation: finalValuation,
+            totalTimeInYears: totalYears
+        ) / 100.0
         
-        // Sort investments by date and calculate cumulative value
-        let sortedInvestments = followOnInvestments.sorted { $0.date < $1.date }
+        // Sort investments by their actual investment date
+        let sortedInvestments = followOnInvestments.sorted { $0.investmentDate < $1.investmentDate }
         
-        for investment in sortedInvestments {
-            let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
-            let cleanValuation = investment.valuation.replacingOccurrences(of: ",", with: "")
+        // Generate monthly growth points
+        for month in 0...months {
+            var totalValue = initial * pow(1 + blendedIRR, Double(month) / 12.0)
             
-            guard let amount = Double(cleanAmount),
-                  let valuation = Double(cleanValuation) else { continue }
-            
-            // Calculate months from start to this investment
-            var monthsFromStart = Calendar.current.dateComponents([.month], from: Date(), to: investment.date).month ?? 0
-            monthsFromStart = max(0, monthsFromStart)
-            
-            // Add the follow-on investment to current value
-            currentValue += amount
-            
-            // Add point at investment date
-            growthPoints.append(GrowthPoint(month: monthsFromStart, value: currentValue))
-            
-            // Calculate growth from this investment to final valuation
-            let remainingMonths = months - monthsFromStart
-            if remainingMonths > 0 {
-                let growthRate = pow(finalValuation / currentValue, 1.0 / Double(remainingMonths)) - 1
+            // Add value from follow-on investments
+            for investment in sortedInvestments {
+                let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
+                guard let amount = Double(cleanAmount) else { continue }
                 
-                // Add growth points for remaining period
-                for month in (monthsFromStart + 1)...months {
-                    let monthsSinceInvestment = month - monthsFromStart
-                    let investmentValue = amount * pow(1 + growthRate, Double(monthsSinceInvestment))
-                    let totalValue = currentValue - amount + investmentValue
-                    growthPoints.append(GrowthPoint(month: month, value: totalValue))
+                // Calculate when this investment was made (months from start)
+                let investmentMonth = Calendar.current.dateComponents([.month], from: Date(), to: investment.investmentDate).month ?? 0
+                let investmentMonthFromStart = max(0, investmentMonth)
+                
+                // Only add growth if the investment was made before or at this month
+                if month >= investmentMonthFromStart {
+                    let monthsSinceInvestment = month - investmentMonthFromStart
+                    let investmentGrowth = amount * pow(1 + blendedIRR, Double(monthsSinceInvestment) / 12.0)
+                    totalValue += investmentGrowth
                 }
             }
-        }
-        
-        // Ensure final value matches
-        if let lastPoint = growthPoints.last {
-            if abs(lastPoint.value - finalValuation) > 1.0 {
-                growthPoints.append(GrowthPoint(month: months, value: finalValuation))
-            }
+            
+            growthPoints.append(GrowthPoint(month: month, value: totalValue))
         }
         
         return growthPoints
@@ -831,7 +854,10 @@ struct BlendedIRRCalculationView: View {
         .sheet(isPresented: $showingAddInvestment) {
             AddFollowOnInvestmentView(
                 investment: FollowOnInvestment(
+                    timingType: .absoluteDate,
                     date: Date(),
+                    relativeAmount: "",
+                    relativeUnit: .days,
                     amount: "",
                     valuationType: .computed,
                     valuation: "",
@@ -872,9 +898,16 @@ struct FollowOnInvestmentRow: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    Text("Date: \(investment.date, style: .date)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    // Display timing information based on type
+                    if investment.timingType == .absoluteDate {
+                        Text("Date: \(investment.investmentDate, style: .date)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Timing: \(investment.relativeAmount) \(investment.relativeUnit.rawValue) after initial investment")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 Spacer()
@@ -913,8 +946,37 @@ struct AddFollowOnInvestmentView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
-                DatePicker("Investment Date", selection: $investment.date, displayedComponents: .date)
-                    .datePickerStyle(CompactDatePickerStyle())
+                // Timing Type Selection
+                Picker("Timing Type", selection: $investment.timingType) {
+                    ForEach(TimingType.allCases, id: \.self) { type in
+                        Text(type.rawValue).tag(type)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                
+                // Conditional timing input based on selection
+                if investment.timingType == .absoluteDate {
+                    DatePicker("Investment Date", selection: $investment.date, displayedComponents: .date)
+                        .datePickerStyle(CompactDatePickerStyle())
+                } else {
+                    HStack {
+                        InputField(
+                            title: "Time After Initial Investment",
+                            placeholder: "Enter number (e.g., 6)",
+                            value: $investment.relativeAmount,
+                            icon: "clock.fill",
+                            isCurrency: false
+                        )
+                        
+                        Picker("Unit", selection: $investment.relativeUnit) {
+                            ForEach(TimeUnit.allCases, id: \.self) { unit in
+                                Text(unit.rawValue).tag(unit)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .frame(width: 100)
+                    }
+                }
                 
                 InputField(
                     title: "Investment Amount",
@@ -965,7 +1027,7 @@ struct AddFollowOnInvestmentView: View {
                         if investment.valuationType == .computed {
                             let amount = Double(investment.amount.replacingOccurrences(of: ",", with: "")) ?? 0
                             let irr = Double(investment.irr) ?? 0
-                            let months = Calendar.current.dateComponents([.month], from: Date(), to: investment.date).month ?? 0
+                            let months = Calendar.current.dateComponents([.month], from: Date(), to: investment.investmentDate).month ?? 0
                             let years = Double(months) / 12.0
                             let computedValuation = amount * pow(1 + irr/100, years)
                             investment.valuation = String(format: "%.2f", computedValuation)
@@ -985,6 +1047,15 @@ struct AddFollowOnInvestmentView: View {
               Double(cleanAmount) != nil,
               Double(cleanAmount) ?? 0 > 0 else {
             return false
+        }
+        
+        // Validate timing input
+        if investment.timingType == .relativeTime {
+            guard !investment.relativeAmount.isEmpty,
+                  Double(investment.relativeAmount) != nil,
+                  Double(investment.relativeAmount) ?? 0 > 0 else {
+                return false
+            }
         }
         
         if investment.valuationType == .computed {
