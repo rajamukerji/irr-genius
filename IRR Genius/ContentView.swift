@@ -792,14 +792,13 @@ struct GrowthPoint: Identifiable {
 struct GrowthChartView: View {
     let data: [GrowthPoint]
     @State private var selectedMonth: Int? = nil
-    @GestureState private var dragLocation: CGPoint = .zero
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Growth Over Time")
                 .font(.headline)
                 .padding(.top, 8)
-                                    Chart {
+            Chart {
                 ForEach(data) { point in
                     LineMark(
                         x: .value("Month", point.month),
@@ -841,9 +840,8 @@ struct GrowthChartView: View {
                     .onChanged { value in
                         let totalMonths = data.count - 1
                         if totalMonths > 0 {
-                            // Use a reasonable estimate for chart width based on screen size
-                            let screenWidth = UIScreen.main.bounds.width
-                            let estimatedChartWidth = min(screenWidth - 40, 600) // Account for padding and max width
+                            // Use a reasonable estimate for chart width
+                            let estimatedChartWidth: CGFloat = 350 // Fixed width for consistent behavior
                             let clampedX = max(0, min(value.location.x, estimatedChartWidth))
                             let percent = clampedX / estimatedChartWidth
                             let monthIndex = Int(round(percent * Double(totalMonths)))
@@ -857,9 +855,5 @@ struct GrowthChartView: View {
         }
         .padding(.horizontal)
     }
-}
-
-#Preview {
-    ContentView()
 }
 
