@@ -55,6 +55,7 @@ struct FollowOnInvestment: Identifiable {
     var valuationType: ValuationType // Only used when valuationMode is .custom
     var valuation: String // Either computed based on IRR or specified directly
     var irr: String // Used for computed valuation
+    var initialInvestmentDate: Date // Reference date for relative timing
     
     // Computed property to get the actual investment date
     var investmentDate: Date {
@@ -66,11 +67,11 @@ struct FollowOnInvestment: Identifiable {
             let calendar = Calendar.current
             switch relativeUnit {
             case .days:
-                return calendar.date(byAdding: .day, value: Int(amount), to: Date()) ?? Date()
+                return calendar.date(byAdding: .day, value: Int(amount), to: initialInvestmentDate) ?? initialInvestmentDate
             case .months:
-                return calendar.date(byAdding: .month, value: Int(amount), to: Date()) ?? Date()
+                return calendar.date(byAdding: .month, value: Int(amount), to: initialInvestmentDate) ?? initialInvestmentDate
             case .years:
-                return calendar.date(byAdding: .year, value: Int(amount), to: Date()) ?? Date()
+                return calendar.date(byAdding: .year, value: Int(amount), to: initialInvestmentDate) ?? initialInvestmentDate
             }
         }
     }
@@ -96,6 +97,7 @@ struct ContentView: View {
     
     // Blended IRR Calculation inputs
     @State private var blendedInitialInvestment: String = ""
+    @State private var blendedInitialDate: Date = Date()
     @State private var blendedFinalValuation: String = ""
     @State private var blendedTimeInMonths: String = ""
     @State private var followOnInvestments: [FollowOnInvestment] = []
@@ -171,6 +173,7 @@ struct ContentView: View {
                     case .calculateBlendedIRR:
                         BlendedIRRCalculationView(
                             initialInvestment: $blendedInitialInvestment,
+                            initialDate: $blendedInitialDate,
                             finalValuation: $blendedFinalValuation,
                             timeInMonths: $blendedTimeInMonths,
                             followOnInvestments: $followOnInvestments,
@@ -385,13 +388,19 @@ struct ContentView: View {
         var totalInvested = initialInvestment * totalTimeInYears // Initial investment for full period
         var totalFinalValue = finalValuation
         
+        // Get the initial investment date from the first follow-on investment (they all have the same reference date)
+        let initialInvestmentDate = sortedInvestments.first?.initialInvestmentDate ?? Date()
+        
+        // Calculate the final date based on initial investment date + total time
+        let finalDate = Calendar.current.date(byAdding: .month, value: Int(totalTimeInYears * 12), to: initialInvestmentDate) ?? Date()
+        
         for investment in sortedInvestments {
             let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
             
             guard let amount = Double(cleanAmount) else { continue }
             
             // Calculate time from investment date to final date
-            let monthsFromInvestment = Calendar.current.dateComponents([.month], from: investment.investmentDate, to: Date()).month ?? 0
+            let monthsFromInvestment = Calendar.current.dateComponents([.month], from: investment.investmentDate, to: finalDate).month ?? 0
             let yearsFromInvestment = Double(monthsFromInvestment) / 12.0
             
             // Handle different investment types
@@ -539,7 +548,8 @@ struct ContentView: View {
                 guard let amount = Double(cleanAmount) else { continue }
                 
                 // Calculate when this investment was made (months from start)
-                let investmentMonth = Calendar.current.dateComponents([.month], from: Date(), to: investment.investmentDate).month ?? 0
+                let initialInvestmentDate = investment.initialInvestmentDate
+                let investmentMonth = Calendar.current.dateComponents([.month], from: initialInvestmentDate, to: investment.investmentDate).month ?? 0
                 let investmentMonthFromStart = max(0, investmentMonth)
                 
                 // Only add growth if the investment was made before or at this month
@@ -832,6 +842,7 @@ struct InitialCalculationView: View {
 
 struct BlendedIRRCalculationView: View {
     @Binding var initialInvestment: String
+    @Binding var initialDate: Date
     @Binding var finalValuation: String
     @Binding var timeInMonths: String
     @Binding var followOnInvestments: [FollowOnInvestment]
@@ -850,6 +861,10 @@ struct BlendedIRRCalculationView: View {
                 icon: "dollarsign.circle.fill",
                 isCurrency: true
             )
+            
+            DatePicker("Initial Investment Date", selection: $initialDate, displayedComponents: .date)
+                .datePickerStyle(CompactDatePickerStyle())
+                .padding(.horizontal)
             
             InputField(
                 title: "Final Valuation",
@@ -932,7 +947,8 @@ struct BlendedIRRCalculationView: View {
                     valuationMode: .tagAlong,
                     valuationType: .computed,
                     valuation: "",
-                    irr: ""
+                    irr: "",
+                    initialInvestmentDate: initialDate
                 )
             ) { newInvestment in
                 followOnInvestments.append(newInvestment)
@@ -1033,6 +1049,21 @@ struct AddFollowOnInvestmentView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
+                // Initial Investment Date Context
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Initial Investment Date")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text(investment.initialInvestmentDate, style: .date)
+                        .font(.subheadline)
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(6)
+                }
+                .padding(.horizontal)
+                
                 // Investment Type Selection
                 Picker("Investment Type", selection: $investment.investmentType) {
                     ForEach(InvestmentType.allCases, id: \.self) { type in
@@ -1051,25 +1082,43 @@ struct AddFollowOnInvestmentView: View {
                 
                 // Conditional timing input based on selection
                 if investment.timingType == .absoluteDate {
-                    DatePicker("Investment Date", selection: $investment.date, displayedComponents: .date)
-                        .datePickerStyle(CompactDatePickerStyle())
-                } else {
-                    HStack {
-                        InputField(
-                            title: "Time After Initial Investment",
-                            placeholder: "Enter number (e.g., 6)",
-                            value: $investment.relativeAmount,
-                            icon: "clock.fill",
-                            isCurrency: false
-                        )
+                    VStack(alignment: .leading, spacing: 8) {
+                        DatePicker("Investment Date", selection: $investment.date, displayedComponents: .date)
+                            .datePickerStyle(CompactDatePickerStyle())
                         
-                        Picker("Unit", selection: $investment.relativeUnit) {
-                            ForEach(TimeUnit.allCases, id: \.self) { unit in
-                                Text(unit.rawValue).tag(unit)
+                        // Show the calculated date for relative timing as reference
+                        let relativeDate = Calendar.current.date(byAdding: .month, value: 6, to: investment.initialInvestmentDate) ?? investment.initialInvestmentDate
+                        Text("Example: 6 months after initial = \(relativeDate, style: .date)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            InputField(
+                                title: "Time After Initial Investment",
+                                placeholder: "Enter number (e.g., 6)",
+                                value: $investment.relativeAmount,
+                                icon: "clock.fill",
+                                isCurrency: false
+                            )
+                            
+                            Picker("Unit", selection: $investment.relativeUnit) {
+                                ForEach(TimeUnit.allCases, id: \.self) { unit in
+                                    Text(unit.rawValue).tag(unit)
+                                }
                             }
+                            .pickerStyle(MenuPickerStyle())
+                            .frame(width: 100)
                         }
-                        .pickerStyle(MenuPickerStyle())
-                        .frame(width: 100)
+                        
+                        // Show the calculated date
+                        if let amount = Double(investment.relativeAmount), amount > 0 {
+                            let calculatedDate = investment.investmentDate
+                            Text("Calculated date: \(calculatedDate, style: .date)")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
                     }
                 }
                 
