@@ -730,8 +730,8 @@ struct ResultCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.9))
-                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                .fill(Color.primary.opacity(0.05))
+                .shadow(color: Color.primary.opacity(0.1), radius: 5, x: 0, y: 2)
         )
         .padding(.horizontal)
     }
@@ -835,7 +835,7 @@ struct GrowthChartView: View {
                         .annotation(position: .top, alignment: .center) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color.white.opacity(0.95))
+                                    .fill(Color.primary.opacity(0.1))
                                     .shadow(radius: 2)
                                 VStack(spacing: 2) {
                                     Text("Month: \(selectedMonth)")
