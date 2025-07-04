@@ -365,10 +365,8 @@ struct ContentView: View {
         
         for investment in sortedInvestments {
             let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
-            let cleanValuation = investment.valuation.replacingOccurrences(of: ",", with: "")
             
-            guard let amount = Double(cleanAmount),
-                  let valuation = Double(cleanValuation) else { continue }
+            guard let amount = Double(cleanAmount) else { continue }
             
             // Calculate time from investment date to final date
             let monthsFromInvestment = Calendar.current.dateComponents([.month], from: investment.investmentDate, to: Date()).month ?? 0
@@ -444,15 +442,6 @@ struct ContentView: View {
                   initial > 0, finalValuation > 0 else { return nil }
             let months = Int(monthsDouble)
             guard months > 0 else { return nil }
-            
-            // Calculate blended IRR for chart
-            let totalYears = Double(months) / 12.0
-            let blendedIRR = calculateBlendedIRRValue(
-                initialInvestment: initial,
-                followOnInvestments: followOnInvestments,
-                finalValuation: finalValuation,
-                totalTimeInYears: totalYears
-            ) / 100.0
             
             return growthPointsWithFollowOn(
                 initial: initial,
