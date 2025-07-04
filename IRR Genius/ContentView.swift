@@ -281,6 +281,11 @@ struct ContentView: View {
             return GrowthPoint(month: month, value: value)
         }
     }
+    
+    static func formatWithCommas(_ value: Double, fractionDigits: Int = 2) -> String {
+        Formatter.withSeparator.maximumFractionDigits = fractionDigits
+        return Formatter.withSeparator.string(from: NSNumber(value: value)) ?? String(format: "%.*f", fractionDigits, value)
+    }
 }
 
 struct IRRCalculationView: View {
@@ -323,7 +328,7 @@ struct IRRCalculationView: View {
                 if let months = Double(timeInMonths), months > 0 {
                     HStack {
                         Spacer()
-                        Text("(\(formatWithCommas(months / 12.0, fractionDigits: 2)) years)")
+                        Text("(\(ContentView.formatWithCommas(months / 12.0, fractionDigits: 2)) years)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -410,7 +415,7 @@ struct OutcomeCalculationView: View {
                 if let months = Double(timeInMonths), months > 0 {
                     HStack {
                         Spacer()
-                        Text("(\(formatWithCommas(months / 12.0, fractionDigits: 2)) years)")
+                        Text("(\(ContentView.formatWithCommas(months / 12.0, fractionDigits: 2)) years)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -714,7 +719,7 @@ struct ResultCard: View {
                     HStack {
                         Text("Total Return:")
                         Spacer()
-                        Text("$\(formatWithCommas(outcome - initial))")
+                        Text("$\(ContentView.formatWithCommas(outcome - initial))")
                             .fontWeight(.medium)
                             .foregroundColor(outcome > initial ? .green : .red)
                     }
@@ -747,7 +752,7 @@ struct ResultCard: View {
         case .calculateIRR:
             return String(format: "%.2f%%", result)
         case .calculateOutcome, .calculateInitial:
-            return "$\(formatWithCommas(result))"
+            return "$\(ContentView.formatWithCommas(result))"
         }
     }
     
@@ -756,13 +761,13 @@ struct ResultCard: View {
         case "IRR":
             return String(format: "%.2f%%", value)
         case "Time Period (Months)":
-            return "\(formatWithCommas(value, fractionDigits: 0)) months"
+            return "\(ContentView.formatWithCommas(value, fractionDigits: 0)) months"
         case "Time Period (Years)":
-            return "\(formatWithCommas(value, fractionDigits: 2)) years"
+            return "\(ContentView.formatWithCommas(value, fractionDigits: 2)) years"
         case "Initial Investment", "Outcome Amount", "Target Outcome Amount":
-            return "$\(formatWithCommas(value))"
+            return "$\(ContentView.formatWithCommas(value))"
         default:
-            return formatWithCommas(value)
+            return ContentView.formatWithCommas(value)
         }
     }
 }
@@ -778,11 +783,6 @@ extension Formatter {
     }()
 }
 
-func formatWithCommas(_ value: Double, fractionDigits: Int = 2) -> String {
-    Formatter.withSeparator.maximumFractionDigits = fractionDigits
-    return Formatter.withSeparator.string(from: NSNumber(value: value)) ?? String(format: "%.*f", fractionDigits, value)
-}
-
 struct GrowthPoint: Identifiable {
     let month: Int
     let value: Double
@@ -793,6 +793,24 @@ struct GrowthChartView: View {
     let data: [GrowthPoint]
     @State private var selectedMonth: Int? = nil
     
+    private var yAxisRange: ClosedRange<Double> {
+        let minValue = data.map { $0.value }.min() ?? 0
+        let maxValue = data.map { $0.value }.max() ?? 0
+        return minValue...maxValue
+    }
+
+    // Helper for drag gesture
+    private func handleDrag(location: CGPoint) {
+        let totalMonths = data.count - 1
+        if totalMonths > 0 {
+            let estimatedChartWidth: CGFloat = 350
+            let clampedX = max(0, min(location.x, estimatedChartWidth))
+            let percent = clampedX / estimatedChartWidth
+            let monthIndex = Int(round(percent * Double(totalMonths)))
+            self.selectedMonth = min(max(monthIndex, 0), totalMonths)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Growth Over Time")
@@ -815,17 +833,21 @@ struct GrowthChartView: View {
                         .foregroundStyle(Color.red)
                         .lineStyle(StrokeStyle(lineWidth: 2, dash: [4]))
                         .annotation(position: .top, alignment: .center) {
-                            VStack(spacing: 2) {
-                                Text("Month: \(selectedMonth)")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                Text("$\(formatWithCommas(selectedPoint.value))")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.blue)
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color.white.opacity(0.95))
+                                    .shadow(radius: 2)
+                                VStack(spacing: 2) {
+                                    Text("Month: \(selectedMonth)")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Text("$\(ContentView.formatWithCommas(selectedPoint.value))")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.blue)
+                                }
+                                .padding(4)
                             }
-                            .padding(4)
-                            .background(RoundedRectangle(cornerRadius: 6).fill(Color(.systemBackground)).shadow(radius: 2))
                         }
                 }
             }
@@ -833,20 +855,12 @@ struct GrowthChartView: View {
             .chartXAxisLabel("Month")
             .chartYAxisLabel("Value ($)")
             .chartXScale(domain: 0...(data.last?.month ?? 0))
-            .chartYScale(domain: (data.map { $0.value }.min() ?? 0)...(data.map { $0.value }.max() ?? 0))
+            .chartYScale(domain: yAxisRange)
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        let totalMonths = data.count - 1
-                        if totalMonths > 0 {
-                            // Use a reasonable estimate for chart width
-                            let estimatedChartWidth: CGFloat = 350 // Fixed width for consistent behavior
-                            let clampedX = max(0, min(value.location.x, estimatedChartWidth))
-                            let percent = clampedX / estimatedChartWidth
-                            let monthIndex = Int(round(percent * Double(totalMonths)))
-                            self.selectedMonth = min(max(monthIndex, 0), totalMonths)
-                        }
+                        handleDrag(location: value.location)
                     }
             )
             .onTapGesture {
