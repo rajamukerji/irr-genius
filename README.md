@@ -29,7 +29,9 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 - **Error Handling**: Clear validation and error messages
 - **Loading States**: Professional loading indicators during calculations
 - **Follow-on Investments**: Add multiple investments with dates and valuations
-- **Valuation Options**: Choose between computed (IRR-based) or specified valuations
+- **Investment Types**: Support for Buy, Sell, and Buy/Sell operations
+- **Tag-Along Mode**: Follow-on investments automatically follow the same IRR trajectory as the initial investment
+- **Custom Valuation Options**: Choose between computed (IRR-based) or specified valuations
 - **Growth Visualization**: Interactive charts showing investment growth over time
 
 ## 🚀 Getting Started
@@ -84,6 +86,15 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 
 ### Calculate Blended IRR
 
+#### Tag-Along Investment Example
+- **Initial Investment**: $1,000,000
+- **Follow-on Investment 1**: $500,000 at month 6 (Tag-Along - follows initial IRR)
+- **Follow-on Investment 2**: $500,000 at month 10 (Tag-Along - follows initial IRR)
+- **Final Valuation**: $8,000,000
+- **Time Period**: 12 months (1 year)
+- **Result**: 700% Blended IRR
+
+#### Custom Valuation Example
 - **Initial Investment**: $10,000
 - **Follow-on Investment 1**: $5,000 at month 12 (computed at 10% IRR)
 - **Follow-on Investment 2**: $3,000 at month 24 (specified valuation: $4,500)
@@ -113,12 +124,27 @@ Initial = Outcome / (1 + IRR)^Years
 
 ### Blended IRR Calculation
 
+#### Tag-Along Investments
+```text
+For tag-along investments, follow-on investments follow the same IRR trajectory as the initial investment:
+
+Investment Growth = Amount × (1 + Blended IRR)^(Months Since Investment / 12)
+
+Total Value = Initial Investment Growth + Σ(Tag-Along Investment Growth)
+```
+
+#### Custom Valuations
 ```text
 Blended IRR = (Final Value / Total Time-Weighted Investment)^(1/Total Years) - 1
 
 Where:
 Total Time-Weighted Investment = Initial × Total Years + Σ(Investment × Years Remaining)
 ```
+
+#### Investment Types
+- **Buy**: Adds to invested capital and final value
+- **Sell**: Reduces final value (no capital addition)
+- **Buy/Sell**: Adds to invested capital but reduces final value by sell amount
 
 ## 🛠 Technical Details
 
@@ -165,6 +191,8 @@ Total Time-Weighted Investment = Initial × Total Years + Σ(Investment × Years
 - **Business Owners**: Evaluate project profitability with staged investments
 - **Startup Investors**: Calculate blended IRR for investments with multiple funding rounds
 - **Real Estate Investors**: Analyze returns on properties with renovation investments
+- **Venture Capitalists**: Model tag-along investments that follow the same growth trajectory
+- **Angel Investors**: Track returns on staged investments with varying participation rights
 
 ## 🔧 Development
 
