@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Charts
 
 enum CalculationMode: String, CaseIterable {
     case calculateIRR = "Calculate IRR"
@@ -107,6 +108,9 @@ struct ContentView: View {
                             result: result,
                             inputs: getInputsForMode()
                         )
+                        if let chartData = chartDataForCurrentInputs() {
+                            GrowthChartView(data: chartData)
+                        }
                     }
                     
                     Spacer(minLength: 50)
@@ -233,6 +237,49 @@ struct ContentView: View {
     private func calculateInitialValue(outcomeAmount: Double, irr: Double, timeInYears: Double) -> Double {
         let irrDecimal = irr / 100
         return outcomeAmount / pow(1 + irrDecimal, timeInYears)
+    }
+    
+    // Chart Data Calculation
+    private func chartDataForCurrentInputs() -> [GrowthPoint]? {
+        switch selectedMode {
+        case .calculateIRR:
+            guard let initial = Double(initialInvestment.replacingOccurrences(of: ",", with: "")),
+                  let outcome = Double(outcomeAmount.replacingOccurrences(of: ",", with: "")),
+                  let monthsDouble = Double(timeInMonths),
+                  initial > 0, outcome > 0 else { return nil }
+            let months = Int(monthsDouble)
+            guard months > 0 else { return nil }
+            let years = Double(months) / 12.0
+            let irr = calculateIRRValue(initialInvestment: initial, outcomeAmount: outcome, timeInYears: years) / 100.0
+            return growthPoints(initial: initial, rate: irr, months: months)
+        case .calculateOutcome:
+            guard let initial = Double(outcomeInitialInvestment.replacingOccurrences(of: ",", with: "")),
+                  let irr = Double(outcomeIRR),
+                  let monthsDouble = Double(outcomeTimeInMonths),
+                  initial > 0 else { return nil }
+            let months = Int(monthsDouble)
+            guard months > 0 else { return nil }
+            let rate = irr / 100.0
+            return growthPoints(initial: initial, rate: rate, months: months)
+        case .calculateInitial:
+            guard let outcome = Double(initialOutcomeAmount.replacingOccurrences(of: ",", with: "")),
+                  let irr = Double(initialIRR),
+                  let monthsDouble = Double(initialTimeInMonths),
+                  outcome > 0 else { return nil }
+            let months = Int(monthsDouble)
+            guard months > 0 else { return nil }
+            let rate = irr / 100.0
+            // Calculate initial investment needed
+            let initial = outcome / pow(1 + rate, Double(months) / 12.0)
+            return growthPoints(initial: initial, rate: rate, months: months)
+        }
+    }
+    
+    private func growthPoints(initial: Double, rate: Double, months: Int) -> [GrowthPoint] {
+        (0...months).map { month in
+            let value = initial * pow(1 + rate, Double(month) / 12.0)
+            return GrowthPoint(month: month, value: value)
+        }
     }
 }
 
@@ -734,6 +781,82 @@ extension Formatter {
 func formatWithCommas(_ value: Double, fractionDigits: Int = 2) -> String {
     Formatter.withSeparator.maximumFractionDigits = fractionDigits
     return Formatter.withSeparator.string(from: NSNumber(value: value)) ?? String(format: "%.*f", fractionDigits, value)
+}
+
+struct GrowthPoint: Identifiable {
+    let month: Int
+    let value: Double
+    var id: Int { month }
+}
+
+struct GrowthChartView: View {
+    let data: [GrowthPoint]
+    @State private var selectedMonth: Int? = nil
+    @GestureState private var dragLocation: CGPoint = .zero
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Growth Over Time")
+                .font(.headline)
+                .padding(.top, 8)
+                                    Chart {
+                ForEach(data) { point in
+                    LineMark(
+                        x: .value("Month", point.month),
+                        y: .value("Value", point.value)
+                    )
+                    .interpolationMethod(.monotone)
+                    PointMark(
+                        x: .value("Month", point.month),
+                        y: .value("Value", point.value)
+                    )
+                }
+                if let selectedMonth = selectedMonth, let selectedPoint = data.first(where: { $0.month == selectedMonth }) {
+                    RuleMark(x: .value("Month", selectedMonth))
+                        .foregroundStyle(Color.red)
+                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [4]))
+                        .annotation(position: .top, alignment: .center) {
+                            VStack(spacing: 2) {
+                                Text("Month: \(selectedMonth)")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text("$\(formatWithCommas(selectedPoint.value))")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.blue)
+                            }
+                            .padding(4)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(Color(.systemBackground)).shadow(radius: 2))
+                        }
+                }
+            }
+            .frame(height: 180)
+            .chartXAxisLabel("Month")
+            .chartYAxisLabel("Value ($)")
+            .chartXScale(domain: 0...(data.last?.month ?? 0))
+            .chartYScale(domain: (data.map { $0.value }.min() ?? 0)...(data.map { $0.value }.max() ?? 0))
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let totalMonths = data.count - 1
+                        if totalMonths > 0 {
+                            // Use a reasonable estimate for chart width based on screen size
+                            let screenWidth = UIScreen.main.bounds.width
+                            let estimatedChartWidth = min(screenWidth - 40, 600) // Account for padding and max width
+                            let clampedX = max(0, min(value.location.x, estimatedChartWidth))
+                            let percent = clampedX / estimatedChartWidth
+                            let monthIndex = Int(round(percent * Double(totalMonths)))
+                            self.selectedMonth = min(max(monthIndex, 0), totalMonths)
+                        }
+                    }
+            )
+            .onTapGesture {
+                self.selectedMonth = nil
+            }
+        }
+        .padding(.horizontal)
+    }
 }
 
 #Preview {
