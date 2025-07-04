@@ -1,14 +1,15 @@
 # IRR Genius 📊
 
-A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for iOS and macOS. Calculate IRR, future values, and required initial investments with a beautiful, intuitive interface.
+A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for iOS and macOS. Calculate IRR, future values, required initial investments, and blended IRR with follow-on investments using a beautiful, intuitive interface.
 
 ## ✨ Features
 
-### 🧮 Three Calculation Modes
+### 🧮 Four Calculation Modes
 
 1. **Calculate IRR** - Find the internal rate of return given initial investment, outcome amount, and time period
 2. **Calculate Outcome** - Determine future value based on initial investment, IRR, and time period
 3. **Calculate Initial Investment** - Find required initial investment to reach a target outcome with given IRR and time
+4. **Calculate Blended IRR** - Calculate overall IRR considering multiple follow-on investments over time
 
 ### 🎨 User Experience
 
@@ -17,6 +18,8 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 - **Month-based time periods** with automatic years conversion display
 - **Professional UI** with gradient buttons and smooth animations
 - **Cross-platform** support for iOS and macOS
+- **Interactive growth charts** with draggable markers to inspect values
+- **Dark mode support** with adaptive colors and backgrounds
 
 ### 📱 Key Features
 
@@ -25,6 +28,9 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 - **Result Display**: Formatted results with all input values for reference
 - **Error Handling**: Clear validation and error messages
 - **Loading States**: Professional loading indicators during calculations
+- **Follow-on Investments**: Add multiple investments with dates and valuations
+- **Valuation Options**: Choose between computed (IRR-based) or specified valuations
+- **Growth Visualization**: Interactive charts showing investment growth over time
 
 ## 🚀 Getting Started
 
@@ -76,6 +82,15 @@ A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for 
 - **Time Period**: 60 months (5 years)
 - **Result**: $10,000.00
 
+### Calculate Blended IRR
+
+- **Initial Investment**: $10,000
+- **Follow-on Investment 1**: $5,000 at month 12 (computed at 10% IRR)
+- **Follow-on Investment 2**: $3,000 at month 24 (specified valuation: $4,500)
+- **Final Valuation**: $25,000
+- **Time Period**: 60 months (5 years)
+- **Result**: 12.34% Blended IRR
+
 ## 🧮 Mathematical Formulas
 
 ### IRR Calculation
@@ -96,6 +111,15 @@ Future Value = Initial × (1 + IRR)^Years
 Initial = Outcome / (1 + IRR)^Years
 ```
 
+### Blended IRR Calculation
+
+```text
+Blended IRR = (Final Value / Total Time-Weighted Investment)^(1/Total Years) - 1
+
+Where:
+Total Time-Weighted Investment = Initial × Total Years + Σ(Investment × Years Remaining)
+```
+
 ## 🛠 Technical Details
 
 ### Architecture
@@ -111,8 +135,12 @@ Initial = Outcome / (1 + IRR)^Years
 - `IRRCalculationView`: IRR calculation form
 - `OutcomeCalculationView`: Future value calculation form
 - `InitialCalculationView`: Initial investment calculation form
+- `BlendedIRRCalculationView`: Blended IRR calculation with follow-on investments
+- `FollowOnInvestmentRow`: Individual follow-on investment display
+- `AddFollowOnInvestmentView`: Modal for adding new follow-on investments
 - `InputField`: Reusable input component with formatting
 - `ResultCard`: Results display component
+- `GrowthChartView`: Interactive growth chart with Swift Charts
 
 ### Features Implementation
 
@@ -120,6 +148,9 @@ Initial = Outcome / (1 + IRR)^Years
 - **Input Validation**: Real-time validation with visual feedback
 - **State Management**: SwiftUI `@State` properties for reactive UI
 - **Cross-Platform**: Single codebase for iOS and macOS
+- **Date Handling**: Calendar-based calculations for investment timing
+- **Chart Integration**: Swift Charts for interactive data visualization
+- **Dark Mode**: Adaptive colors and backgrounds for all UI components
 
 ## 📸 Screenshots
 
@@ -127,11 +158,13 @@ Initial = Outcome / (1 + IRR)^Years
 
 ## 🎯 Use Cases
 
-- **Investors**: Calculate expected returns on investments
-- **Financial Planners**: Determine investment strategies
-- **Students**: Learn and practice IRR calculations
-- **Analysts**: Compare different investment opportunities
-- **Business Owners**: Evaluate project profitability
+- **Investors**: Calculate expected returns on investments with multiple contributions
+- **Financial Planners**: Determine investment strategies with follow-on funding
+- **Students**: Learn and practice IRR calculations including complex scenarios
+- **Analysts**: Compare different investment opportunities with varying cash flows
+- **Business Owners**: Evaluate project profitability with staged investments
+- **Startup Investors**: Calculate blended IRR for investments with multiple funding rounds
+- **Real Estate Investors**: Analyze returns on properties with renovation investments
 
 ## 🔧 Development
 
@@ -178,6 +211,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built with SwiftUI for modern iOS/macOS development
 - Inspired by the need for simple, accurate IRR calculations
 - Designed for both professional and educational use
+- Enhanced with follow-on investment capabilities for real-world scenarios
 
 ---
 
