@@ -10,7 +10,7 @@ import Foundation
 // Import enums from the same module
 
 // Data structure for follow-on investments
-struct FollowOnInvestment: Identifiable {
+struct FollowOnInvestment: Identifiable, Codable {
     let id = UUID()
     var timingType: TimingType
     var date: Date // Used when timingType is .absoluteDate
