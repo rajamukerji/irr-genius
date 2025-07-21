@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.IRRGenius" parent="Theme.Material3.DayNight">
-        <item name="colorPrimary">@android:color/system_accent1_600</item>
+    <style name="Theme.IRRGenius" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">#2196F3</item>
+        <item name="android:colorPrimaryDark">#1976D2</item>
+        <item name="android:colorAccent">#03DAC5</item>
     </style>
 </resources>

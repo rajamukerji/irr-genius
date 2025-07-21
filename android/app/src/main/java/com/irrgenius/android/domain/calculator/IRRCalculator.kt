@@ -2,11 +2,10 @@ package com.irrgenius.android.domain.calculator
 
 import com.irrgenius.android.data.models.*
 import java.time.LocalDate
-import javax.inject.Inject
 import kotlin.math.pow
 import kotlin.math.ln
 
-class IRRCalculator @Inject constructor() {
+class IRRCalculator {
     
     fun calculateIRRValue(initial: Double, outcome: Double, years: Double): Double {
         if (initial <= 0 || outcome <= 0 || years <= 0) return 0.0

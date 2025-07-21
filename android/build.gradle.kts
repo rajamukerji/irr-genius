@@ -5,9 +5,3 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.48" apply false
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}

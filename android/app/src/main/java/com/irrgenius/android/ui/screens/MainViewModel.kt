@@ -4,14 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.irrgenius.android.data.models.*
 import com.irrgenius.android.domain.calculator.IRRCalculator
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import javax.inject.Inject
 
 data class MainUiState(
     val calculationMode: CalculationMode = CalculationMode.CALCULATE_IRR,
@@ -47,10 +45,8 @@ data class MainUiState(
     val growthPoints: List<GrowthPoint> = emptyList()
 )
 
-@HiltViewModel
-class MainViewModel @Inject constructor(
-    private val calculator: IRRCalculator
-) : ViewModel() {
+class MainViewModel : ViewModel() {
+    private val calculator = IRRCalculator()
     
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
