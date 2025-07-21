@@ -1,246 +1,188 @@
-# IRR Genius 📊
+# IRR Genius
 
-A comprehensive Internal Rate of Return (IRR) calculator built with SwiftUI for iOS and macOS. Calculate IRR, future values, required initial investments, and blended IRR with follow-on investments using a beautiful, intuitive interface.
+A cross-platform Internal Rate of Return calculator for iOS and Android, designed for investors and financial professionals.
+
+## 📱 Platforms
+
+- **iOS**: Native Swift/SwiftUI application (iOS 17.0+)
+- **Android**: Native Kotlin/Jetpack Compose application (API 26+)
 
 ## ✨ Features
 
-### 🧮 Four Calculation Modes
+### Core Calculations
+- **Calculate IRR**: Determine Internal Rate of Return from investment parameters
+- **Calculate Outcome**: Find future value given IRR and time horizon  
+- **Calculate Initial Investment**: Determine required capital for target outcomes
+- **Blended IRR**: Complex calculations with multiple follow-on investments
 
-1. **Calculate IRR** - Find the internal rate of return given initial investment, outcome amount, and time period
-2. **Calculate Outcome** - Determine future value based on initial investment, IRR, and time period
-3. **Calculate Initial Investment** - Find required initial investment to reach a target outcome with given IRR and time
-4. **Calculate Blended IRR** - Calculate overall IRR considering multiple follow-on investments over time
+### Advanced Features
+- **Interactive Growth Charts**: Visualize investment trajectory over time
+- **Follow-on Investments**: Model additional investments at different times
+- **Tag-Along Investments**: Automatically follow initial investment's IRR
+- **Custom Valuations**: Specify valuations for follow-on investments
+- **Buy/Sell/Buy-Sell**: Support different investment transaction types
 
-### 🎨 User Experience
+### UI/UX
+- **Real-time Formatting**: Automatic currency and percentage formatting
+- **Input Validation**: Comprehensive error checking and user guidance
+- **Dark Mode**: Full support on both platforms
+- **Responsive Design**: Optimized for phones and tablets
 
-- **Real-time comma formatting** for easy number reading (e.g., 1,000,000)
-- **Smart input validation** with helpful error messages
-- **Month-based time periods** with automatic years conversion display
-- **Professional UI** with gradient buttons and smooth animations
-- **Cross-platform** support for iOS and macOS
-- **Interactive growth charts** with draggable markers to inspect values
-- **Dark mode support** with adaptive colors and backgrounds
+## 🏗️ Project Structure
 
-### 📱 Key Features
-
-- **Input Formatting**: Automatic comma insertion for currency fields
-- **Time Conversion**: Enter months, see years equivalent in real-time
-- **Result Display**: Formatted results with all input values for reference
-- **Error Handling**: Clear validation and error messages
-- **Loading States**: Professional loading indicators during calculations
-- **Follow-on Investments**: Add multiple investments with dates and valuations
-- **Investment Types**: Support for Buy, Sell, and Buy/Sell operations
-- **Tag-Along Mode**: Follow-on investments automatically follow the same IRR trajectory as the initial investment
-- **Custom Valuation Options**: Choose between computed (IRR-based) or specified valuations
-- **Growth Visualization**: Interactive charts showing investment growth over time
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Xcode 15.0 or later
-- iOS 17.0+ / macOS 14.0+
-- Swift 5.9+
-
-### Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/rajamukerji/irr-genius.git
-   cd irr-genius
-   ```
-
-2. **Open in Xcode**
-
-   ```bash
-   open "IRR Genius.xcodeproj"
-   ```
-
-3. **Build and Run**
-   - Select your target device/simulator
-   - Press `⌘+R` to build and run
-
-## 📖 Usage Examples
-
-### Calculate IRR
-
-- **Initial Investment**: $10,000
-- **Outcome Amount**: $15,000
-- **Time Period**: 60 months (5 years)
-- **Result**: 8.45% IRR
-
-### Calculate Future Value
-
-- **Initial Investment**: $10,000
-- **IRR**: 8.5%
-- **Time Period**: 60 months (5 years)
-- **Result**: $15,000.00
-
-### Calculate Required Initial Investment
-
-- **Target Outcome**: $15,000
-- **IRR**: 8.5%
-- **Time Period**: 60 months (5 years)
-- **Result**: $10,000.00
-
-### Calculate Blended IRR
-
-#### Tag-Along Investment Example
-- **Initial Investment**: $1,000,000
-- **Follow-on Investment 1**: $500,000 at month 6 (Tag-Along - follows initial IRR)
-- **Follow-on Investment 2**: $500,000 at month 10 (Tag-Along - follows initial IRR)
-- **Final Valuation**: $8,000,000
-- **Time Period**: 12 months (1 year)
-- **Result**: 700% Blended IRR
-
-#### Custom Valuation Example
-- **Initial Investment**: $10,000
-- **Follow-on Investment 1**: $5,000 at month 12 (computed at 10% IRR)
-- **Follow-on Investment 2**: $3,000 at month 24 (specified valuation: $4,500)
-- **Final Valuation**: $25,000
-- **Time Period**: 60 months (5 years)
-- **Result**: 12.34% Blended IRR
-
-## 🧮 Mathematical Formulas
-
-### IRR Calculation
-
-```text
-IRR = (Outcome/Initial)^(1/Years) - 1
+```
+├── ios/                          # iOS application
+│   ├── IRR Genius/               # Main iOS project
+│   ├── IRR Genius.xcodeproj/     # Xcode project file
+│   ├── IRR GeniusTests/          # Unit tests
+│   └── IRR GeniusUITests/        # UI tests
+├── android/                      # Android application  
+│   ├── app/                      # Main Android module
+│   ├── build.gradle.kts          # Build configuration
+│   └── settings.gradle.kts       # Project settings
+├── shared/                       # Common assets and documentation
+│   ├── docs/                     # Shared documentation
+│   ├── assets/                   # Design assets and specifications
+│   └── specs/                    # Technical specifications
+└── README.md                     # This file
 ```
 
-### Future Value Calculation
+## 🚀 Quick Start
 
-```text
-Future Value = Initial × (1 + IRR)^Years
+### iOS Development
+```bash
+cd ios/
+open "IRR Genius.xcodeproj"
+# Build and run in Xcode (⌘+R)
 ```
 
-### Initial Investment Calculation
-
-```text
-Initial = Outcome / (1 + IRR)^Years
+### Android Development  
+```bash
+cd android/
+# Open in Android Studio or:
+./gradlew build
+./gradlew installDebug
 ```
 
-### Blended IRR Calculation
+## 🧮 Calculation Examples
 
-#### Tag-Along Investments
-```text
-For tag-along investments, follow-on investments follow the same IRR trajectory as the initial investment:
+### Basic IRR Calculation
+- **Initial Investment**: $100,000
+- **Final Outcome**: $150,000  
+- **Time Period**: 2 years
+- **Result**: 22.47% IRR
 
-Investment Growth = Amount × (1 + Blended IRR)^(Months Since Investment / 12)
+### Blended IRR with Follow-on
+- **Initial**: $100,000 (Year 0)
+- **Follow-on**: $50,000 (Year 1) 
+- **Final Outcome**: $200,000 (Year 3)
+- **Result**: Blended IRR accounting for time-weighted returns
 
-Total Value = Initial Investment Growth + Σ(Tag-Along Investment Growth)
+## 🔧 Technical Details
+
+### iOS (Swift/SwiftUI)
+- **Architecture**: MVVM with SwiftUI state management
+- **Charts**: Native Swift Charts framework
+- **Testing**: Swift Testing framework
+- **Minimum Version**: iOS 17.0, macOS 14.0
+
+### Android (Kotlin/Compose)
+- **Architecture**: MVVM with StateFlow and Hilt DI
+- **Charts**: Vico charting library
+- **Testing**: JUnit with Kotlin test extensions
+- **Minimum Version**: Android API 26 (Android 8.0)
+
+### Shared Specifications
+- **Calculations**: Identical mathematical formulas across platforms
+- **Data Models**: Equivalent structures for all data types
+- **UI Patterns**: Consistent user experience and interaction patterns
+- **Testing**: Common test cases and validation scenarios
+
+## 📊 Mathematical Formulas
+
+All calculations use standard financial formulas:
+
+- **IRR**: `(FV/PV)^(1/n) - 1`
+- **Future Value**: `PV × (1 + IRR)^n`  
+- **Present Value**: `FV / (1 + IRR)^n`
+- **Blended IRR**: Time-weighted money-weighted returns
+
+See [shared/specs/CALCULATIONS.md](shared/specs/CALCULATIONS.md) for detailed specifications.
+
+## 🧪 Testing
+
+### iOS Testing
+```bash
+cd ios/
+# In Xcode: ⌘+U or Product → Test
 ```
 
-#### Custom Valuations
-```text
-Blended IRR = (Final Value / Total Time-Weighted Investment)^(1/Total Years) - 1
-
-Where:
-Total Time-Weighted Investment = Initial × Total Years + Σ(Investment × Years Remaining)
+### Android Testing
+```bash
+cd android/
+./gradlew test                    # Unit tests
+./gradlew connectedAndroidTest    # Instrumented tests
 ```
 
-#### Investment Types
-- **Buy**: Adds to invested capital and final value
-- **Sell**: Reduces final value (no capital addition)
-- **Buy/Sell**: Adds to invested capital but reduces final value by sell amount
+### Common Test Cases
+- Basic IRR calculations with known results
+- Round-trip calculation verification
+- Edge cases (zero values, negative returns)
+- Input validation and error handling
+- Follow-on investment scenarios
 
-## 🛠 Technical Details
+## 🎨 Design Assets
 
-### Architecture
+Design specifications and assets are located in `shared/assets/`:
+- App icon specifications for both platforms
+- Color palette and brand guidelines  
+- UI component design standards
+- Chart styling and formatting rules
 
-- **Framework**: SwiftUI
-- **Platform**: iOS 17.0+, macOS 14.0+
-- **Language**: Swift 5.9+
-- **Design Pattern**: MVVM with State Management
+## 📖 Documentation
 
-### Key Components
+### Platform-Specific
+- [iOS README](ios/README.md) - iOS-specific setup and development
+- [Android README](android/README.md) - Android-specific setup and development
 
-- `ContentView`: Main app interface with mode selection
-- `IRRCalculationView`: IRR calculation form
-- `OutcomeCalculationView`: Future value calculation form
-- `InitialCalculationView`: Initial investment calculation form
-- `BlendedIRRCalculationView`: Blended IRR calculation with follow-on investments
-- `FollowOnInvestmentRow`: Individual follow-on investment display
-- `AddFollowOnInvestmentView`: Modal for adding new follow-on investments
-- `InputField`: Reusable input component with formatting
-- `ResultCard`: Results display component
-- `GrowthChartView`: Interactive growth chart with Swift Charts
+### Shared Documentation
+- [Calculation Specifications](shared/specs/CALCULATIONS.md) - Mathematical formulas and business logic
+- [Refactoring Guide](shared/docs/REFACTORING_GUIDE.md) - iOS codebase evolution
+- [Claude AI Guide](shared/docs/CLAUDE.md) - AI assistant integration guide
 
-### Features Implementation
+## 🔒 Security & Privacy
 
-- **Number Formatting**: Custom `NumberFormatter` with comma separators
-- **Input Validation**: Real-time validation with visual feedback
-- **State Management**: SwiftUI `@State` properties for reactive UI
-- **Cross-Platform**: Single codebase for iOS and macOS
-- **Date Handling**: Calendar-based calculations for investment timing
-- **Chart Integration**: Swift Charts for interactive data visualization
-- **Dark Mode**: Adaptive colors and backgrounds for all UI components
-
-## 📸 Screenshots
-
-## Screenshots will be added here once the app is running
-
-## 🎯 Use Cases
-
-- **Investors**: Calculate expected returns on investments with multiple contributions
-- **Financial Planners**: Determine investment strategies with follow-on funding
-- **Students**: Learn and practice IRR calculations including complex scenarios
-- **Analysts**: Compare different investment opportunities with varying cash flows
-- **Business Owners**: Evaluate project profitability with staged investments
-- **Startup Investors**: Calculate blended IRR for investments with multiple funding rounds
-- **Real Estate Investors**: Analyze returns on properties with renovation investments
-- **Venture Capitalists**: Model tag-along investments that follow the same growth trajectory
-- **Angel Investors**: Track returns on staged investments with varying participation rights
-
-## 🔧 Development
-
-### Project Structure
-
-```text
-IRR Genius/
-├── IRR Genius/
-│   ├── IRR_GeniusApp.swift      # App entry point
-│   ├── ContentView.swift        # Main UI and logic
-│   └── Assets.xcassets/         # App icons and assets
-├── IRR GeniusTests/             # Unit tests
-└── IRR GeniusUITests/           # UI tests
-```
-
-### Building for Release
-
-1. Select **Product** → **Archive** in Xcode
-2. Choose **Distribute App**
-3. Select **App Store Connect**
-4. Follow the upload process
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- **No Network Access**: All calculations performed locally
+- **No Data Collection**: No user data transmitted or stored remotely
+- **Input Sanitization**: All user inputs validated and sanitized
+- **Secure Calculations**: Financial calculations use double-precision arithmetic
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👨‍💻 Author
+## 🤝 Contributing
 
-## Raja Mukerji
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-- GitHub: [@rajamukerji](https://github.com/rajamukerji)
-- Created: July 1, 2025
+### Platform-Specific Contributions
+- **iOS**: Follow Swift style guidelines and SwiftUI best practices
+- **Android**: Follow Kotlin coding conventions and Jetpack Compose patterns
+- **Shared**: Ensure mathematical consistency across platforms
 
-## 🙏 Acknowledgments
+## 📞 Support
 
-- Built with SwiftUI for modern iOS/macOS development
-- Inspired by the need for simple, accurate IRR calculations
-- Designed for both professional and educational use
-- Enhanced with follow-on investment capabilities for real-world scenarios
+For questions, bug reports, or feature requests:
+- Create an issue in this repository
+- Ensure bug reports include platform, version, and reproduction steps
+- Feature requests should specify target platform(s) or cross-platform scope
 
----
+## 🏆 Credits
 
-⭐ **Star this repository if you find it helpful!**
+- Original iOS development and financial calculations
+- Android port with feature parity and modern architecture
+- Cross-platform design and mathematical specifications

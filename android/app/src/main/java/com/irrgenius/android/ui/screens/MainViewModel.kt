@@ -1,0 +1,198 @@
+package com.irrgenius.android.ui.screens
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.irrgenius.android.data.models.*
+import com.irrgenius.android.domain.calculator.IRRCalculator
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import javax.inject.Inject
+
+data class MainUiState(
+    val calculationMode: CalculationMode = CalculationMode.CALCULATE_IRR,
+    val isCalculating: Boolean = false,
+    
+    // IRR Calculation inputs
+    val irrInitialInvestment: String = "",
+    val irrOutcome: String = "",
+    val irrYears: String = "",
+    val irrResult: Double? = null,
+    
+    // Outcome Calculation inputs
+    val outcomeInitialInvestment: String = "",
+    val outcomeIRR: String = "",
+    val outcomeYears: String = "",
+    val outcomeResult: Double? = null,
+    
+    // Initial Calculation inputs
+    val initialOutcome: String = "",
+    val initialIRR: String = "",
+    val initialYears: String = "",
+    val initialResult: Double? = null,
+    
+    // Blended IRR inputs
+    val blendedInitialInvestment: String = "",
+    val blendedOutcome: String = "",
+    val blendedYears: String = "",
+    val blendedInitialDate: LocalDate = LocalDate.now(),
+    val blendedFollowOnInvestments: List<FollowOnInvestment> = emptyList(),
+    val blendedResult: Double? = null,
+    
+    // Growth chart data
+    val growthPoints: List<GrowthPoint> = emptyList()
+)
+
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val calculator: IRRCalculator
+) : ViewModel() {
+    
+    private val _uiState = MutableStateFlow(MainUiState())
+    val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+    
+    fun setCalculationMode(mode: CalculationMode) {
+        _uiState.value = _uiState.value.copy(calculationMode = mode)
+    }
+    
+    fun updateIRRInputs(initial: String? = null, outcome: String? = null, years: String? = null) {
+        _uiState.value = _uiState.value.copy(
+            irrInitialInvestment = initial ?: _uiState.value.irrInitialInvestment,
+            irrOutcome = outcome ?: _uiState.value.irrOutcome,
+            irrYears = years ?: _uiState.value.irrYears
+        )
+    }
+    
+    fun updateOutcomeInputs(initial: String? = null, irr: String? = null, years: String? = null) {
+        _uiState.value = _uiState.value.copy(
+            outcomeInitialInvestment = initial ?: _uiState.value.outcomeInitialInvestment,
+            outcomeIRR = irr ?: _uiState.value.outcomeIRR,
+            outcomeYears = years ?: _uiState.value.outcomeYears
+        )
+    }
+    
+    fun updateInitialInputs(outcome: String? = null, irr: String? = null, years: String? = null) {
+        _uiState.value = _uiState.value.copy(
+            initialOutcome = outcome ?: _uiState.value.initialOutcome,
+            initialIRR = irr ?: _uiState.value.initialIRR,
+            initialYears = years ?: _uiState.value.initialYears
+        )
+    }
+    
+    fun updateBlendedInputs(
+        initial: String? = null, 
+        outcome: String? = null, 
+        years: String? = null,
+        initialDate: LocalDate? = null
+    ) {
+        _uiState.value = _uiState.value.copy(
+            blendedInitialInvestment = initial ?: _uiState.value.blendedInitialInvestment,
+            blendedOutcome = outcome ?: _uiState.value.blendedOutcome,
+            blendedYears = years ?: _uiState.value.blendedYears,
+            blendedInitialDate = initialDate ?: _uiState.value.blendedInitialDate
+        )
+    }
+    
+    fun addFollowOnInvestment(investment: FollowOnInvestment) {
+        _uiState.value = _uiState.value.copy(
+            blendedFollowOnInvestments = _uiState.value.blendedFollowOnInvestments + investment
+        )
+    }
+    
+    fun removeFollowOnInvestment(id: String) {
+        _uiState.value = _uiState.value.copy(
+            blendedFollowOnInvestments = _uiState.value.blendedFollowOnInvestments.filter { it.id != id }
+        )
+    }
+    
+    fun calculate() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isCalculating = true)
+            
+            // Simulate calculation delay like in Swift version
+            delay(300)
+            
+            when (_uiState.value.calculationMode) {
+                CalculationMode.CALCULATE_IRR -> calculateIRR()
+                CalculationMode.CALCULATE_OUTCOME -> calculateOutcome()
+                CalculationMode.CALCULATE_INITIAL -> calculateInitial()
+                CalculationMode.CALCULATE_BLENDED -> calculateBlended()
+            }
+            
+            _uiState.value = _uiState.value.copy(isCalculating = false)
+        }
+    }
+    
+    private fun calculateIRR() {
+        val initial = _uiState.value.irrInitialInvestment.toDoubleOrNull() ?: return
+        val outcome = _uiState.value.irrOutcome.toDoubleOrNull() ?: return
+        val years = _uiState.value.irrYears.toDoubleOrNull() ?: return
+        
+        val irr = calculator.calculateIRRValue(initial, outcome, years)
+        val points = calculator.growthPoints(initial, irr, years)
+        
+        _uiState.value = _uiState.value.copy(
+            irrResult = irr,
+            growthPoints = points
+        )
+    }
+    
+    private fun calculateOutcome() {
+        val initial = _uiState.value.outcomeInitialInvestment.toDoubleOrNull() ?: return
+        val irr = (_uiState.value.outcomeIRR.toDoubleOrNull() ?: return) / 100.0
+        val years = _uiState.value.outcomeYears.toDoubleOrNull() ?: return
+        
+        val outcome = calculator.calculateOutcomeValue(initial, irr, years)
+        val points = calculator.growthPoints(initial, irr, years)
+        
+        _uiState.value = _uiState.value.copy(
+            outcomeResult = outcome,
+            growthPoints = points
+        )
+    }
+    
+    private fun calculateInitial() {
+        val outcome = _uiState.value.initialOutcome.toDoubleOrNull() ?: return
+        val irr = (_uiState.value.initialIRR.toDoubleOrNull() ?: return) / 100.0
+        val years = _uiState.value.initialYears.toDoubleOrNull() ?: return
+        
+        val initial = calculator.calculateInitialValue(outcome, irr, years)
+        val points = calculator.growthPoints(initial, irr, years)
+        
+        _uiState.value = _uiState.value.copy(
+            initialResult = initial,
+            growthPoints = points
+        )
+    }
+    
+    private fun calculateBlended() {
+        val initial = _uiState.value.blendedInitialInvestment.toDoubleOrNull() ?: return
+        val outcome = _uiState.value.blendedOutcome.toDoubleOrNull() ?: return
+        val years = _uiState.value.blendedYears.toDoubleOrNull() ?: return
+        
+        val blendedIRR = calculator.calculateBlendedIRR(
+            initial, outcome, years,
+            _uiState.value.blendedFollowOnInvestments,
+            _uiState.value.blendedInitialDate
+        )
+        
+        val points = if (_uiState.value.blendedFollowOnInvestments.isEmpty()) {
+            calculator.growthPoints(initial, blendedIRR, years)
+        } else {
+            calculator.growthPointsWithFollowOn(
+                initial, blendedIRR, years,
+                _uiState.value.blendedFollowOnInvestments,
+                _uiState.value.blendedInitialDate
+            )
+        }
+        
+        _uiState.value = _uiState.value.copy(
+            blendedResult = blendedIRR,
+            growthPoints = points
+        )
+    }
+}
