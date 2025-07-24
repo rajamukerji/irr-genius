@@ -22,12 +22,14 @@ struct ResultCard: View {
             return "Required Initial Investment"
         case .calculateBlendedIRR:
             return "Blended IRR"
+        case .portfolioUnitInvestment:
+            return "Portfolio Unit IRR"
         }
     }
     
     private var resultUnit: String {
         switch mode {
-        case .calculateIRR, .calculateBlendedIRR:
+        case .calculateIRR, .calculateBlendedIRR, .portfolioUnitInvestment:
             return "%"
         case .calculateOutcome, .calculateInitial:
             return ""

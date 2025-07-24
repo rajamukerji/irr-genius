@@ -94,6 +94,11 @@ struct ContentView: View {
                             showingAddInvestment: $showingAddInvestment,
                             onCalculate: calculateBlendedIRR
                         )
+                    case .portfolioUnitInvestment:
+                        // TODO: Implement Portfolio Unit Investment View
+                        Text("Portfolio Unit Investment - Coming Soon")
+                            .foregroundColor(.secondary)
+                            .padding()
                     }
                     
                     // Results Section
@@ -282,6 +287,9 @@ struct ContentView: View {
                 "Time Period (Years)": months / 12.0,
                 "Follow-on Investments": Double(followOnInvestments.count)
             ]
+        case .portfolioUnitInvestment:
+            // TODO: Implement Portfolio Unit Investment inputs
+            return [:]
         }
     }
     
@@ -331,6 +339,9 @@ struct ContentView: View {
                 finalValuation: finalValuation,
                 months: months
             )
+        case .portfolioUnitInvestment:
+            // TODO: Implement Portfolio Unit Investment chart data
+            return nil
         }
     }
 } 

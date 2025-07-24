@@ -91,10 +91,10 @@ private fun SimpleLineChart(
         val height = size.height - 2 * padding
         
         // Find min/max values
-        val minX = points.minOf { it.month }
-        val maxX = points.maxOf { it.month }
-        val minY = points.minOf { it.value }
-        val maxY = points.maxOf { it.value }
+        val minX = points.minOf { it.month }.toFloat()
+        val maxX = points.maxOf { it.month }.toFloat()
+        val minY = points.minOf { it.value }.toFloat()
+        val maxY = points.maxOf { it.value }.toFloat()
         
         val xRange = maxX - minX
         val yRange = maxY - minY
@@ -107,8 +107,8 @@ private fun SimpleLineChart(
         // Create path for line
         val path = Path()
         points.forEachIndexed { index, point ->
-            val x = padding + ((point.month - minX) / xRange) * width
-            val y = padding + height - ((point.value - minY) / yRange) * height
+            val x = padding + ((point.month.toFloat() - minX) / xRange) * width
+            val y = padding + height - ((point.value.toFloat() - minY) / yRange) * height
             
             if (index == 0) {
                 path.moveTo(x, y)
@@ -126,8 +126,8 @@ private fun SimpleLineChart(
         
         // Draw points
         points.forEach { point ->
-            val x = padding + ((point.month - minX) / xRange) * width
-            val y = padding + height - ((point.value - minY) / yRange) * height
+            val x = padding + ((point.month.toFloat() - minX) / xRange) * width
+            val y = padding + height - ((point.value.toFloat() - minY) / yRange) * height
             
             drawCircle(
                 color = lineColor,

@@ -134,7 +134,7 @@ class CoreDataCalculationRepository: CalculationRepository {
         // Parse tags
         let tags = entity.tags?.components(separatedBy: ",").filter { !$0.isEmpty } ?? []
         
-        return SavedCalculation(
+        return try SavedCalculation(
             id: id,
             name: name,
             calculationType: calculationType,

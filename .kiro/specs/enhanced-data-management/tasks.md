@@ -6,20 +6,20 @@
   - Write unit tests for basic CRUD operations on calculations and projects
   - _Requirements: 1.1, 1.2, 6.1, 6.2_
 
-- [ ] 2. Implement core data models and validation
-  - [ ] 2.1 Create enhanced SavedCalculation data model
+- [x] 2. Implement core data models and validation
+  - [x] 2.1 Create enhanced SavedCalculation data model
     - Write SavedCalculation struct/class with all calculation types support
     - Implement Codable/Serializable protocols for data persistence
     - Add validation methods for calculation data integrity
     - _Requirements: 1.1, 1.4_
 
-  - [ ] 2.2 Create Project data model and relationships
+  - [x] 2.2 Create Project data model and relationships
     - Write Project model with calculation relationships
     - Implement project-calculation association logic
     - Add project validation and naming constraints
     - _Requirements: 6.1, 6.2, 6.4_
 
-  - [ ] 2.3 Implement FollowOnInvestment persistence model
+  - [x] 2.3 Implement FollowOnInvestment persistence model
     - Extend existing FollowOnInvestment for database storage
     - Create relationship mapping between calculations and follow-on investments
     - Write serialization logic for complex investment data
@@ -112,29 +112,50 @@
     - Write project deletion with calculation handling options
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 7. Enhance calculation workflow with persistence
-  - [ ] 7.1 Add auto-save functionality to calculations
+- [ ] 7. Implement Portfolio Unit Investment calculation mode
+  - [x] 7.1 Add Portfolio Unit Investment enum and data model
+    - Add new CalculationMode.portfolioUnitInvestment enum case
+    - Extend SavedCalculation model to support portfolio unit investment parameters
+    - Add validation for portfolio unit investment specific constraints
+    - _Requirements: 1.1, 1.4_
+
+  - [x] 7.2 Implement portfolio unit investment calculation logic
+    - Create calculation methods for unit-based investments with success rates
+    - Implement follow-on batch support with different unit prices and timing
+    - Add blended IRR calculation for multiple investment batches
+    - Write growth point generation for portfolio unit investments
+    - _Requirements: 1.1, 1.2_
+
+  - [ ] 7.3 Build portfolio unit investment UI components
+    - Create input form for portfolio unit investment parameters
+    - Add batch management interface for follow-on investments
+    - Implement results display with unit-based metrics
+    - Write validation and error handling for portfolio unit inputs
+    - _Requirements: 2.1, 2.2_
+
+- [ ] 8. Enhance calculation workflow with persistence
+  - [ ] 8.1 Add auto-save functionality to calculations
     - Implement automatic saving after successful calculations
     - Add save dialog with naming and project assignment options
     - Write unsaved changes detection and warning system
     - Create draft saving for incomplete calculations
     - _Requirements: 1.1, 2.2_
 
-  - [ ] 7.2 Implement calculation loading and editing
+  - [ ] 8.2 Implement calculation loading and editing
     - Add "Load Calculation" functionality to populate form fields
     - Write calculation duplication feature for scenario analysis
     - Implement calculation history tracking with version management
     - Create calculation comparison interface for side-by-side analysis
     - _Requirements: 1.3, 2.2_
 
-  - [ ] 7.3 Add progress indicators and loading states
+  - [ ] 8.3 Add progress indicators and loading states
     - Implement loading spinners for calculation operations
     - Add progress bars for file import/export operations
     - Write timeout handling for long-running operations
     - Create user feedback for background sync operations
     - _Requirements: 2.4, 2.5_
 
-- [ ] 8. Implement cloud synchronization
+- [ ] 9. Implement cloud synchronization
   - [ ] 8.1 Create iOS CloudKit integration
     - Set up CloudKit container and record types for calculations and projects
     - Implement upload/download logic with conflict resolution

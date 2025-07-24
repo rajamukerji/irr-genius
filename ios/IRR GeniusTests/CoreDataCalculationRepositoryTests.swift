@@ -74,7 +74,7 @@ final class CoreDataCalculationRepositoryTests: XCTestCase {
         // Given
         let calculation1 = createTestCalculation(name: "IRR Analysis")
         let calculation2 = createTestCalculation(name: "Outcome Calculation")
-        let calculation3 = createTestCalculation(name: "Investment Study", notes: "IRR related")
+        let calculation3 = createTestCalculation(name: "Investment Study")
         
         try await repository.saveCalculation(calculation1)
         try await repository.saveCalculation(calculation2)
@@ -144,7 +144,7 @@ final class CoreDataCalculationRepositoryTests: XCTestCase {
         projectId: UUID? = nil,
         followOnInvestments: [FollowOnInvestment]? = nil
     ) -> SavedCalculation {
-        return SavedCalculation(
+        return try! SavedCalculation(
             name: name,
             calculationType: .calculateIRR,
             projectId: projectId,

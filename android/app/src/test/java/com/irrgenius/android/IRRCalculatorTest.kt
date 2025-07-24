@@ -47,8 +47,8 @@ class IRRCalculatorTest {
         val points = calculator.growthPoints(100.0, 0.10, 1.0)
         
         assertTrue("Should have 13 points (0-12 months)", points.size == 13)
-        assertEquals("First point should be initial value", 100.0f, points[0].value, 0.01f)
-        assertTrue("Last point should be ~110 (10% growth)", abs(points[12].value - 110.0f) < 0.5f)
+        assertEquals("First point should be initial value", 100.0, points[0].value, 0.01)
+        assertTrue("Last point should be ~110 (10% growth)", abs(points[12].value - 110.0) < 0.5)
     }
     
     @Test

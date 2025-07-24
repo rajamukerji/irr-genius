@@ -4,7 +4,8 @@ enum class CalculationMode {
     CALCULATE_IRR,
     CALCULATE_OUTCOME,
     CALCULATE_INITIAL,
-    CALCULATE_BLENDED
+    CALCULATE_BLENDED,
+    PORTFOLIO_UNIT_INVESTMENT
 }
 
 enum class ValuationType {

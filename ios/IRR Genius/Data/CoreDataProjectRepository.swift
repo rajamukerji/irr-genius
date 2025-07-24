@@ -87,7 +87,7 @@ class CoreDataProjectRepository: ProjectRepository {
             throw RepositoryError.invalidData
         }
         
-        return Project(
+        return try Project(
             id: id,
             name: name,
             description: entity.projectDescription,

@@ -94,7 +94,7 @@ final class CoreDataProjectRepositoryTests: XCTestCase {
         name: String = "Test Project",
         description: String? = "Test project description"
     ) -> Project {
-        return Project(
+        return try! Project(
             name: name,
             description: description,
             color: "#FF5733"

@@ -117,6 +117,12 @@ class MainViewModel : ViewModel() {
                 CalculationMode.CALCULATE_OUTCOME -> calculateOutcome()
                 CalculationMode.CALCULATE_INITIAL -> calculateInitial()
                 CalculationMode.CALCULATE_BLENDED -> calculateBlended()
+                CalculationMode.PORTFOLIO_UNIT_INVESTMENT -> {
+                    // TODO: Implement Portfolio Unit Investment calculation
+                    _uiState.value = _uiState.value.copy(
+                        growthPoints = emptyList()
+                    )
+                }
             }
             
             _uiState.value = _uiState.value.copy(isCalculating = false)

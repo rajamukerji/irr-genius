@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -53,6 +55,14 @@ fun MainScreen(
                 CalculationMode.CALCULATE_OUTCOME -> OutcomeCalculationView(uiState, viewModel)
                 CalculationMode.CALCULATE_INITIAL -> InitialCalculationView(uiState, viewModel)
                 CalculationMode.CALCULATE_BLENDED -> BlendedIRRCalculationView(uiState, viewModel)
+                CalculationMode.PORTFOLIO_UNIT_INVESTMENT -> {
+                    // TODO: Implement Portfolio Unit Investment View
+                    Text(
+                        text = "Portfolio Unit Investment - Coming Soon",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
         }
     }

@@ -12,6 +12,7 @@ enum CalculationMode: String, CaseIterable, Codable {
     case calculateOutcome = "Calculate Outcome"
     case calculateInitial = "Calculate Initial Investment"
     case calculateBlendedIRR = "Calculate Blended IRR"
+    case portfolioUnitInvestment = "Portfolio Unit Investment"
 }
 
 enum ValuationType: String, CaseIterable, Codable {

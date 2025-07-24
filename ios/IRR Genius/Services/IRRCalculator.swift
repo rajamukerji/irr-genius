@@ -185,4 +185,138 @@ class IRRCalculator {
         
         return growthPoints
     }
+    
+    // MARK: - Portfolio Unit Investment Calculations
+    
+    /**
+     * Calculates Portfolio Unit Investment IRR
+     * @param investmentAmount Total amount invested
+     * @param unitPrice Price per unit/lead/patent/etc.
+     * @param successRate Percentage of units that succeed (0-100)
+     * @param outcomePerUnit Revenue/settlement/profit per successful unit
+     * @param investorShare Percentage of outcome that goes to investor (0-100)
+     * @param years Time to outcome realization
+     * @param feePercentage Optional management/legal/servicing fees (0-100)
+     * @return IRR as percentage (e.g., 15.0 for 15%)
+     */
+    static func calculatePortfolioUnitIRR(
+        investmentAmount: Double,
+        unitPrice: Double,
+        successRate: Double,
+        outcomePerUnit: Double,
+        investorShare: Double,
+        years: Double,
+        feePercentage: Double = 0.0
+    ) -> Double {
+        guard investmentAmount > 0, unitPrice > 0, years > 0 else { return 0.0 }
+        guard successRate >= 0, successRate <= 100 else { return 0.0 }
+        guard investorShare >= 0, investorShare <= 100 else { return 0.0 }
+        guard feePercentage >= 0, feePercentage <= 100 else { return 0.0 }
+        
+        // Calculate number of units purchased
+        let totalUnits = investmentAmount / unitPrice
+        
+        // Calculate successful units
+        let successfulUnits = totalUnits * (successRate / 100.0)
+        
+        // Calculate gross outcome per successful unit
+        let grossOutcomePerUnit = outcomePerUnit * (investorShare / 100.0)
+        
+        // Apply fees to the outcome
+        let netOutcomePerUnit = grossOutcomePerUnit * (1.0 - feePercentage / 100.0)
+        
+        // Calculate total outcome
+        let totalOutcome = successfulUnits * netOutcomePerUnit
+        
+        // Calculate IRR
+        return calculateIRRValue(initialInvestment: investmentAmount, outcomeAmount: totalOutcome, timeInYears: years)
+    }
+    
+    /**
+     * Calculates Portfolio Unit Investment with multiple batches (follow-on investments)
+     */
+    static func calculatePortfolioUnitBlendedIRR(
+        initialInvestmentAmount: Double,
+        initialUnitPrice: Double,
+        successRate: Double,
+        outcomePerUnit: Double,
+        investorShare: Double,
+        years: Double,
+        followOnBatches: [PortfolioUnitBatch],
+        feePercentage: Double = 0.0
+    ) -> Double {
+        guard initialInvestmentAmount > 0, initialUnitPrice > 0, years > 0 else { return 0.0 }
+        
+        // Calculate initial batch
+        let initialUnits = initialInvestmentAmount / initialUnitPrice
+        var totalInvestment = initialInvestmentAmount
+        var totalUnits = initialUnits
+        
+        // Add follow-on batches
+        for batch in followOnBatches {
+            let batchUnits = batch.investmentAmount / batch.unitPrice
+            totalInvestment += batch.investmentAmount
+            totalUnits += batchUnits
+        }
+        
+        // Calculate successful units
+        let successfulUnits = totalUnits * (successRate / 100.0)
+        
+        // Calculate gross outcome per successful unit
+        let grossOutcomePerUnit = outcomePerUnit * (investorShare / 100.0)
+        
+        // Apply fees to the outcome
+        let netOutcomePerUnit = grossOutcomePerUnit * (1.0 - feePercentage / 100.0)
+        
+        // Calculate total outcome
+        let totalOutcome = successfulUnits * netOutcomePerUnit
+        
+        // Calculate blended IRR
+        return calculateIRRValue(initialInvestment: totalInvestment, outcomeAmount: totalOutcome, timeInYears: years)
+    }
+    
+    /**
+     * Generates growth points for Portfolio Unit Investment
+     */
+    static func portfolioUnitGrowthPoints(
+        investmentAmount: Double,
+        unitPrice: Double,
+        successRate: Double,
+        outcomePerUnit: Double,
+        investorShare: Double,
+        years: Double,
+        feePercentage: Double = 0.0
+    ) -> [GrowthPoint] {
+        let monthsTotal = Int(years * 12)
+        var points: [GrowthPoint] = []
+        
+        // Calculate final outcome
+        let totalUnits = investmentAmount / unitPrice
+        let successfulUnits = totalUnits * (successRate / 100.0)
+        let grossOutcomePerUnit = outcomePerUnit * (investorShare / 100.0)
+        let netOutcomePerUnit = grossOutcomePerUnit * (1.0 - feePercentage / 100.0)
+        let totalOutcome = successfulUnits * netOutcomePerUnit
+        
+        // Calculate IRR for growth trajectory (as decimal)
+        let irrPercentage = calculateIRRValue(initialInvestment: investmentAmount, outcomeAmount: totalOutcome, timeInYears: years)
+        let irr = irrPercentage / 100.0
+        
+        // Generate growth points
+        for month in 0...monthsTotal {
+            let yearFraction = Double(month) / 12.0
+            let value = investmentAmount * pow(1.0 + irr, yearFraction)
+            points.append(GrowthPoint(month: month, value: value))
+        }
+        
+        return points
+    }
+}
+
+/**
+ * Data structure for follow-on portfolio unit investment batches
+ */
+struct PortfolioUnitBatch {
+    let investmentAmount: Double
+    let unitPrice: Double
+    let investmentDate: Date
 } 
