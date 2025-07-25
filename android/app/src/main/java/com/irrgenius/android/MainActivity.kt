@@ -55,16 +55,21 @@ fun MainScreen(
                 CalculationMode.CALCULATE_OUTCOME -> OutcomeCalculationView(uiState, viewModel)
                 CalculationMode.CALCULATE_INITIAL -> InitialCalculationView(uiState, viewModel)
                 CalculationMode.CALCULATE_BLENDED -> BlendedIRRCalculationView(uiState, viewModel)
-                CalculationMode.PORTFOLIO_UNIT_INVESTMENT -> {
-                    // TODO: Implement Portfolio Unit Investment View
-                    Text(
-                        text = "Portfolio Unit Investment - Coming Soon",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
+                CalculationMode.PORTFOLIO_UNIT_INVESTMENT -> PortfolioUnitInvestmentView(uiState, viewModel)
             }
         }
+    }
+    
+    // Portfolio Follow-on Investment Modal
+    if (uiState.showingAddPortfolioInvestment) {
+        AddPortfolioFollowOnInvestmentView(
+            onDismiss = { viewModel.setShowingAddPortfolioInvestment(false) },
+            onAdd = { investment ->
+                viewModel.addPortfolioFollowOnInvestment(investment)
+                viewModel.setShowingAddPortfolioInvestment(false)
+            },
+            initialInvestmentDate = uiState.portfolioInitialDate
+        )
     }
 }
 

@@ -126,7 +126,7 @@
     - Write growth point generation for portfolio unit investments
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 7.3 Build portfolio unit investment UI components
+  - [x] 7.3 Build portfolio unit investment UI components
     - Create input form for portfolio unit investment parameters
     - Add batch management interface for follow-on investments
     - Implement results display with unit-based metrics

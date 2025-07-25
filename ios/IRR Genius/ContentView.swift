@@ -33,6 +33,16 @@ struct ContentView: View {
     @State private var followOnInvestments: [FollowOnInvestment] = []
     @State private var showingAddInvestment = false
     
+    // Portfolio Unit Investment inputs
+    @State private var portfolioInitialInvestment: String = ""
+    @State private var portfolioUnitPrice: String = ""
+    @State private var portfolioNumberOfUnits: String = ""
+    @State private var portfolioSuccessRate: String = "100"
+    @State private var portfolioTimeInMonths: String = ""
+    @State private var portfolioInitialDate: Date = Date()
+    @State private var portfolioFollowOnInvestments: [FollowOnInvestment] = []
+    @State private var showingAddPortfolioInvestment = false
+    
     @State private var calculatedResult: Double?
     @State private var showingResult = false
     @State private var isCalculating = false
@@ -95,10 +105,19 @@ struct ContentView: View {
                             onCalculate: calculateBlendedIRR
                         )
                     case .portfolioUnitInvestment:
-                        // TODO: Implement Portfolio Unit Investment View
-                        Text("Portfolio Unit Investment - Coming Soon")
-                            .foregroundColor(.secondary)
-                            .padding()
+                        PortfolioUnitInvestmentView(
+                            initialInvestment: $portfolioInitialInvestment,
+                            unitPrice: $portfolioUnitPrice,
+                            numberOfUnits: $portfolioNumberOfUnits,
+                            successRate: $portfolioSuccessRate,
+                            timeInMonths: $portfolioTimeInMonths,
+                            followOnInvestments: $portfolioFollowOnInvestments,
+                            calculatedResult: $calculatedResult,
+                            isCalculating: $isCalculating,
+                            errorMessage: $errorMessage,
+                            showingAddInvestment: $showingAddPortfolioInvestment,
+                            onCalculate: calculatePortfolioUnitInvestment
+                        )
                     }
                     
                     // Results Section
@@ -121,6 +140,20 @@ struct ContentView: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .center)
+        .sheet(isPresented: $showingAddInvestment) {
+            AddFollowOnInvestmentView(
+                isPresented: $showingAddInvestment,
+                followOnInvestments: $followOnInvestments,
+                initialInvestmentDate: blendedInitialDate
+            )
+        }
+        .sheet(isPresented: $showingAddPortfolioInvestment) {
+            AddPortfolioFollowOnInvestmentView(
+                isPresented: $showingAddPortfolioInvestment,
+                followOnInvestments: $portfolioFollowOnInvestments,
+                initialInvestmentDate: portfolioInitialDate
+            )
+        }
     }
     
     // MARK: - Calculation Methods
@@ -244,6 +277,75 @@ struct ContentView: View {
         }
     }
     
+    private func calculatePortfolioUnitInvestment() {
+        let cleanInitial = portfolioInitialInvestment.replacingOccurrences(of: ",", with: "")
+        let cleanUnitPrice = portfolioUnitPrice.replacingOccurrences(of: ",", with: "")
+        
+        guard let initialInvestment = Double(cleanInitial),
+              let unitPrice = Double(cleanUnitPrice),
+              let numberOfUnits = Double(portfolioNumberOfUnits),
+              let successRate = Double(portfolioSuccessRate),
+              let months = Double(portfolioTimeInMonths),
+              initialInvestment > 0, unitPrice > 0, numberOfUnits > 0, 
+              successRate > 0, successRate <= 100, months > 0 else {
+            errorMessage = "Please enter valid numbers"
+            return
+        }
+        
+        // Validate follow-on investments
+        for investment in portfolioFollowOnInvestments {
+            let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
+            let cleanValuation = investment.valuation.replacingOccurrences(of: ",", with: "")
+            
+            guard let amount = Double(cleanAmount),
+                  let valuation = Double(cleanValuation),
+                  amount > 0, valuation > 0 else {
+                errorMessage = "Please enter valid amounts and unit prices for all follow-on investments"
+                return
+            }
+        }
+        
+        isCalculating = true
+        errorMessage = nil
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            let years = months / 12.0
+            let successRateDecimal = successRate / 100.0
+            let successfulUnits = numberOfUnits * successRateDecimal
+            
+            // Calculate total investment including follow-ons
+            let followOnTotal = portfolioFollowOnInvestments.compactMap { investment in
+                Double(investment.amount.replacingOccurrences(of: ",", with: ""))
+            }.reduce(0, +)
+            let totalInvestment = initialInvestment + followOnTotal
+            
+            // Calculate expected outcome based on successful units
+            // Simplified calculation: assume 2x return on successful units
+            let expectedOutcome = successfulUnits * unitPrice * 2.0
+            
+            // Calculate portfolio IRR
+            let portfolioIRR = if portfolioFollowOnInvestments.isEmpty {
+                IRRCalculator.calculateIRRValue(
+                    initialInvestment: totalInvestment,
+                    outcomeAmount: expectedOutcome,
+                    timeInYears: years
+                )
+            } else {
+                // Use blended IRR calculation for complex scenarios
+                IRRCalculator.calculateBlendedIRRValue(
+                    initialInvestment: initialInvestment,
+                    followOnInvestments: portfolioFollowOnInvestments,
+                    finalValuation: expectedOutcome,
+                    totalTimeInYears: years
+                )
+            }
+            
+            calculatedResult = portfolioIRR
+            isCalculating = false
+            showingResult = true
+        }
+    }
+    
     // MARK: - Helper Methods
     
     private func getInputsForMode() -> [String: Double] {
@@ -288,8 +390,22 @@ struct ContentView: View {
                 "Follow-on Investments": Double(followOnInvestments.count)
             ]
         case .portfolioUnitInvestment:
-            // TODO: Implement Portfolio Unit Investment inputs
-            return [:]
+            let cleanInitial = portfolioInitialInvestment.replacingOccurrences(of: ",", with: "")
+            let cleanUnitPrice = portfolioUnitPrice.replacingOccurrences(of: ",", with: "")
+            let months = Double(portfolioTimeInMonths) ?? 0
+            let units = Double(portfolioNumberOfUnits) ?? 0
+            let successRate = Double(portfolioSuccessRate) ?? 100
+            let successfulUnits = units * (successRate / 100.0)
+            return [
+                "Initial Investment": Double(cleanInitial) ?? 0,
+                "Unit Price": Double(cleanUnitPrice) ?? 0,
+                "Number of Units": units,
+                "Success Rate (%)": successRate,
+                "Expected Successful Units": successfulUnits,
+                "Time Period (Months)": months,
+                "Time Period (Years)": months / 12.0,
+                "Follow-on Batches": Double(portfolioFollowOnInvestments.count)
+            ]
         }
     }
     
@@ -340,8 +456,35 @@ struct ContentView: View {
                 months: months
             )
         case .portfolioUnitInvestment:
-            // TODO: Implement Portfolio Unit Investment chart data
-            return nil
+            guard let initial = Double(portfolioInitialInvestment.replacingOccurrences(of: ",", with: "")),
+                  let unitPrice = Double(portfolioUnitPrice.replacingOccurrences(of: ",", with: "")),
+                  let numberOfUnits = Double(portfolioNumberOfUnits),
+                  let successRate = Double(portfolioSuccessRate),
+                  let monthsDouble = Double(portfolioTimeInMonths),
+                  initial > 0, unitPrice > 0, numberOfUnits > 0, successRate > 0 else { return nil }
+            let months = Int(monthsDouble)
+            guard months > 0 else { return nil }
+            
+            let successRateDecimal = successRate / 100.0
+            let successfulUnits = numberOfUnits * successRateDecimal
+            let expectedOutcome = successfulUnits * unitPrice * 2.0 // Simplified 2x return
+            
+            if portfolioFollowOnInvestments.isEmpty {
+                let years = Double(months) / 12.0
+                let irr = IRRCalculator.calculateIRRValue(
+                    initialInvestment: initial,
+                    outcomeAmount: expectedOutcome,
+                    timeInYears: years
+                ) / 100.0
+                return IRRCalculator.growthPoints(initial: initial, rate: irr, months: months)
+            } else {
+                return IRRCalculator.growthPointsWithFollowOn(
+                    initial: initial,
+                    followOnInvestments: portfolioFollowOnInvestments,
+                    finalValuation: expectedOutcome,
+                    months: months
+                )
+            }
         }
     }
 } 

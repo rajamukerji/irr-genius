@@ -47,4 +47,12 @@ struct NumberFormatting {
         // Remove all non-digit characters except decimal point
         return input.replacingOccurrences(of: "[^0-9.]", with: "", options: .regularExpression)
     }
+    
+    static func formatNumber(_ value: Double) -> String {
+        return formatWithCommas(value, fractionDigits: 0)
+    }
+    
+    static func formatCurrency(_ value: Double) -> String {
+        return "$" + formatWithCommas(value)
+    }
 } 
