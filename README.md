@@ -14,6 +14,7 @@ A cross-platform Internal Rate of Return calculator for iOS and Android, designe
 - **Calculate Outcome**: Find future value given IRR and time horizon  
 - **Calculate Initial Investment**: Determine required capital for target outcomes
 - **Blended IRR**: Complex calculations with multiple follow-on investments
+- **Portfolio Unit Investment**: Calculate IRR for unit-based portfolio investments with success rates
 
 ### Advanced Features
 - **Interactive Growth Charts**: Visualize investment trajectory over time
@@ -21,6 +22,15 @@ A cross-platform Internal Rate of Return calculator for iOS and Android, designe
 - **Tag-Along Investments**: Automatically follow initial investment's IRR
 - **Custom Valuations**: Specify valuations for follow-on investments
 - **Buy/Sell/Buy-Sell**: Support different investment transaction types
+- **Unit-Based Metrics**: Track cost per unit, average unit IRR, and portfolio composition
+- **Investment Batch Management**: Organize multiple investment batches with different unit prices
+- **Success Rate Modeling**: Apply probability-based adjustments to portfolio returns
+
+### Data Management
+- **Save Calculations**: Store calculations locally with name, notes, and tags
+- **Project Organization**: Group related calculations into projects
+- **Search & Filter**: Find calculations by name, notes, tags, or project
+- **Import/Export**: Support for CSV import and export of calculation data (coming soon)
 
 ### UI/UX
 - **Real-time Formatting**: Automatic currency and percentage formatting
@@ -33,13 +43,21 @@ A cross-platform Internal Rate of Return calculator for iOS and Android, designe
 ```
 ├── ios/                          # iOS application
 │   ├── IRR Genius/               # Main iOS project
+│   │   ├── Data/                 # Core Data persistence layer
+│   │   ├── Models/               # Data models and business logic
+│   │   └── Views/                # SwiftUI views and components
 │   ├── IRR Genius.xcodeproj/     # Xcode project file
 │   ├── IRR GeniusTests/          # Unit tests
 │   └── IRR GeniusUITests/        # UI tests
 ├── android/                      # Android application  
 │   ├── app/                      # Main Android module
+│   │   ├── data/                 # Room database and repositories
+│   │   ├── ui/                   # Compose UI and ViewModels
+│   │   └── utils/                # Utility classes and helpers
 │   ├── build.gradle.kts          # Build configuration
 │   └── settings.gradle.kts       # Project settings
+├── .kiro/                        # Kiro AI specifications
+│   └── specs/                    # Enhanced data management specs
 ├── shared/                       # Common assets and documentation
 │   ├── docs/                     # Shared documentation
 │   ├── assets/                   # Design assets and specifications
@@ -78,16 +96,24 @@ cd android/
 - **Final Outcome**: $200,000 (Year 3)
 - **Result**: Blended IRR accounting for time-weighted returns
 
+### Portfolio Unit Investment
+- **Initial Investment**: $100,000 for 100 units @ $1,000/unit
+- **Success Rate**: 80% expected success
+- **Follow-on Batch**: 50 units @ $1,200/unit (Year 1)
+- **Result**: Portfolio IRR with unit-based performance metrics
+
 ## 🔧 Technical Details
 
 ### iOS (Swift/SwiftUI)
 - **Architecture**: MVVM with SwiftUI state management
+- **Persistence**: Core Data with async/await patterns
 - **Charts**: Native Swift Charts framework
 - **Testing**: Swift Testing framework
 - **Minimum Version**: iOS 17.0, macOS 14.0
 
 ### Android (Kotlin/Compose)
-- **Architecture**: MVVM with StateFlow and Hilt DI
+- **Architecture**: MVVM with StateFlow and Repository pattern
+- **Persistence**: Room database with Kotlin coroutines
 - **Charts**: Vico charting library
 - **Testing**: JUnit with Kotlin test extensions
 - **Minimum Version**: Android API 26 (Android 8.0)
