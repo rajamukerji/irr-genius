@@ -18,5 +18,5 @@ interface FollowOnInvestmentDao {
     suspend fun deleteFollowOnInvestment(investment: FollowOnInvestmentEntity)
     
     @Query("DELETE FROM follow_on_investments WHERE calculationId = :calculationId")
-    suspend fun deleteFollowOnInvestmentsByCalculation(calculationId: String)
+    suspend fun deleteByCalculationId(calculationId: String)
 }

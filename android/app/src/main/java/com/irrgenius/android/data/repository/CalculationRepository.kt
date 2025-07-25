@@ -28,6 +28,8 @@ sealed class RepositoryError : Exception() {
     object NotFound : RepositoryError()
     object InvalidData : RepositoryError()
     object DuplicateEntry : RepositoryError()
+    data class NetworkError(override val cause: Throwable) : RepositoryError()
+    data class SyncError(override val cause: Throwable) : RepositoryError()
     
     override val message: String
         get() = when (this) {
@@ -35,5 +37,17 @@ sealed class RepositoryError : Exception() {
             is NotFound -> "Item not found"
             is InvalidData -> "Invalid data provided"
             is DuplicateEntry -> "Item already exists"
+            is NetworkError -> "Network error: ${cause.message}"
+            is SyncError -> "Sync error: ${cause.message}"
+        }
+    
+    val recoverySuggestion: String
+        get() = when (this) {
+            is PersistenceError -> "Please try again. If the problem persists, restart the app."
+            is NotFound -> "The item may have been deleted. Please refresh and try again."
+            is InvalidData -> "Please check your input and try again."
+            is DuplicateEntry -> "An item with this information already exists."
+            is NetworkError -> "Please check your internet connection and try again."
+            is SyncError -> "Please try syncing again later."
         }
 }

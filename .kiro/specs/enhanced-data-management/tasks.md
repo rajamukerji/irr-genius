@@ -25,22 +25,22 @@
     - Write serialization logic for complex investment data
     - _Requirements: 1.1, 1.2_
 
-- [ ] 3. Build data repository layer
-  - [ ] 3.1 Implement iOS Core Data repository
+- [x] 3. Build data repository layer
+  - [x] 3.1 Implement iOS Core Data repository
     - Create CoreDataCalculationRepository with async/await methods
     - Implement saveCalculation, loadCalculations, deleteCalculation methods
     - Add search functionality with NSPredicate queries
     - Write error handling for Core Data operations
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - [ ] 3.2 Implement Android Room repository
+  - [x] 3.2 Implement Android Room repository
     - Create CalculationDao with suspend functions for database operations
     - Implement ProjectDao for project management operations
     - Add database migration strategies for schema updates
     - Write repository implementation with proper error handling
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - [ ] 3.3 Create repository abstraction layer
+  - [x] 3.3 Create repository abstraction layer
     - Define protocol/interface for cross-platform repository consistency
     - Implement dependency injection for repository instances
     - Add repository factory pattern for testing and production environments
@@ -112,7 +112,7 @@
     - Write project deletion with calculation handling options
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 7. Implement Portfolio Unit Investment calculation mode
+- [x] 7. Implement Portfolio Unit Investment calculation mode
   - [x] 7.1 Add Portfolio Unit Investment enum and data model
     - Add new CalculationMode.portfolioUnitInvestment enum case
     - Extend SavedCalculation model to support portfolio unit investment parameters

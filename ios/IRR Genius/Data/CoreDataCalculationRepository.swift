@@ -11,40 +11,65 @@ class CoreDataCalculationRepository: CalculationRepository {
     private let container: NSPersistentContainer
     private let context: NSManagedObjectContext
     
-    init(container: NSPersistentContainer) {
+    init(container: NSPersistentContainer = CoreDataStack.shared.persistentContainer) {
         self.container = container
         self.context = container.viewContext
     }
     
     func saveCalculation(_ calculation: SavedCalculation) async throws {
-        try await context.perform {
-            let entity = SavedCalculationEntity(context: self.context)
-            entity.id = calculation.id
-            entity.name = calculation.name
-            entity.calculationType = Int16(calculation.calculationType.rawValue.hashValue)
-            entity.createdDate = calculation.createdDate
-            entity.modifiedDate = calculation.modifiedDate
-            entity.notes = calculation.notes
-            entity.tags = calculation.tags.joined(separator: ",")
-            entity.projectId = calculation.projectId
-            
-            // Encode input data as JSON
-            let inputData = CalculationInputData(
-                initialInvestment: calculation.initialInvestment,
-                outcomeAmount: calculation.outcomeAmount,
-                timeInMonths: calculation.timeInMonths,
-                irr: calculation.irr
-            )
-            entity.inputData = try JSONEncoder().encode(inputData)
-            
-            // Encode result data as JSON
-            let resultData = CalculationResultData(
-                calculatedResult: calculation.calculatedResult,
-                growthPoints: calculation.growthPoints
-            )
-            entity.resultData = try JSONEncoder().encode(resultData)
-            
-            try self.context.save()
+        do {
+            try await context.perform {
+                // Check if calculation already exists
+                let fetchRequest: NSFetchRequest<SavedCalculationEntity> = SavedCalculationEntity.fetchRequest()
+                fetchRequest.predicate = NSPredicate(format: "id == %@", calculation.id as CVarArg)
+                fetchRequest.fetchLimit = 1
+                
+                let entity: SavedCalculationEntity
+                if let existingEntity = try self.context.fetch(fetchRequest).first {
+                    entity = existingEntity
+                } else {
+                    entity = SavedCalculationEntity(context: self.context)
+                    entity.id = calculation.id
+                    entity.createdDate = calculation.createdDate
+                }
+                
+                // Update entity properties
+                entity.name = calculation.name
+                entity.calculationType = Int16(calculation.calculationType.rawValue.hashValue)
+                entity.modifiedDate = calculation.modifiedDate
+                entity.notes = calculation.notes
+                entity.tags = calculation.tagsJSON
+                entity.projectId = calculation.projectId
+                
+                // Encode comprehensive input data as JSON
+                let inputData = CalculationInputData(
+                    initialInvestment: calculation.initialInvestment,
+                    outcomeAmount: calculation.outcomeAmount,
+                    timeInMonths: calculation.timeInMonths,
+                    irr: calculation.irr,
+                    unitPrice: calculation.unitPrice,
+                    successRate: calculation.successRate,
+                    outcomePerUnit: calculation.outcomePerUnit,
+                    investorShare: calculation.investorShare,
+                    feePercentage: calculation.feePercentage,
+                    followOnInvestments: calculation.followOnInvestments
+                )
+                
+                let encoder = JSONEncoder()
+                encoder.dateEncodingStrategy = .iso8601
+                entity.inputData = try encoder.encode(inputData)
+                
+                // Encode result data as JSON
+                let resultData = CalculationResultData(
+                    calculatedResult: calculation.calculatedResult,
+                    growthPoints: calculation.growthPoints
+                )
+                entity.resultData = try encoder.encode(resultData)
+                
+                try self.context.save()
+            }
+        } catch {
+            throw RepositoryError.persistenceError(underlying: error)
         }
     }
     
@@ -116,23 +141,34 @@ class CoreDataCalculationRepository: CalculationRepository {
             throw RepositoryError.invalidData
         }
         
-        // Decode input data
+        // Decode input data with proper error handling
         var inputData: CalculationInputData?
         if let data = entity.inputData {
-            inputData = try JSONDecoder().decode(CalculationInputData.self, from: data)
+            do {
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                inputData = try decoder.decode(CalculationInputData.self, from: data)
+            } catch {
+                throw RepositoryError.persistenceError(underlying: error)
+            }
         }
         
-        // Decode result data
+        // Decode result data with proper error handling
         var resultData: CalculationResultData?
         if let data = entity.resultData {
-            resultData = try JSONDecoder().decode(CalculationResultData.self, from: data)
+            do {
+                let decoder = JSONDecoder()
+                resultData = try decoder.decode(CalculationResultData.self, from: data)
+            } catch {
+                throw RepositoryError.persistenceError(underlying: error)
+            }
         }
         
-        // Convert calculation type
+        // Convert calculation type with better mapping
         let calculationType = CalculationMode.allCases.first { $0.rawValue.hashValue == Int(entity.calculationType) } ?? .calculateIRR
         
-        // Parse tags
-        let tags = entity.tags?.components(separatedBy: ",").filter { !$0.isEmpty } ?? []
+        // Parse tags using the proper JSON method
+        let tags = SavedCalculation.tags(from: entity.tags)
         
         return try SavedCalculation(
             id: id,
@@ -145,7 +181,12 @@ class CoreDataCalculationRepository: CalculationRepository {
             outcomeAmount: inputData?.outcomeAmount,
             timeInMonths: inputData?.timeInMonths,
             irr: inputData?.irr,
-            followOnInvestments: nil, // Simplified for now
+            followOnInvestments: inputData?.followOnInvestments,
+            unitPrice: inputData?.unitPrice,
+            successRate: inputData?.successRate,
+            outcomePerUnit: inputData?.outcomePerUnit,
+            investorShare: inputData?.investorShare,
+            feePercentage: inputData?.feePercentage,
             calculatedResult: resultData?.calculatedResult,
             growthPoints: resultData?.growthPoints,
             notes: entity.notes,
@@ -160,6 +201,16 @@ private struct CalculationInputData: Codable {
     let outcomeAmount: Double?
     let timeInMonths: Double?
     let irr: Double?
+    
+    // Portfolio Unit Investment specific parameters
+    let unitPrice: Double?
+    let successRate: Double?
+    let outcomePerUnit: Double?
+    let investorShare: Double?
+    let feePercentage: Double?
+    
+    // Follow-on investments
+    let followOnInvestments: [FollowOnInvestment]?
 }
 
 private struct CalculationResultData: Codable {
