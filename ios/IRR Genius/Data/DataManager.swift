@@ -66,7 +66,7 @@ class DataManager: ObservableObject {
     
     // MARK: - Private Properties
     private let repositoryManager: RepositoryManager
-    private let cloudKitSyncService: CloudKitSyncService
+    private lazy var cloudKitSyncService: CloudKitSyncService = CloudKitSyncService()
     private var autoSaveTimer: Timer?
     private var draftSaveTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
@@ -74,12 +74,16 @@ class DataManager: ObservableObject {
     private var pendingCalculation: SavedCalculation?
     
     // MARK: - Initialization
-    init(repositoryManager: RepositoryManager = RepositoryManager(), cloudKitSyncService: CloudKitSyncService = CloudKitSyncService()) {
+    init(repositoryManager: RepositoryManager = RepositoryManager()) {
         self.repositoryManager = repositoryManager
-        self.cloudKitSyncService = cloudKitSyncService
         setupAutoSave()
-        setupCloudKitSync()
+        // CloudKit setup will happen lazily when cloudKitSyncService is first accessed
         loadInitialData()
+        
+        // Setup CloudKit sync after initialization
+        DispatchQueue.main.async {
+            self.setupCloudKitSync()
+        }
     }
     
     // MARK: - Auto-Save Setup
@@ -876,13 +880,12 @@ class DataManager: ObservableObject {
         } else {
             stopDraftSaveTimer()
         }
-    }nfig
-        
-        if config.isEnabled {
-            startDraftSaveTimer()
-        } else {
-            stopDraftSaveTimer()
-        }
+    }
+    
+    /// Refreshes data from repository
+    func refreshData() async {
+        await loadCalculations()
+        await loadProjects()
     }
     
     // MARK: - Cleanup
@@ -892,20 +895,4 @@ class DataManager: ObservableObject {
     }
 }
 
-// MARK: - CalculationMode Extension
-extension CalculationMode {
-    var displayName: String {
-        switch self {
-        case .calculateIRR:
-            return "IRR Calculation"
-        case .calculateOutcome:
-            return "Outcome Calculation"
-        case .calculateInitial:
-            return "Initial Investment Calculation"
-        case .calculateBlendedIRR:
-            return "Blended IRR Calculation"
-        case .portfolioUnitInvestment:
-            return "Portfolio Unit Investment"
-        }
-    }
-}
+// CalculationMode extension moved to Models/Enums.swift to avoid duplication

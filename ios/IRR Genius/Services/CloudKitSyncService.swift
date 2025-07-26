@@ -66,6 +66,7 @@ struct SyncConflict {
 }
 
 // MARK: - CloudKit Sync Service Protocol
+@MainActor
 protocol CloudKitSyncServiceProtocol: ObservableObject {
     var syncStatus: SyncStatus { get }
     var isCloudKitAvailable: Bool { get }

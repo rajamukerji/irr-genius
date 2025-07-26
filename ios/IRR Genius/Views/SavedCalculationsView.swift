@@ -58,8 +58,8 @@ struct SavedCalculationsView: View {
                             CalculationRowView(calculation: calculation)
                                 .swipeActions(edge: .trailing) {
                                     Button("Delete", role: .destructive) {
-                                        withAnimation {
-                                            dataManager.deleteCalculation(calculation)
+                                        Task {
+                                            await dataManager.deleteCalculation(calculation)
                                         }
                                     }
                                     Button("Export") {

@@ -8,7 +8,7 @@
 import SwiftUI
 
 // MARK: - Loading State Types
-enum LoadingState {
+enum LoadingState: Equatable {
     case idle
     case loading(message: String)
     case success(message: String)

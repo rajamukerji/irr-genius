@@ -282,12 +282,7 @@ struct SearchBar: View {
     }
 }
 
-// Extension to make CalculationMode conform to CaseIterable
-extension CalculationMode: CaseIterable {
-    public static var allCases: [CalculationMode] {
-        return [.calculateIRR, .calculateOutcome, .calculateInitial, .calculateBlendedIRR, .portfolioUnitInvestment]
-    }
-}
+// CalculationMode already conforms to CaseIterable in Models/Enums.swift
 
 #Preview {
     LoadCalculationView(isPresented: .constant(true)) { _ in }
