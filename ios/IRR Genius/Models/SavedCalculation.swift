@@ -486,7 +486,7 @@ enum ProjectValidationError: LocalizedError {
     }
 }
 
-struct Project: Identifiable, Codable {
+struct Project: Identifiable, Codable, Equatable, Hashable {
     let id: UUID
     let name: String
     let description: String?

@@ -51,110 +51,7 @@ struct ContentView: View {
     @State private var errorMessage: String?
     
     var body: some View {
-        HStack {
-            Spacer(minLength: 0)
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Header
-                    HeaderView()
-                    
-                    // Mode Selector
-                    ModeSelectorView(selectedMode: $selectedMode)
-                    
-                    // Load Calculation Button
-                    Button(action: { showingLoadCalculation = true }) {
-                        HStack {
-                            Image(systemName: "folder")
-                            Text("Load Calculation")
-                        }
-                        .foregroundColor(.blue)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
-                    }
-                    
-                    // Input Form based on selected mode
-                    switch selectedMode {
-                    case .calculateIRR:
-                        IRRCalculationView(
-                            initialInvestment: $initialInvestment,
-                            outcomeAmount: $outcomeAmount,
-                            timeInMonths: $timeInMonths,
-                            calculatedResult: $calculatedResult,
-                            isCalculating: $isCalculating,
-                            errorMessage: $errorMessage,
-                            onCalculate: calculateIRR
-                        )
-                    case .calculateOutcome:
-                        OutcomeCalculationView(
-                            initialInvestment: $outcomeInitialInvestment,
-                            irr: $outcomeIRR,
-                            timeInMonths: $outcomeTimeInMonths,
-                            calculatedResult: $calculatedResult,
-                            isCalculating: $isCalculating,
-                            errorMessage: $errorMessage,
-                            onCalculate: calculateOutcome
-                        )
-                    case .calculateInitial:
-                        InitialCalculationView(
-                            outcomeAmount: $initialOutcomeAmount,
-                            irr: $initialIRR,
-                            timeInMonths: $initialTimeInMonths,
-                            calculatedResult: $calculatedResult,
-                            isCalculating: $isCalculating,
-                            errorMessage: $errorMessage,
-                            onCalculate: calculateInitialInvestment
-                        )
-                    case .calculateBlendedIRR:
-                        BlendedIRRCalculationView(
-                            initialInvestment: $blendedInitialInvestment,
-                            initialDate: $blendedInitialDate,
-                            finalValuation: $blendedFinalValuation,
-                            timeInMonths: $blendedTimeInMonths,
-                            followOnInvestments: $followOnInvestments,
-                            calculatedResult: $calculatedResult,
-                            isCalculating: $isCalculating,
-                            errorMessage: $errorMessage,
-                            showingAddInvestment: $showingAddInvestment,
-                            onCalculate: calculateBlendedIRR
-                        )
-                    case .portfolioUnitInvestment:
-                        PortfolioUnitInvestmentView(
-                            initialInvestment: $portfolioInitialInvestment,
-                            unitPrice: $portfolioUnitPrice,
-                            numberOfUnits: $portfolioNumberOfUnits,
-                            successRate: $portfolioSuccessRate,
-                            timeInMonths: $portfolioTimeInMonths,
-                            followOnInvestments: $portfolioFollowOnInvestments,
-                            calculatedResult: $calculatedResult,
-                            isCalculating: $isCalculating,
-                            errorMessage: $errorMessage,
-                            showingAddInvestment: $showingAddPortfolioInvestment,
-                            onCalculate: calculatePortfolioUnitInvestment
-                        )
-                    }
-                    
-                    // Results Section
-                    if let result = calculatedResult {
-                        ResultCard(
-                            mode: selectedMode,
-                            result: result,
-                            inputs: getInputsForMode()
-                        )
-                        if let chartData = chartDataForCurrentInputs() {
-                            GrowthChartView(data: chartData)
-                        }
-                    }
-                    
-                    Spacer(minLength: 50)
-                }
-                .frame(maxWidth: 420)
-                .padding(.vertical, 32)
-            }
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, alignment: .center)
+        mainView
         .sheet(isPresented: $showingAddInvestment) {
             AddFollowOnInvestmentView(
                 isPresented: $showingAddInvestment,
@@ -218,6 +115,121 @@ struct ContentView: View {
         .onChange(of: portfolioSuccessRate) { _ in updateInputTracking() }
         .onChange(of: portfolioTimeInMonths) { _ in updateInputTracking() }
         .onChange(of: portfolioFollowOnInvestments) { _ in updateInputTracking() }
+    }
+    
+    // MARK: - Computed Properties
+    
+    @ViewBuilder
+    private var mainView: some View {
+        HStack {
+            Spacer(minLength: 0)
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    HeaderView()
+                    
+                    // Mode Selector
+                    ModeSelectorView(selectedMode: $selectedMode)
+                    
+                    // Load Calculation Button
+                    Button(action: { showingLoadCalculation = true }) {
+                        HStack {
+                            Image(systemName: "folder")
+                            Text("Load Calculation")
+                        }
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    
+                    // Input Form based on selected mode
+                    calculationView
+                    
+                    // Results Section
+                    if let result = calculatedResult {
+                        ResultCard(
+                            mode: selectedMode,
+                            result: result,
+                            inputs: getInputsForMode()
+                        )
+                        if let chartData = chartDataForCurrentInputs() {
+                            GrowthChartView(data: chartData)
+                        }
+                    }
+                    
+                    Spacer(minLength: 50)
+                }
+                .frame(maxWidth: 420)
+                .padding(.vertical, 32)
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+    
+    @ViewBuilder
+    private var calculationView: some View {
+        switch selectedMode {
+        case .calculateIRR:
+            IRRCalculationView(
+                initialInvestment: $initialInvestment,
+                outcomeAmount: $outcomeAmount,
+                timeInMonths: $timeInMonths,
+                calculatedResult: $calculatedResult,
+                isCalculating: $isCalculating,
+                errorMessage: $errorMessage,
+                onCalculate: calculateIRR
+            )
+        case .calculateOutcome:
+            OutcomeCalculationView(
+                initialInvestment: $outcomeInitialInvestment,
+                irr: $outcomeIRR,
+                timeInMonths: $outcomeTimeInMonths,
+                calculatedResult: $calculatedResult,
+                isCalculating: $isCalculating,
+                errorMessage: $errorMessage,
+                onCalculate: calculateOutcome
+            )
+        case .calculateInitial:
+            InitialCalculationView(
+                outcomeAmount: $initialOutcomeAmount,
+                irr: $initialIRR,
+                timeInMonths: $initialTimeInMonths,
+                calculatedResult: $calculatedResult,
+                isCalculating: $isCalculating,
+                errorMessage: $errorMessage,
+                onCalculate: calculateInitialInvestment
+            )
+        case .calculateBlendedIRR:
+            BlendedIRRCalculationView(
+                initialInvestment: $blendedInitialInvestment,
+                initialDate: $blendedInitialDate,
+                finalValuation: $blendedFinalValuation,
+                timeInMonths: $blendedTimeInMonths,
+                followOnInvestments: $followOnInvestments,
+                calculatedResult: $calculatedResult,
+                isCalculating: $isCalculating,
+                errorMessage: $errorMessage,
+                showingAddInvestment: $showingAddInvestment,
+                onCalculate: calculateBlendedIRR
+            )
+        case .portfolioUnitInvestment:
+            PortfolioUnitInvestmentView(
+                initialInvestment: $portfolioInitialInvestment,
+                unitPrice: $portfolioUnitPrice,
+                numberOfUnits: $portfolioNumberOfUnits,
+                successRate: $portfolioSuccessRate,
+                timeInMonths: $portfolioTimeInMonths,
+                followOnInvestments: $portfolioFollowOnInvestments,
+                calculatedResult: $calculatedResult,
+                isCalculating: $isCalculating,
+                errorMessage: $errorMessage,
+                showingAddInvestment: $showingAddPortfolioInvestment,
+                onCalculate: calculatePortfolioUnitInvestment
+            )
+        }
     }
     
     // MARK: - Calculation Methods

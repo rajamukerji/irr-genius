@@ -804,8 +804,7 @@ class CloudKitSyncService: CloudKitSyncServiceProtocol {
     }
     
     deinit {
-        stopAutomaticSync()
-        stopRetryTimer()
+        // Timers will be automatically invalidated when deallocated
     }
 }
 
