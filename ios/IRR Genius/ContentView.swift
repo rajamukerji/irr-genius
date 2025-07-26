@@ -51,70 +51,49 @@ struct ContentView: View {
     @State private var errorMessage: String?
     
     var body: some View {
+        configuredMainView
+    }
+    
+    private var configuredMainView: some View {
         mainView
-        .sheet(isPresented: $showingAddInvestment) {
-            AddFollowOnInvestmentView(
-                isPresented: $showingAddInvestment,
-                followOnInvestments: $followOnInvestments,
-                initialInvestmentDate: blendedInitialDate
-            )
-        }
-        .sheet(isPresented: $showingAddPortfolioInvestment) {
-            AddPortfolioFollowOnInvestmentView(
-                isPresented: $showingAddPortfolioInvestment,
-                followOnInvestments: $portfolioFollowOnInvestments,
-                initialInvestmentDate: portfolioInitialDate
-            )
-        }
-        .sheet(isPresented: $dataManager.saveDialogData.isVisible) {
-            SaveCalculationDialog()
+            .sheet(isPresented: $showingAddInvestment) {
+                AddFollowOnInvestmentView(
+                    isPresented: $showingAddInvestment,
+                    followOnInvestments: $followOnInvestments,
+                    initialInvestmentDate: blendedInitialDate
+                )
+            }
+            .sheet(isPresented: $showingAddPortfolioInvestment) {
+                AddPortfolioFollowOnInvestmentView(
+                    isPresented: $showingAddPortfolioInvestment,
+                    followOnInvestments: $portfolioFollowOnInvestments,
+                    initialInvestmentDate: portfolioInitialDate
+                )
+            }
+            .sheet(isPresented: $dataManager.saveDialogData.isVisible) {
+                SaveCalculationDialog()
+                    .environmentObject(dataManager)
+            }
+            .sheet(isPresented: $showingLoadCalculation) {
+                LoadCalculationView(isPresented: $showingLoadCalculation) { calculation in
+                    loadCalculation(calculation)
+                }
                 .environmentObject(dataManager)
-        }
-        .sheet(isPresented: $showingLoadCalculation) {
-            LoadCalculationView(isPresented: $showingLoadCalculation) { calculation in
-                loadCalculation(calculation)
             }
             .environmentObject(dataManager)
-        }
-        .environmentObject(dataManager)
-        .loadingState(dataManager.loadingState) {
-            // Retry action for failed operations
-            Task {
-                await dataManager.loadCalculations()
+            .loadingState(dataManager.loadingState) {
+                // Retry action for failed operations
+                Task {
+                    await dataManager.loadCalculations()
+                }
             }
-        }
-        .overlay(alignment: .top) {
-            BackgroundSyncIndicator(
-                isVisible: .constant(dataManager.isSyncing),
-                message: "Syncing..."
-            )
-            .padding(.top, 8)
-        }
-        .onChange(of: selectedMode) { _ in
-            if dataManager.showUnsavedChangesWarning() {
-                // Could show an alert here for unsaved changes
+            .overlay(alignment: .top) {
+                BackgroundSyncIndicator(
+                    isVisible: .constant(dataManager.isSyncing),
+                    message: "Syncing..."
+                )
+                .padding(.top, 8)
             }
-            updateInputTracking()
-        }
-        .onChange(of: initialInvestment) { _ in updateInputTracking() }
-        .onChange(of: outcomeAmount) { _ in updateInputTracking() }
-        .onChange(of: timeInMonths) { _ in updateInputTracking() }
-        .onChange(of: outcomeInitialInvestment) { _ in updateInputTracking() }
-        .onChange(of: outcomeIRR) { _ in updateInputTracking() }
-        .onChange(of: outcomeTimeInMonths) { _ in updateInputTracking() }
-        .onChange(of: initialOutcomeAmount) { _ in updateInputTracking() }
-        .onChange(of: initialIRR) { _ in updateInputTracking() }
-        .onChange(of: initialTimeInMonths) { _ in updateInputTracking() }
-        .onChange(of: blendedInitialInvestment) { _ in updateInputTracking() }
-        .onChange(of: blendedFinalValuation) { _ in updateInputTracking() }
-        .onChange(of: blendedTimeInMonths) { _ in updateInputTracking() }
-        .onChange(of: followOnInvestments) { _ in updateInputTracking() }
-        .onChange(of: portfolioInitialInvestment) { _ in updateInputTracking() }
-        .onChange(of: portfolioUnitPrice) { _ in updateInputTracking() }
-        .onChange(of: portfolioNumberOfUnits) { _ in updateInputTracking() }
-        .onChange(of: portfolioSuccessRate) { _ in updateInputTracking() }
-        .onChange(of: portfolioTimeInMonths) { _ in updateInputTracking() }
-        .onChange(of: portfolioFollowOnInvestments) { _ in updateInputTracking() }
     }
     
     // MARK: - Computed Properties
@@ -662,7 +641,7 @@ struct ContentView: View {
             portfolioInitialInvestment = formatCurrency(calculation.initialInvestment)
             portfolioUnitPrice = formatCurrency(calculation.unitPrice)
             portfolioNumberOfUnits = formatNumber(calculation.outcomePerUnit) // Using outcomePerUnit as number of units
-            portfolioSuccessRate = formatNumber(calculation.successRate) ?? "100"
+            portfolioSuccessRate = formatNumber(calculation.successRate)
             portfolioTimeInMonths = formatNumber(calculation.timeInMonths)
             portfolioFollowOnInvestments = calculation.followOnInvestments ?? []
             calculatedResult = calculation.calculatedResult
