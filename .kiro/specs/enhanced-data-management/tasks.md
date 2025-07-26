@@ -46,44 +46,44 @@
     - Add repository factory pattern for testing and production environments
     - _Requirements: 1.1, 1.2_
 
-- [ ] 4. Implement file import functionality
-  - [ ] 4.1 Create CSV import service
+- [x] 4. Implement file import functionality
+  - [x] 4.1 Create CSV import service
     - Write CSV parser with configurable delimiters and headers
     - Implement data validation and type conversion for financial data
     - Add column mapping interface for user-defined field assignments
     - Create preview functionality before final import
     - _Requirements: 3.1, 3.2, 3.4, 3.5_
 
-  - [ ] 4.2 Create Excel import service
+  - [x] 4.2 Create Excel import service
     - Implement Excel file reader supporting .xlsx and .xls formats
     - Add sheet selection and range specification capabilities
     - Write data extraction logic with proper error handling
     - Implement same validation and mapping as CSV import
     - _Requirements: 3.1, 3.2, 3.4, 3.5_
 
-  - [ ] 4.3 Build import validation and mapping UI
+  - [x] 4.3 Build import validation and mapping UI
     - Create file picker interface for import file selection
     - Implement data preview table with column mapping controls
     - Add validation error display with specific row/column feedback
     - Write import confirmation dialog with data summary
     - _Requirements: 3.2, 3.4, 3.5, 3.6_
 
-- [ ] 5. Implement file export functionality
-  - [ ] 5.1 Create PDF export service
+- [x] 5. Implement file export functionality
+  - [x] 5.1 Create PDF export service
     - Write PDF generation logic with calculation details and charts
     - Implement professional formatting with company branding options
     - Add chart rendering to PDF with proper scaling
     - Create batch export functionality for multiple calculations
     - _Requirements: 4.1, 4.2, 4.4_
 
-  - [ ] 5.2 Create CSV/Excel export service
+  - [x] 5.2 Create CSV/Excel export service
     - Implement structured data export with all calculation parameters
     - Write export format that can be re-imported into the app
     - Add custom field selection for export customization
     - Create export templates for different use cases
     - _Requirements: 4.1, 4.3, 4.4_
 
-  - [ ] 5.3 Integrate native sharing capabilities
+  - [x] 5.3 Integrate native sharing capabilities
     - Implement iOS share sheet integration for export files
     - Add Android sharing intent for file distribution
     - Write temporary file management for export operations
@@ -133,7 +133,7 @@
     - Write validation and error handling for portfolio unit inputs
     - _Requirements: 2.1, 2.2_
 
-- [ ] 8. Enhance calculation workflow with persistence
+- [-] 8. Enhance calculation workflow with persistence
   - [ ] 8.1 Add auto-save functionality to calculations
     - Implement automatic saving after successful calculations
     - Add save dialog with naming and project assignment options

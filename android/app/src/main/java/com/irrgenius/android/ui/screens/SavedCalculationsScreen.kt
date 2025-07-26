@@ -13,9 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.irrgenius.android.DataManager
-import com.irrgenius.android.SavedCalculation
-import com.irrgenius.android.Project
+import com.irrgenius.android.data.DataManager
+import com.irrgenius.android.data.models.SavedCalculation
+import com.irrgenius.android.data.models.Project
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +30,9 @@ fun SavedCalculationsScreen(
     var searchText by remember { mutableStateOf("") }
     var showingImportSheet by remember { mutableStateOf(false) }
     var selectedProject by remember { mutableStateOf<Project?>(null) }
+    
+    val isLoading by dataManager.isLoading
+    val errorMessage by dataManager.errorMessage
     
     val filteredCalculations = remember(dataManager.calculations, searchText, selectedProject) {
         dataManager.calculations.filter { calculation ->
@@ -48,11 +51,55 @@ fun SavedCalculationsScreen(
         TopAppBar(
             title = { Text("Saved Calculations") },
             actions = {
-                IconButton(onClick = { showingImportSheet = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    IconButton(onClick = { showingImportSheet = true }) {
+                        Icon(Icons.Default.Add, contentDescription = "Add")
+                    }
                 }
             }
         )
+        
+        // Error Message
+        errorMessage?.let { error ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Error,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { dataManager.clearError() }) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Dismiss error",
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+            }
+        }
         
         // Search Bar
         OutlinedTextField(

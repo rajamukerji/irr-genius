@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.irrgenius.android.DataManager
-import com.irrgenius.android.Project
+import com.irrgenius.android.data.DataManager
+import com.irrgenius.android.data.models.Project
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -336,8 +336,7 @@ fun CreateProjectDialog(
         }
     )
 }
-@Com
-posable
+@Composable
 fun EditProjectDialog(
     project: Project,
     onDismiss: () -> Unit,
