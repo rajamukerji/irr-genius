@@ -32,7 +32,7 @@ struct FollowOnInvestmentList: View {
     }
     
     private func deleteInvestment(at index: Int) {
-        withAnimation(.easeInOut(duration: 0.3)) {
+        _ = withAnimation(.easeInOut(duration: 0.3)) {
             followOnInvestments.remove(at: index)
         }
     }

@@ -180,22 +180,22 @@ struct PortfolioUnitInvestmentView: View {
         .onAppear {
             validationErrors = validateInputs()
         }
-        .onChange(of: initialInvestment) { _ in
+        .onChange(of: initialInvestment) {
             validationErrors = validateInputs()
         }
-        .onChange(of: unitPrice) { _ in
+        .onChange(of: unitPrice) {
             validationErrors = validateInputs()
         }
-        .onChange(of: numberOfUnits) { _ in
+        .onChange(of: numberOfUnits) {
             validationErrors = validateInputs()
         }
-        .onChange(of: successRate) { _ in
+        .onChange(of: successRate) {
             validationErrors = validateInputs()
         }
-        .onChange(of: timeInMonths) { _ in
+        .onChange(of: timeInMonths) {
             validationErrors = validateInputs()
         }
-        .onChange(of: followOnInvestments) { _ in
+        .onChange(of: followOnInvestments) {
             validationErrors = validateInputs()
         }
     }
