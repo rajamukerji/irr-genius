@@ -35,7 +35,7 @@ enum FollowOnInvestmentValidationError: LocalizedError {
 }
 
 // Data structure for follow-on investments
-struct FollowOnInvestment: Identifiable, Codable {
+struct FollowOnInvestment: Identifiable, Codable, Equatable {
     let id: UUID
     var timingType: TimingType
     var date: Date // Used when timingType is .absoluteDate
