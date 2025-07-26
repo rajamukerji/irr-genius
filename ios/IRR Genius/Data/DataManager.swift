@@ -314,7 +314,10 @@ class DataManager: ObservableObject {
     
     /// Updates input tracking for unsaved changes detection
     func updateInputs(_ inputs: [String: Any]) {
-        let hasChanges = !inputs.isEmpty && inputs != lastCalculationInputs
+        // Compare by converting to string representations since [String: Any] is not Equatable
+        let currentInputsDescription = inputs.description
+        let lastInputsDescription = lastCalculationInputs.description
+        let hasChanges = !inputs.isEmpty && currentInputsDescription != lastInputsDescription
         
         if hasChanges {
             unsavedChanges = UnsavedChanges(
@@ -492,8 +495,8 @@ class DataManager: ObservableObject {
                     name: "Untitled Outcome Calculation",
                     calculationType: calculationType,
                     initialInvestment: inputs["Initial Investment"] as? Double,
-                    irr: inputs["IRR"] as? Double,
                     timeInMonths: inputs["Time Period (Months)"] as? Double,
+                    irr: inputs["IRR"] as? Double,
                     calculatedResult: result,
                     growthPoints: growthPoints
                 )
@@ -503,8 +506,8 @@ class DataManager: ObservableObject {
                     name: "Untitled Initial Investment Calculation",
                     calculationType: calculationType,
                     outcomeAmount: inputs["Outcome Amount"] as? Double,
-                    irr: inputs["IRR"] as? Double,
                     timeInMonths: inputs["Time Period (Months)"] as? Double,
+                    irr: inputs["IRR"] as? Double,
                     calculatedResult: result,
                     growthPoints: growthPoints
                 )
@@ -527,9 +530,9 @@ class DataManager: ObservableObject {
                     calculationType: calculationType,
                     initialInvestment: inputs["Initial Investment"] as? Double,
                     timeInMonths: inputs["Time Period (Months)"] as? Double,
+                    followOnInvestments: inputs["Follow-on Investments"] as? [FollowOnInvestment],
                     unitPrice: inputs["Unit Price"] as? Double,
                     successRate: inputs["Success Rate (%)"] as? Double,
-                    followOnInvestments: inputs["Follow-on Investments"] as? [FollowOnInvestment],
                     calculatedResult: result,
                     growthPoints: growthPoints
                 )

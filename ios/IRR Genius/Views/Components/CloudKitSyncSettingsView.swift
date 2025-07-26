@@ -219,7 +219,7 @@ struct CloudKitSyncSettingsView: View {
         case .syncing:
             return "Syncing..."
         case .success(let date):
-            return "Last synced \(date, formatter: relativeDateFormatter)"
+            return "Last synced \(relativeDateFormatter.localizedString(for: date, relativeTo: Date()))"
         case .error(let error):
             return "Sync failed: \(error.localizedDescription)"
         }
@@ -464,9 +464,14 @@ struct DetailRow: View {
         self.value = value
     }
     
-    init<T>(label: String, value: T, formatter: NumberFormatter) where T: Numeric {
+    init(label: String, value: Int, formatter: NumberFormatter) {
         self.label = label
-        self.value = formatter.string(from: NSNumber(value: Double(exactly: value) ?? 0)) ?? "\(value)"
+        self.value = formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+    
+    init(label: String, value: Double, formatter: NumberFormatter) {
+        self.label = label
+        self.value = formatter.string(from: NSNumber(value: value)) ?? "\(value)"
     }
     
     init(label: String, value: Date, formatter: DateFormatter) {

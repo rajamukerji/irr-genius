@@ -283,7 +283,7 @@ struct ColumnMappingView: View {
 struct ColumnMappingRow: View {
     let columnName: String
     let selectedField: CalculationField?
-    let onFieldSelected: (CalculationField?) -> Unit
+    let onFieldSelected: (CalculationField?) -> Void
     
     var body: some View {
         HStack {

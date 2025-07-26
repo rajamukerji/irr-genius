@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Foundation
+import UIKit
 
 struct PortfolioUnitInvestmentView: View {
     @Binding var initialInvestment: String
@@ -134,7 +136,7 @@ struct PortfolioUnitInvestmentView: View {
                     title: "Initial Investment Amount",
                     placeholder: "Enter initial investment amount",
                     text: $initialInvestment,
-                    formatType: .currency
+                    formatType: InputField.FormatType.currency
                 )
                 
                 HStack(spacing: 12) {
@@ -405,7 +407,7 @@ struct PortfolioUnitInvestmentView: View {
             .disabled(!isInputValid)
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(UIColor.systemGray6))
         .cornerRadius(12)
     }
 }
@@ -421,7 +423,7 @@ struct PortfolioFollowOnInvestmentRow: View {
     private var batchSummary: String {
         let amount = Double(investment.amount.replacingOccurrences(of: ",", with: "")) ?? 0
         let unitPrice = Double(investment.valuation.replacingOccurrences(of: ",", with: "")) ?? 0
-        let units = unitPrice > 0 ? amount / unitPrice : 0
+        let units = unitPrice > 0 ? amount / unitPrice : 0.0
         return "\(NumberFormatting.formatNumber(units)) units @ \(NumberFormatting.formatCurrency(unitPrice))"
     }
     
@@ -536,11 +538,11 @@ struct PortfolioFollowOnInvestmentRow: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(Color(UIColor.systemBackground))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.systemGray4), lineWidth: 1)
+                .stroke(Color(UIColor.systemGray4), lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
     }

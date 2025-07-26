@@ -342,7 +342,8 @@ class PDFExportServiceImpl: PDFExportService {
         currentY += 15
         
         for (index, investment) in investments.enumerated() {
-            let investmentText = "Investment \(index + 1): \(NumberFormatter.currency.string(from: NSNumber(value: investment.amount)) ?? "$0")"
+            let amountValue = Double(investment.amount) ?? 0.0
+            let investmentText = "Investment \(index + 1): \(NumberFormatter.currency.string(from: NSNumber(value: amountValue)) ?? "$0")"
             currentY = drawText(investmentText, font: .systemFont(ofSize: 12), color: .black,
                                in: context, at: CGPoint(x: margin + 10, y: currentY), maxWidth: contentWidth - 10)
             currentY += 5

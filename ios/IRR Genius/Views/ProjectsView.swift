@@ -81,7 +81,9 @@ struct ProjectsView: View {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
                 if let project = projectToDelete {
-                    dataManager.deleteProject(project)
+                    Task {
+                        await dataManager.deleteProject(project)
+                    }
                 }
             }
         } message: {
@@ -112,7 +114,7 @@ struct ProjectRowView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("\(project.calculationCount)")
+                    Text("0")
                         .font(.title3)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
@@ -183,10 +185,17 @@ struct CreateProjectView: View {
                         let trimmedName = projectName.trimmingCharacters(in: .whitespacesAndNewlines)
                         let trimmedDescription = projectDescription.trimmingCharacters(in: .whitespacesAndNewlines)
                         
-                        dataManager.createProject(
-                            name: trimmedName,
-                            description: trimmedDescription.isEmpty ? nil : trimmedDescription
-                        )
+                        Task {
+                            do {
+                                let newProject = try Project(
+                                    name: trimmedName,
+                                    description: trimmedDescription.isEmpty ? nil : trimmedDescription
+                                )
+                                await dataManager.saveProject(newProject)
+                            } catch {
+                                print("Failed to create project: \(error)")
+                            }
+                        }
                         isPresented = false
                     }
                     .disabled(projectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -222,19 +231,23 @@ struct EditProjectView: View {
                         .lineLimit(3...6)
                 }
                 
-                Section(header: Text("Project Information")) {
-                    HStack {
-                        Text("Created")
-                        Spacer()
-                        Text(project.createdDate, style: .date)
-                            .foregroundColor(.secondary)
+                Section {
+                    Group {
+                        HStack {
+                            Text("Created")
+                            Spacer()
+                            Text(project.createdDate, style: .date)
+                                .foregroundColor(.secondary)
+                        }
+                        HStack {
+                            Text("Calculations")
+                            Spacer()
+                            Text("0")
+                                .foregroundColor(.secondary)
+                        }
                     }
-                    HStack {
-                        Text("Calculations")
-                        Spacer()
-                        Text("\(project.calculationCount)")
-                            .foregroundColor(.secondary)
-                    }
+                } header: {
+                    Text("Project Information")
                 }
             }
             .navigationTitle("Edit Project")
@@ -250,11 +263,19 @@ struct EditProjectView: View {
                         let trimmedName = projectName.trimmingCharacters(in: .whitespacesAndNewlines)
                         let trimmedDescription = projectDescription.trimmingCharacters(in: .whitespacesAndNewlines)
                         
-                        dataManager.updateProject(
-                            project,
-                            name: trimmedName,
-                            description: trimmedDescription.isEmpty ? nil : trimmedDescription
-                        )
+                        Task {
+                            do {
+                                let updatedProject = try Project(
+                                    id: project.id,
+                                    name: trimmedName,
+                                    description: trimmedDescription.isEmpty ? nil : trimmedDescription,
+                                    createdDate: project.createdDate
+                                )
+                                await dataManager.saveProject(updatedProject)
+                            } catch {
+                                print("Failed to update project: \(error)")
+                            }
+                        }
                         onDismiss()
                     }
                     .disabled(projectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
