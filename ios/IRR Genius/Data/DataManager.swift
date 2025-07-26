@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import Combine
 import UIKit
+import CloudKit
 
 // MARK: - Auto-Save Configuration
 struct AutoSaveConfiguration {
@@ -58,9 +59,14 @@ class DataManager: ObservableObject {
     @Published var loadingState: LoadingState = .idle
     @Published var syncProgress: Double = 0.0
     @Published var isSyncing: Bool = false
+    @Published var syncStatus: SyncStatus = .idle
+    @Published var isCloudKitEnabled: Bool = false
+    @Published var lastSyncDate: Date? = nil
+    @Published var pendingConflicts: [SyncConflict] = []
     
     // MARK: - Private Properties
     private let repositoryManager: RepositoryManager
+    private let cloudKitSyncService: CloudKitSyncService
     private var autoSaveTimer: Timer?
     private var draftSaveTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
@@ -68,9 +74,11 @@ class DataManager: ObservableObject {
     private var pendingCalculation: SavedCalculation?
     
     // MARK: - Initialization
-    init(repositoryManager: RepositoryManager = RepositoryManager()) {
+    init(repositoryManager: RepositoryManager = RepositoryManager(), cloudKitSyncService: CloudKitSyncService = CloudKitSyncService()) {
         self.repositoryManager = repositoryManager
+        self.cloudKitSyncService = cloudKitSyncService
         setupAutoSave()
+        setupCloudKitSync()
         loadInitialData()
     }
     
@@ -94,6 +102,36 @@ class DataManager: ObservableObject {
     private func stopDraftSaveTimer() {
         draftSaveTimer?.invalidate()
         draftSaveTimer = nil
+    }
+    
+    // MARK: - CloudKit Sync Setup
+    private func setupCloudKitSync() {
+        // Observe CloudKit sync service properties
+        cloudKitSyncService.$syncStatus
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                self?.syncStatus = status
+                self?.isSyncing = status.isActive
+                self?.lastSyncDate = status.lastSyncDate
+            }
+            .store(in: &cancellables)
+        
+        cloudKitSyncService.$syncProgress
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] progress in
+                self?.syncProgress = progress
+            }
+            .store(in: &cancellables)
+        
+        cloudKitSyncService.$pendingConflicts
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] conflicts in
+                self?.pendingConflicts = conflicts
+            }
+            .store(in: &cancellables)
+        
+        // Check if CloudKit is available and enabled
+        isCloudKitEnabled = cloudKitSyncService.isCloudKitAvailable && UserDefaults.standard.bool(forKey: "CloudKitSyncEnabled")
     }
     
     // MARK: - Data Loading
@@ -361,6 +399,10 @@ class DataManager: ObservableObject {
                 calculations.insert(calculation, at: 0)
             }
             clearUnsavedChanges()
+            
+            // Sync to CloudKit in background
+            await syncCalculationToCloud(calculation)
+            
         case .failure(let error):
             errorMessage = error.localizedDescription
         }
@@ -399,6 +441,10 @@ class DataManager: ObservableObject {
             } else {
                 projects.insert(project, at: 0)
             }
+            
+            // Sync to CloudKit in background
+            await syncProjectToCloud(project)
+            
         case .failure(let error):
             errorMessage = error.localizedDescription
         }
@@ -743,11 +789,94 @@ class DataManager: ObservableObject {
         }
     }
     
+    // MARK: - CloudKit Sync Methods
+    
+    /// Enables CloudKit synchronization
+    func enableCloudKitSync() async {
+        do {
+            try await cloudKitSyncService.enableSync()
+            isCloudKitEnabled = true
+            UserDefaults.standard.set(true, forKey: "CloudKitSyncEnabled")
+        } catch {
+            errorMessage = "Failed to enable CloudKit sync: \(error.localizedDescription)"
+        }
+    }
+    
+    /// Disables CloudKit synchronization
+    func disableCloudKitSync() async {
+        do {
+            try await cloudKitSyncService.disableSync()
+            isCloudKitEnabled = false
+            UserDefaults.standard.set(false, forKey: "CloudKitSyncEnabled")
+        } catch {
+            errorMessage = "Failed to disable CloudKit sync: \(error.localizedDescription)"
+        }
+    }
+    
+    /// Manually triggers sync
+    func manualSync() async {
+        guard isCloudKitEnabled else {
+            errorMessage = "CloudKit sync is not enabled"
+            return
+        }
+        
+        do {
+            try await cloudKitSyncService.syncCalculations()
+            try await cloudKitSyncService.syncProjects()
+            await loadCalculations()
+            await loadProjects()
+        } catch {
+            errorMessage = "Sync failed: \(error.localizedDescription)"
+        }
+    }
+    
+    /// Resolves a sync conflict
+    func resolveSyncConflict(_ conflict: SyncConflict, resolution: ConflictResolution) async {
+        do {
+            try await cloudKitSyncService.resolveConflict(conflict, resolution: resolution)
+            await loadCalculations()
+            await loadProjects()
+        } catch {
+            errorMessage = "Failed to resolve conflict: \(error.localizedDescription)"
+        }
+    }
+    
+    /// Uploads a calculation to CloudKit after local save
+    private func syncCalculationToCloud(_ calculation: SavedCalculation) async {
+        guard isCloudKitEnabled else { return }
+        
+        do {
+            try await cloudKitSyncService.uploadCalculation(calculation)
+        } catch {
+            print("Failed to sync calculation to cloud: \(error)")
+            // Don't show error to user for background sync failures
+        }
+    }
+    
+    /// Uploads a project to CloudKit after local save
+    private func syncProjectToCloud(_ project: Project) async {
+        guard isCloudKitEnabled else { return }
+        
+        do {
+            try await cloudKitSyncService.uploadProject(project)
+        } catch {
+            print("Failed to sync project to cloud: \(error)")
+            // Don't show error to user for background sync failures
+        }
+    }
+    
     // MARK: - Configuration
     
     /// Updates auto-save configuration
     func updateAutoSaveConfiguration(_ config: AutoSaveConfiguration) {
         autoSaveConfiguration = config
+        
+        if config.isEnabled {
+            startDraftSaveTimer()
+        } else {
+            stopDraftSaveTimer()
+        }
+    }nfig
         
         if config.isEnabled {
             startDraftSaveTimer()

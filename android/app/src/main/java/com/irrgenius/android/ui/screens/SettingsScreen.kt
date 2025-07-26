@@ -14,10 +14,18 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
-    var syncEnabled by remember { mutableStateOf(false) }
+fun SettingsScreen(
+    dataManager: com.irrgenius.android.data.DataManager,
+    onNavigateToCloudSync: () -> Unit,
+    onNavigateToImport: () -> Unit
+) {
+    val isSyncEnabled by dataManager.isSyncEnabled.collectAsState()
+    val syncStatus by dataManager.syncStatus.collectAsState()
+    val pendingConflicts by dataManager.pendingConflicts.collectAsState()
+    
     var autoSaveEnabled by remember { mutableStateOf(true) }
     var showingAbout by remember { mutableStateOf(false) }
+    var showingClearDataDialog by remember { mutableStateOf(false) }
     
     Column(
         modifier = Modifier.fillMaxSize()
@@ -34,12 +42,12 @@ fun SettingsScreen() {
         ) {
             item {
                 SettingsSection(title = "Data Management") {
-                    SettingsToggleItem(
-                        icon = Icons.Default.Cloud,
-                        title = "Cloud Sync",
-                        description = "Sync your data across devices",
-                        checked = syncEnabled,
-                        onCheckedChange = { syncEnabled = it }
+                    // Cloud Sync Settings
+                    CloudSyncSettingsItem(
+                        isSyncEnabled = isSyncEnabled,
+                        syncStatus = syncStatus,
+                        pendingConflicts = pendingConflicts,
+                        onClick = onNavigateToCloudSync
                     )
                     
                     SettingsToggleItem(
@@ -55,7 +63,7 @@ fun SettingsScreen() {
                         title = "Clear All Data",
                         description = "Remove all saved calculations and projects",
                         iconTint = MaterialTheme.colorScheme.error,
-                        onClick = { /* TODO: Implement data clearing */ }
+                        onClick = { showingClearDataDialog = true }
                     )
                 }
             }
@@ -103,6 +111,126 @@ fun SettingsScreen() {
             onDismiss = { showingAbout = false }
         )
     }
+    
+    if (showingClearDataDialog) {
+        ClearDataDialog(
+            onDismiss = { showingClearDataDialog = false },
+            onConfirm = {
+                // Clear all data
+                dataManager.calculations.clear()
+                dataManager.projects.clear()
+                showingClearDataDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun CloudSyncSettingsItem(
+    isSyncEnabled: Boolean,
+    syncStatus: com.irrgenius.android.data.sync.CloudSyncService.SyncStatus,
+    pendingConflicts: List<com.irrgenius.android.data.sync.CloudSyncService.SyncConflict>,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Cloud,
+            contentDescription = null,
+            tint = if (isSyncEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = "Cloud Sync",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+            
+            val statusText = when {
+                !isSyncEnabled -> "Disabled"
+                syncStatus is com.irrgenius.android.data.sync.CloudSyncService.SyncStatus.Syncing -> "Syncing..."
+                syncStatus is com.irrgenius.android.data.sync.CloudSyncService.SyncStatus.Success -> "Enabled"
+                syncStatus is com.irrgenius.android.data.sync.CloudSyncService.SyncStatus.Error -> "Error"
+                else -> "Ready"
+            }
+            
+            Text(
+                text = statusText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
+        // Show indicators
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Sync progress indicator
+            if (syncStatus is com.irrgenius.android.data.sync.CloudSyncService.SyncStatus.Syncing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+            }
+            
+            // Conflict indicator
+            if (pendingConflicts.isNotEmpty()) {
+                Badge {
+                    Text(
+                        text = pendingConflicts.size.toString(),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+            
+            IconButton(onClick = onClick) {
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = "Open Cloud Sync Settings"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ClearDataDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Clear All Data") },
+        text = {
+            Text("This will permanently delete all your saved calculations and projects. This action cannot be undone.")
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Clear")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable

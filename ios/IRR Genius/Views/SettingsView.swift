@@ -8,34 +8,78 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @State private var syncEnabled = false
-    @State private var autoSaveEnabled = true
+    @EnvironmentObject var dataManager: DataManager
     @State private var showingAbout = false
+    @State private var showingCloudKitSettings = false
+    @State private var showingClearDataAlert = false
     
     var body: some View {
         NavigationView {
             List {
                 Section(header: Text("Data Management")) {
-                    HStack {
-                        Image(systemName: "icloud")
-                            .foregroundColor(.blue)
-                            .frame(width: 24)
-                        Toggle("Cloud Sync", isOn: $syncEnabled)
+                    // CloudKit Sync Settings
+                    NavigationLink(destination: CloudKitSyncSettingsView()) {
+                        HStack {
+                            Image(systemName: "icloud")
+                                .foregroundColor(dataManager.isCloudKitEnabled ? .blue : .gray)
+                                .frame(width: 24)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("iCloud Sync")
+                                if dataManager.isCloudKitEnabled {
+                                    Text("Enabled")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Text("Disabled")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            Spacer()
+                            if dataManager.isSyncing {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else if !dataManager.pendingConflicts.isEmpty {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.orange)
+                            }
+                        }
                     }
                     
+                    // Auto-Save Settings
                     HStack {
                         Image(systemName: "square.and.arrow.down")
                             .foregroundColor(.green)
                             .frame(width: 24)
-                        Toggle("Auto-Save Calculations", isOn: $autoSaveEnabled)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Toggle("Auto-Save Calculations", isOn: Binding(
+                                get: { dataManager.autoSaveConfiguration.isEnabled },
+                                set: { enabled in
+                                    var config = dataManager.autoSaveConfiguration
+                                    config = AutoSaveConfiguration(
+                                        isEnabled: enabled,
+                                        saveDelay: config.saveDelay,
+                                        draftSaveInterval: config.draftSaveInterval,
+                                        showSaveDialog: config.showSaveDialog
+                                    )
+                                    dataManager.updateAutoSaveConfiguration(config)
+                                }
+                            ))
+                            if dataManager.autoSaveConfiguration.isEnabled {
+                                Text("Automatically saves calculations after completion")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
                     
+                    // Clear Data
                     HStack {
                         Image(systemName: "trash")
                             .foregroundColor(.red)
                             .frame(width: 24)
                         Button("Clear All Data") {
-                            // TODO: Implement data clearing
+                            showingClearDataAlert = true
                         }
                         .foregroundColor(.red)
                     }
@@ -47,7 +91,20 @@ struct SettingsView: View {
                             .foregroundColor(.blue)
                             .frame(width: 24)
                         Button("Export All Calculations") {
-                            // TODO: Implement bulk export
+                            Task {
+                                await dataManager.exportCalculations(dataManager.calculations)
+                            }
+                        }
+                    }
+                    
+                    HStack {
+                        Image(systemName: "doc.badge.plus")
+                            .foregroundColor(.blue)
+                            .frame(width: 24)
+                        Button("Export to CSV") {
+                            Task {
+                                await dataManager.exportCalculationsToCSV(dataManager.calculations)
+                            }
                         }
                     }
                     
@@ -56,7 +113,56 @@ struct SettingsView: View {
                             .foregroundColor(.green)
                             .frame(width: 24)
                         Button("Import from File") {
-                            // TODO: Implement import
+                            // TODO: Navigate to import screen
+                        }
+                    }
+                }
+                
+                Section(header: Text("Storage Info")) {
+                    HStack {
+                        Image(systemName: "folder")
+                            .foregroundColor(.blue)
+                            .frame(width: 24)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Saved Calculations")
+                            Text("\(dataManager.calculations.count) calculations")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                    }
+                    
+                    HStack {
+                        Image(systemName: "folder.badge.plus")
+                            .foregroundColor(.green)
+                            .frame(width: 24)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Projects")
+                            Text("\(dataManager.projects.count) projects")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                    }
+                    
+                    if dataManager.isCloudKitEnabled {
+                        HStack {
+                            Image(systemName: "icloud")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Last Sync")
+                                if let lastSync = dataManager.lastSyncDate {
+                                    Text(lastSync, formatter: relativeDateFormatter)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Text("Never")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            Spacer()
                         }
                     }
                 }
@@ -77,6 +183,9 @@ struct SettingsView: View {
                             .frame(width: 24)
                         Button("Rate App") {
                             // TODO: Implement app rating
+                            if let url = URL(string: "https://apps.apple.com/app/id123456789?action=write-review") {
+                                UIApplication.shared.open(url)
+                            }
                         }
                     }
                 }
@@ -86,6 +195,36 @@ struct SettingsView: View {
         .sheet(isPresented: $showingAbout) {
             AboutView(isPresented: $showingAbout)
         }
+        .alert("Clear All Data", isPresented: $showingClearDataAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clear", role: .destructive) {
+                Task {
+                    await clearAllData()
+                }
+            }
+        } message: {
+            Text("This will permanently delete all your saved calculations and projects. This action cannot be undone.")
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func clearAllData() async {
+        // Clear all calculations
+        for calculation in dataManager.calculations {
+            await dataManager.deleteCalculation(calculation)
+        }
+        
+        // Clear all projects
+        for project in dataManager.projects {
+            await dataManager.deleteProject(project)
+        }
+    }
+    
+    private var relativeDateFormatter: RelativeDateTimeFormatter {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter
     }
 }
 

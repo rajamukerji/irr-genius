@@ -7,8 +7,13 @@ import com.irrgenius.android.data.export.SharingService
 import com.irrgenius.android.data.export.SharingException
 import com.irrgenius.android.data.models.SavedCalculation
 import com.irrgenius.android.data.models.Project
+import com.irrgenius.android.data.repository.RepositoryFactory
+import com.irrgenius.android.data.sync.CloudSyncService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -23,9 +28,49 @@ class DataManager(private val context: Context) {
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
     
+    // Cloud sync state
+    private val _isSyncEnabled = MutableStateFlow(false)
+    val isSyncEnabled: StateFlow<Boolean> = _isSyncEnabled.asStateFlow()
+    
+    private val _syncStatus = MutableStateFlow<CloudSyncService.SyncStatus>(CloudSyncService.SyncStatus.Idle)
+    val syncStatus: StateFlow<CloudSyncService.SyncStatus> = _syncStatus.asStateFlow()
+    
+    private val _syncProgress = MutableStateFlow(0.0)
+    val syncProgress: StateFlow<Double> = _syncProgress.asStateFlow()
+    
+    private val _pendingConflicts = MutableStateFlow<List<CloudSyncService.SyncConflict>>(emptyList())
+    val pendingConflicts: StateFlow<List<CloudSyncService.SyncConflict>> = _pendingConflicts.asStateFlow()
+    
     // Services
+    private val repositoryFactory = RepositoryFactory(context)
+    private val cloudSyncService = CloudSyncService(context, repositoryFactory)
     private val sharingService = SharingService(context)
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
+    
+    init {
+        // Initialize sync state flows
+        coroutineScope.launch {
+            cloudSyncService.syncStatus.collect { status ->
+                _syncStatus.value = status
+            }
+        }
+        
+        coroutineScope.launch {
+            cloudSyncService.syncProgress.collect { progress ->
+                _syncProgress.value = progress
+            }
+        }
+        
+        coroutineScope.launch {
+            cloudSyncService.pendingConflicts.collect { conflicts ->
+                _pendingConflicts.value = conflicts
+            }
+        }
+        
+        // Initialize sync enabled status
+        val prefs = context.getSharedPreferences("cloud_sync", Context.MODE_PRIVATE)
+        _isSyncEnabled.value = prefs.getBoolean("cloud_sync_enabled", false)
+    }
     
     // MARK: - Calculation Management
     
@@ -164,6 +209,90 @@ class DataManager(private val context: Context) {
         // Remove the project
         projects.removeAll { it.id == project.id }
         // TODO: Delete from repository when implemented
+    }
+    
+    // MARK: - Cloud Sync Management
+    
+    /**
+     * Enables cloud synchronization
+     */
+    fun enableCloudSync() {
+        coroutineScope.launch {
+            val result = cloudSyncService.enableSync()
+            result.onSuccess {
+                _isSyncEnabled.value = true
+            }.onFailure { error ->
+                errorMessage.value = "Failed to enable cloud sync: ${error.message}"
+            }
+        }
+    }
+    
+    /**
+     * Disables cloud synchronization
+     */
+    fun disableCloudSync() {
+        coroutineScope.launch {
+            val result = cloudSyncService.disableSync()
+            result.onSuccess {
+                _isSyncEnabled.value = false
+            }.onFailure { error ->
+                errorMessage.value = "Failed to disable cloud sync: ${error.message}"
+            }
+        }
+    }
+    
+    /**
+     * Manually triggers synchronization
+     */
+    fun manualSync() {
+        coroutineScope.launch {
+            val result = cloudSyncService.manualSync()
+            result.onFailure { error ->
+                errorMessage.value = "Sync failed: ${error.message}"
+            }
+        }
+    }
+    
+    /**
+     * Resolves a sync conflict
+     */
+    fun resolveSyncConflict(conflict: CloudSyncService.SyncConflict, resolution: CloudSyncService.ConflictResolution) {
+        coroutineScope.launch {
+            val result = cloudSyncService.resolveConflict(conflict, resolution)
+            result.onFailure { error ->
+                errorMessage.value = "Failed to resolve conflict: ${error.message}"
+            }
+        }
+    }
+    
+    /**
+     * Uploads a calculation to cloud storage after local save
+     */
+    private fun syncCalculationToCloud(calculation: SavedCalculation) {
+        if (!_isSyncEnabled.value) return
+        
+        coroutineScope.launch {
+            val result = cloudSyncService.uploadCalculation(calculation)
+            result.onFailure { error ->
+                // Don't show error to user for background sync failures
+                android.util.Log.w("DataManager", "Failed to sync calculation to cloud: ${error.message}")
+            }
+        }
+    }
+    
+    /**
+     * Uploads a project to cloud storage after local save
+     */
+    private fun syncProjectToCloud(project: Project) {
+        if (!_isSyncEnabled.value) return
+        
+        coroutineScope.launch {
+            val result = cloudSyncService.uploadProject(project)
+            result.onFailure { error ->
+                // Don't show error to user for background sync failures
+                android.util.Log.w("DataManager", "Failed to sync project to cloud: ${error.message}")
+            }
+        }
     }
     
     // MARK: - Data Refresh
