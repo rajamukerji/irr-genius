@@ -133,22 +133,22 @@
     - Write validation and error handling for portfolio unit inputs
     - _Requirements: 2.1, 2.2_
 
-- [-] 8. Enhance calculation workflow with persistence
-  - [ ] 8.1 Add auto-save functionality to calculations
+- [x] 8. Enhance calculation workflow with persistence
+  - [x] 8.1 Add auto-save functionality to calculations
     - Implement automatic saving after successful calculations
     - Add save dialog with naming and project assignment options
     - Write unsaved changes detection and warning system
     - Create draft saving for incomplete calculations
     - _Requirements: 1.1, 2.2_
 
-  - [ ] 8.2 Implement calculation loading and editing
+  - [x] 8.2 Implement calculation loading and editing
     - Add "Load Calculation" functionality to populate form fields
     - Write calculation duplication feature for scenario analysis
     - Implement calculation history tracking with version management
     - Create calculation comparison interface for side-by-side analysis
     - _Requirements: 1.3, 2.2_
 
-  - [ ] 8.3 Add progress indicators and loading states
+  - [x] 8.3 Add progress indicators and loading states
     - Implement loading spinners for calculation operations
     - Add progress bars for file import/export operations
     - Write timeout handling for long-running operations
@@ -156,28 +156,28 @@
     - _Requirements: 2.4, 2.5_
 
 - [ ] 9. Implement cloud synchronization
-  - [ ] 8.1 Create iOS CloudKit integration
+  - [ ] 9.1 Create iOS CloudKit integration
     - Set up CloudKit container and record types for calculations and projects
     - Implement upload/download logic with conflict resolution
     - Add sync status indicators and manual sync triggers
     - Write offline-first sync with automatic retry mechanisms
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-  - [ ] 8.2 Create Android cloud sync service
+  - [ ] 9.2 Create Android cloud sync service
     - Implement Google Drive or Firebase integration for data backup
     - Write cross-platform data format for iOS/Android compatibility
     - Add encryption for sensitive financial data in cloud storage
     - Create sync conflict resolution with user choice options
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-  - [ ] 8.3 Build sync settings and management UI
+  - [ ] 9.3 Build sync settings and management UI
     - Create sync enable/disable toggle in settings
     - Implement sync status display with last sync timestamp
     - Add manual sync trigger button with progress feedback
     - Write sync conflict resolution interface for user decisions
     - _Requirements: 5.1, 5.5_
 
-- [ ] 9. Add comprehensive error handling and validation
+- [ ] 10. Add comprehensive error handling and validation
   - [ ] 9.1 Implement data validation framework
     - Write validation rules for all calculation input fields
     - Add real-time validation feedback in form interfaces

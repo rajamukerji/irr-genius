@@ -104,32 +104,77 @@ fun CalculatorTabScreen(
     viewModel: MainViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val saveDialogData by viewModel.autoSaveManager.saveDialogData.collectAsState()
+    val projects by viewModel.autoSaveManager.projects.collectAsState()
+    val calculations by viewModel.autoSaveManager.calculations.collectAsState()
+    val loadingState by viewModel.autoSaveManager.loadingState.collectAsState()
+    val isSyncing by viewModel.autoSaveManager.isSyncing.collectAsState()
     
-    Column(
-        modifier = Modifier.fillMaxSize()
+    var showingLoadCalculation by remember { mutableStateOf(false) }
+    
+    LoadingStateHandler(
+        loadingState = loadingState,
+        onRetry = {
+            viewModel.autoSaveManager.loadCalculations()
+        }
     ) {
-        // Header
-        HeaderView()
-        
-        // Mode Selector
-        ModeSelectorView(
-            selectedMode = uiState.calculationMode,
-            onModeSelected = { mode -> viewModel.setCalculationMode(mode) }
-        )
-        
-        // Content based on selected mode
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            when (uiState.calculationMode) {
-                CalculationMode.CALCULATE_IRR -> IRRCalculationView(uiState, viewModel)
-                CalculationMode.CALCULATE_OUTCOME -> OutcomeCalculationView(uiState, viewModel)
-                CalculationMode.CALCULATE_INITIAL -> InitialCalculationView(uiState, viewModel)
-                CalculationMode.CALCULATE_BLENDED -> BlendedIRRCalculationView(uiState, viewModel)
-                CalculationMode.PORTFOLIO_UNIT_INVESTMENT -> PortfolioUnitInvestmentView(uiState, viewModel)
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Header
+                HeaderView()
+                
+                // Mode Selector
+                ModeSelectorView(
+                    selectedMode = uiState.calculationMode,
+                    onModeSelected = { mode -> viewModel.setCalculationMode(mode) }
+                )
+                
+                // Load Calculation Button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { showingLoadCalculation = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.Default.Folder,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Load Calculation")
+                    }
+                }
+                
+                // Content based on selected mode
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    when (uiState.calculationMode) {
+                        CalculationMode.CALCULATE_IRR -> IRRCalculationView(uiState, viewModel)
+                        CalculationMode.CALCULATE_OUTCOME -> OutcomeCalculationView(uiState, viewModel)
+                        CalculationMode.CALCULATE_INITIAL -> InitialCalculationView(uiState, viewModel)
+                        CalculationMode.CALCULATE_BLENDED -> BlendedIRRCalculationView(uiState, viewModel)
+                        CalculationMode.PORTFOLIO_UNIT_INVESTMENT -> PortfolioUnitInvestmentView(uiState, viewModel)
+                    }
+                }
             }
+            
+            // Background Sync Indicator
+            BackgroundSyncIndicator(
+                isVisible = isSyncing,
+                message = "Syncing...",
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 8.dp)
+            )
         }
     }
     
@@ -142,6 +187,31 @@ fun CalculatorTabScreen(
                 viewModel.setShowingAddPortfolioInvestment(false)
             },
             initialInvestmentDate = uiState.portfolioInitialDate
+        )
+    }
+    
+    // Save Calculation Dialog
+    if (saveDialogData.isVisible) {
+        SaveCalculationDialog(
+            autoSaveManager = viewModel.autoSaveManager,
+            saveDialogData = saveDialogData,
+            projects = projects,
+            onDismiss = { viewModel.autoSaveManager.dismissSaveDialog() },
+            onSave = { viewModel.autoSaveManager.saveFromDialog() }
+        )
+    }
+    
+    // Load Calculation Dialog
+    if (showingLoadCalculation) {
+        LoadCalculationDialog(
+            autoSaveManager = viewModel.autoSaveManager,
+            calculations = calculations,
+            projects = projects,
+            onDismiss = { showingLoadCalculation = false },
+            onCalculationSelected = { calculation ->
+                viewModel.loadCalculation(calculation)
+                showingLoadCalculation = false
+            }
         )
     }
 }

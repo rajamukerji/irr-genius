@@ -8,7 +8,9 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var dataManager = DataManager()
     @State private var selectedMode: CalculationMode = .calculateIRR
+    @State private var showingLoadCalculation = false
     
     // IRR Calculation inputs
     @State private var initialInvestment: String = ""
@@ -58,6 +60,19 @@ struct ContentView: View {
                     
                     // Mode Selector
                     ModeSelectorView(selectedMode: $selectedMode)
+                    
+                    // Load Calculation Button
+                    Button(action: { showingLoadCalculation = true }) {
+                        HStack {
+                            Image(systemName: "folder")
+                            Text("Load Calculation")
+                        }
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
+                    }
                     
                     // Input Form based on selected mode
                     switch selectedMode {
@@ -154,6 +169,55 @@ struct ContentView: View {
                 initialInvestmentDate: portfolioInitialDate
             )
         }
+        .sheet(isPresented: $dataManager.saveDialogData.isVisible) {
+            SaveCalculationDialog()
+                .environmentObject(dataManager)
+        }
+        .sheet(isPresented: $showingLoadCalculation) {
+            LoadCalculationView(isPresented: $showingLoadCalculation) { calculation in
+                loadCalculation(calculation)
+            }
+            .environmentObject(dataManager)
+        }
+        .environmentObject(dataManager)
+        .loadingState(dataManager.loadingState) {
+            // Retry action for failed operations
+            Task {
+                await dataManager.loadCalculations()
+            }
+        }
+        .overlay(alignment: .top) {
+            BackgroundSyncIndicator(
+                isVisible: .constant(dataManager.isSyncing),
+                message: "Syncing..."
+            )
+            .padding(.top, 8)
+        }
+        .onChange(of: selectedMode) { _ in
+            if dataManager.showUnsavedChangesWarning() {
+                // Could show an alert here for unsaved changes
+            }
+            updateInputTracking()
+        }
+        .onChange(of: initialInvestment) { _ in updateInputTracking() }
+        .onChange(of: outcomeAmount) { _ in updateInputTracking() }
+        .onChange(of: timeInMonths) { _ in updateInputTracking() }
+        .onChange(of: outcomeInitialInvestment) { _ in updateInputTracking() }
+        .onChange(of: outcomeIRR) { _ in updateInputTracking() }
+        .onChange(of: outcomeTimeInMonths) { _ in updateInputTracking() }
+        .onChange(of: initialOutcomeAmount) { _ in updateInputTracking() }
+        .onChange(of: initialIRR) { _ in updateInputTracking() }
+        .onChange(of: initialTimeInMonths) { _ in updateInputTracking() }
+        .onChange(of: blendedInitialInvestment) { _ in updateInputTracking() }
+        .onChange(of: blendedFinalValuation) { _ in updateInputTracking() }
+        .onChange(of: blendedTimeInMonths) { _ in updateInputTracking() }
+        .onChange(of: followOnInvestments) { _ in updateInputTracking() }
+        .onChange(of: portfolioInitialInvestment) { _ in updateInputTracking() }
+        .onChange(of: portfolioUnitPrice) { _ in updateInputTracking() }
+        .onChange(of: portfolioNumberOfUnits) { _ in updateInputTracking() }
+        .onChange(of: portfolioSuccessRate) { _ in updateInputTracking() }
+        .onChange(of: portfolioTimeInMonths) { _ in updateInputTracking() }
+        .onChange(of: portfolioFollowOnInvestments) { _ in updateInputTracking() }
     }
     
     // MARK: - Calculation Methods
@@ -179,6 +243,16 @@ struct ContentView: View {
             calculatedResult = irr
             isCalculating = false
             showingResult = true
+            
+            // Trigger auto-save
+            let inputs = getInputsForMode()
+            let growthPoints = chartDataForCurrentInputs()
+            dataManager.handleCalculationCompleted(
+                calculationType: selectedMode,
+                inputs: inputs,
+                result: irr,
+                growthPoints: growthPoints
+            )
         }
     }
     
@@ -202,6 +276,16 @@ struct ContentView: View {
             calculatedResult = outcome
             isCalculating = false
             showingResult = true
+            
+            // Trigger auto-save
+            let inputs = getInputsForMode()
+            let growthPoints = chartDataForCurrentInputs()
+            dataManager.handleCalculationCompleted(
+                calculationType: selectedMode,
+                inputs: inputs,
+                result: outcome,
+                growthPoints: growthPoints
+            )
         }
     }
     
@@ -225,6 +309,16 @@ struct ContentView: View {
             calculatedResult = initial
             isCalculating = false
             showingResult = true
+            
+            // Trigger auto-save
+            let inputs = getInputsForMode()
+            let growthPoints = chartDataForCurrentInputs()
+            dataManager.handleCalculationCompleted(
+                calculationType: selectedMode,
+                inputs: inputs,
+                result: initial,
+                growthPoints: growthPoints
+            )
         }
     }
     
@@ -274,6 +368,16 @@ struct ContentView: View {
             calculatedResult = blendedIRR
             isCalculating = false
             showingResult = true
+            
+            // Trigger auto-save
+            let inputs = getInputsForMode()
+            let growthPoints = chartDataForCurrentInputs()
+            dataManager.handleCalculationCompleted(
+                calculationType: selectedMode,
+                inputs: inputs,
+                result: blendedIRR,
+                growthPoints: growthPoints
+            )
         }
     }
     
@@ -343,6 +447,16 @@ struct ContentView: View {
             calculatedResult = portfolioIRR
             isCalculating = false
             showingResult = true
+            
+            // Trigger auto-save
+            let inputs = getInputsForMode()
+            let growthPoints = chartDataForCurrentInputs()
+            dataManager.handleCalculationCompleted(
+                calculationType: selectedMode,
+                inputs: inputs,
+                result: portfolioIRR,
+                growthPoints: growthPoints
+            )
         }
     }
     
@@ -486,5 +600,73 @@ struct ContentView: View {
                 )
             }
         }
+    }
+    
+    // MARK: - Auto-Save Methods
+    
+    private func updateInputTracking() {
+        let inputs = getInputsForMode()
+        dataManager.updateInputs(inputs)
+    }
+    
+    // MARK: - Calculation Loading Methods
+    
+    private func loadCalculation(_ calculation: SavedCalculation) {
+        // Clear current results
+        calculatedResult = nil
+        errorMessage = nil
+        
+        // Set the calculation mode
+        selectedMode = calculation.calculationType
+        
+        // Populate form fields based on calculation type
+        switch calculation.calculationType {
+        case .calculateIRR:
+            initialInvestment = formatCurrency(calculation.initialInvestment)
+            outcomeAmount = formatCurrency(calculation.outcomeAmount)
+            timeInMonths = formatNumber(calculation.timeInMonths)
+            calculatedResult = calculation.calculatedResult
+            
+        case .calculateOutcome:
+            outcomeInitialInvestment = formatCurrency(calculation.initialInvestment)
+            outcomeIRR = formatNumber(calculation.irr)
+            outcomeTimeInMonths = formatNumber(calculation.timeInMonths)
+            calculatedResult = calculation.calculatedResult
+            
+        case .calculateInitial:
+            initialOutcomeAmount = formatCurrency(calculation.outcomeAmount)
+            initialIRR = formatNumber(calculation.irr)
+            initialTimeInMonths = formatNumber(calculation.timeInMonths)
+            calculatedResult = calculation.calculatedResult
+            
+        case .calculateBlendedIRR:
+            blendedInitialInvestment = formatCurrency(calculation.initialInvestment)
+            blendedFinalValuation = formatCurrency(calculation.outcomeAmount)
+            blendedTimeInMonths = formatNumber(calculation.timeInMonths)
+            followOnInvestments = calculation.followOnInvestments ?? []
+            calculatedResult = calculation.calculatedResult
+            
+        case .portfolioUnitInvestment:
+            portfolioInitialInvestment = formatCurrency(calculation.initialInvestment)
+            portfolioUnitPrice = formatCurrency(calculation.unitPrice)
+            portfolioNumberOfUnits = formatNumber(calculation.outcomePerUnit) // Using outcomePerUnit as number of units
+            portfolioSuccessRate = formatNumber(calculation.successRate) ?? "100"
+            portfolioTimeInMonths = formatNumber(calculation.timeInMonths)
+            portfolioFollowOnInvestments = calculation.followOnInvestments ?? []
+            calculatedResult = calculation.calculatedResult
+        }
+        
+        // Clear unsaved changes since we just loaded a calculation
+        dataManager.clearUnsavedChanges()
+    }
+    
+    private func formatCurrency(_ value: Double?) -> String {
+        guard let value = value else { return "" }
+        return String(format: "%.2f", value)
+    }
+    
+    private func formatNumber(_ value: Double?) -> String {
+        guard let value = value else { return "" }
+        return String(format: "%.0f", value)
     }
 } 

@@ -2,6 +2,7 @@ package com.irrgenius.android.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.irrgenius.android.data.AutoSaveManager
 import com.irrgenius.android.data.models.*
 import com.irrgenius.android.domain.calculator.IRRCalculator
 import kotlinx.coroutines.delay
@@ -58,6 +59,7 @@ data class MainUiState(
 
 class MainViewModel : ViewModel() {
     private val calculator = IRRCalculator()
+    val autoSaveManager = AutoSaveManager()
     
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
@@ -72,6 +74,7 @@ class MainViewModel : ViewModel() {
             irrOutcome = outcome ?: _uiState.value.irrOutcome,
             irrYears = years ?: _uiState.value.irrYears
         )
+        updateInputTracking()
     }
     
     fun updateOutcomeInputs(initial: String? = null, irr: String? = null, years: String? = null) {
@@ -80,6 +83,7 @@ class MainViewModel : ViewModel() {
             outcomeIRR = irr ?: _uiState.value.outcomeIRR,
             outcomeYears = years ?: _uiState.value.outcomeYears
         )
+        updateInputTracking()
     }
     
     fun updateInitialInputs(outcome: String? = null, irr: String? = null, years: String? = null) {
@@ -88,6 +92,7 @@ class MainViewModel : ViewModel() {
             initialIRR = irr ?: _uiState.value.initialIRR,
             initialYears = years ?: _uiState.value.initialYears
         )
+        updateInputTracking()
     }
     
     fun updateBlendedInputs(
@@ -102,6 +107,7 @@ class MainViewModel : ViewModel() {
             blendedYears = years ?: _uiState.value.blendedYears,
             blendedInitialDate = initialDate ?: _uiState.value.blendedInitialDate
         )
+        updateInputTracking()
     }
     
     fun addFollowOnInvestment(investment: FollowOnInvestment) {
@@ -132,6 +138,7 @@ class MainViewModel : ViewModel() {
             portfolioTimeInMonths = timeInMonths ?: _uiState.value.portfolioTimeInMonths,
             portfolioInitialDate = initialDate ?: _uiState.value.portfolioInitialDate
         )
+        updateInputTracking()
     }
     
     fun addPortfolioFollowOnInvestment(investment: FollowOnInvestment) {
@@ -181,6 +188,15 @@ class MainViewModel : ViewModel() {
             irrResult = irr,
             growthPoints = points
         )
+        
+        // Trigger auto-save
+        val inputs = getInputsForMode()
+        autoSaveManager.handleCalculationCompleted(
+            calculationType = _uiState.value.calculationMode,
+            inputs = inputs,
+            result = irr,
+            growthPoints = points
+        )
     }
     
     private fun calculateOutcome() {
@@ -195,6 +211,15 @@ class MainViewModel : ViewModel() {
             outcomeResult = outcome,
             growthPoints = points
         )
+        
+        // Trigger auto-save
+        val inputs = getInputsForMode()
+        autoSaveManager.handleCalculationCompleted(
+            calculationType = _uiState.value.calculationMode,
+            inputs = inputs,
+            result = outcome,
+            growthPoints = points
+        )
     }
     
     private fun calculateInitial() {
@@ -207,6 +232,15 @@ class MainViewModel : ViewModel() {
         
         _uiState.value = _uiState.value.copy(
             initialResult = initial,
+            growthPoints = points
+        )
+        
+        // Trigger auto-save
+        val inputs = getInputsForMode()
+        autoSaveManager.handleCalculationCompleted(
+            calculationType = _uiState.value.calculationMode,
+            inputs = inputs,
+            result = initial,
             growthPoints = points
         )
     }
@@ -234,6 +268,15 @@ class MainViewModel : ViewModel() {
         
         _uiState.value = _uiState.value.copy(
             blendedResult = blendedIRR,
+            growthPoints = points
+        )
+        
+        // Trigger auto-save
+        val inputs = getInputsForMode()
+        autoSaveManager.handleCalculationCompleted(
+            calculationType = _uiState.value.calculationMode,
+            inputs = inputs,
+            result = blendedIRR,
             growthPoints = points
         )
     }
@@ -294,5 +337,176 @@ class MainViewModel : ViewModel() {
             portfolioResult = portfolioIRR,
             growthPoints = points
         )
+        
+        // Trigger auto-save
+        val inputs = getInputsForMode()
+        autoSaveManager.handleCalculationCompleted(
+            calculationType = _uiState.value.calculationMode,
+            inputs = inputs,
+            result = portfolioIRR,
+            growthPoints = points
+        )
+    }
+    
+    // MARK: - Auto-Save Methods
+    
+    private fun updateInputTracking() {
+        val inputs = getInputsForMode()
+        autoSaveManager.updateInputs(inputs)
+    }
+    
+    private fun getInputsForMode(): Map<String, Any> {
+        return when (_uiState.value.calculationMode) {
+            CalculationMode.CALCULATE_IRR -> {
+                val months = _uiState.value.irrYears.toDoubleOrNull()?.times(12) ?: 0.0
+                mapOf(
+                    "Initial Investment" to (_uiState.value.irrInitialInvestment.toDoubleOrNull() ?: 0.0),
+                    "Outcome Amount" to (_uiState.value.irrOutcome.toDoubleOrNull() ?: 0.0),
+                    "Time Period (Months)" to months,
+                    "Time Period (Years)" to (_uiState.value.irrYears.toDoubleOrNull() ?: 0.0)
+                )
+            }
+            CalculationMode.CALCULATE_OUTCOME -> {
+                val months = _uiState.value.outcomeYears.toDoubleOrNull()?.times(12) ?: 0.0
+                mapOf(
+                    "Initial Investment" to (_uiState.value.outcomeInitialInvestment.toDoubleOrNull() ?: 0.0),
+                    "IRR" to (_uiState.value.outcomeIRR.toDoubleOrNull() ?: 0.0),
+                    "Time Period (Months)" to months,
+                    "Time Period (Years)" to (_uiState.value.outcomeYears.toDoubleOrNull() ?: 0.0)
+                )
+            }
+            CalculationMode.CALCULATE_INITIAL -> {
+                val months = _uiState.value.initialYears.toDoubleOrNull()?.times(12) ?: 0.0
+                mapOf(
+                    "Outcome Amount" to (_uiState.value.initialOutcome.toDoubleOrNull() ?: 0.0),
+                    "IRR" to (_uiState.value.initialIRR.toDoubleOrNull() ?: 0.0),
+                    "Time Period (Months)" to months,
+                    "Time Period (Years)" to (_uiState.value.initialYears.toDoubleOrNull() ?: 0.0)
+                )
+            }
+            CalculationMode.CALCULATE_BLENDED -> {
+                val months = _uiState.value.blendedYears.toDoubleOrNull()?.times(12) ?: 0.0
+                mapOf(
+                    "Initial Investment" to (_uiState.value.blendedInitialInvestment.toDoubleOrNull() ?: 0.0),
+                    "Final Valuation" to (_uiState.value.blendedOutcome.toDoubleOrNull() ?: 0.0),
+                    "Time Period (Months)" to months,
+                    "Time Period (Years)" to (_uiState.value.blendedYears.toDoubleOrNull() ?: 0.0),
+                    "Follow-on Investments" to _uiState.value.blendedFollowOnInvestments.size.toDouble()
+                )
+            }
+            CalculationMode.PORTFOLIO_UNIT_INVESTMENT -> {
+                val months = _uiState.value.portfolioTimeInMonths.toDoubleOrNull() ?: 0.0
+                val units = _uiState.value.portfolioNumberOfUnits.toDoubleOrNull() ?: 0.0
+                val successRate = _uiState.value.portfolioSuccessRate.toDoubleOrNull() ?: 100.0
+                val successfulUnits = units * (successRate / 100.0)
+                mapOf(
+                    "Initial Investment" to (_uiState.value.portfolioInitialInvestment.toDoubleOrNull() ?: 0.0),
+                    "Unit Price" to (_uiState.value.portfolioUnitPrice.toDoubleOrNull() ?: 0.0),
+                    "Number of Units" to units,
+                    "Success Rate (%)" to successRate,
+                    "Expected Successful Units" to successfulUnits,
+                    "Time Period (Months)" to months,
+                    "Time Period (Years)" to (months / 12.0),
+                    "Follow-on Batches" to _uiState.value.portfolioFollowOnInvestments.size.toDouble()
+                )
+            }
+        }
+    }
+    
+    // MARK: - Calculation Loading Methods
+    
+    fun loadCalculation(calculation: SavedCalculation) {
+        // Clear current results
+        clearResults()
+        
+        // Set the calculation mode
+        setCalculationMode(calculation.calculationType)
+        
+        // Populate form fields based on calculation type
+        when (calculation.calculationType) {
+            CalculationMode.CALCULATE_IRR -> {
+                updateIRRInputs(
+                    initial = formatCurrency(calculation.initialInvestment),
+                    outcome = formatCurrency(calculation.outcomeAmount),
+                    years = formatNumber(calculation.timeInMonths?.div(12.0))
+                )
+                _uiState.value = _uiState.value.copy(
+                    irrResult = calculation.calculatedResult,
+                    growthPoints = calculation.getGrowthPoints()
+                )
+            }
+            
+            CalculationMode.CALCULATE_OUTCOME -> {
+                updateOutcomeInputs(
+                    initial = formatCurrency(calculation.initialInvestment),
+                    irr = formatNumber(calculation.irr),
+                    years = formatNumber(calculation.timeInMonths?.div(12.0))
+                )
+                _uiState.value = _uiState.value.copy(
+                    outcomeResult = calculation.calculatedResult,
+                    growthPoints = calculation.getGrowthPoints()
+                )
+            }
+            
+            CalculationMode.CALCULATE_INITIAL -> {
+                updateInitialInputs(
+                    outcome = formatCurrency(calculation.outcomeAmount),
+                    irr = formatNumber(calculation.irr),
+                    years = formatNumber(calculation.timeInMonths?.div(12.0))
+                )
+                _uiState.value = _uiState.value.copy(
+                    initialResult = calculation.calculatedResult,
+                    growthPoints = calculation.getGrowthPoints()
+                )
+            }
+            
+            CalculationMode.CALCULATE_BLENDED -> {
+                updateBlendedInputs(
+                    initial = formatCurrency(calculation.initialInvestment),
+                    outcome = formatCurrency(calculation.outcomeAmount),
+                    years = formatNumber(calculation.timeInMonths?.div(12.0))
+                )
+                _uiState.value = _uiState.value.copy(
+                    blendedResult = calculation.calculatedResult,
+                    growthPoints = calculation.getGrowthPoints()
+                )
+            }
+            
+            CalculationMode.PORTFOLIO_UNIT_INVESTMENT -> {
+                updatePortfolioInputs(
+                    initialInvestment = formatCurrency(calculation.initialInvestment),
+                    unitPrice = formatCurrency(calculation.unitPrice),
+                    numberOfUnits = formatNumber(calculation.outcomePerUnit), // Using outcomePerUnit as number of units
+                    successRate = formatNumber(calculation.successRate) ?: "100",
+                    timeInMonths = formatNumber(calculation.timeInMonths)
+                )
+                _uiState.value = _uiState.value.copy(
+                    portfolioResult = calculation.calculatedResult,
+                    growthPoints = calculation.getGrowthPoints()
+                )
+            }
+        }
+        
+        // Clear unsaved changes since we just loaded a calculation
+        autoSaveManager.clearUnsavedChanges()
+    }
+    
+    private fun clearResults() {
+        _uiState.value = _uiState.value.copy(
+            irrResult = null,
+            outcomeResult = null,
+            initialResult = null,
+            blendedResult = null,
+            portfolioResult = null,
+            growthPoints = emptyList()
+        )
+    }
+    
+    private fun formatCurrency(value: Double?): String {
+        return value?.let { String.format("%.2f", it) } ?: ""
+    }
+    
+    private fun formatNumber(value: Double?): String {
+        return value?.let { String.format("%.0f", it) } ?: ""
     }
 }

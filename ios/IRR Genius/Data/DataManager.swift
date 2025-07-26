@@ -55,6 +55,9 @@ class DataManager: ObservableObject {
     @Published var saveDialogData = SaveDialogData()
     @Published var unsavedChanges = UnsavedChanges.none
     @Published var autoSaveConfiguration = AutoSaveConfiguration.default
+    @Published var loadingState: LoadingState = .idle
+    @Published var syncProgress: Double = 0.0
+    @Published var isSyncing: Bool = false
     
     // MARK: - Private Properties
     private let repositoryManager: RepositoryManager
@@ -102,7 +105,7 @@ class DataManager: ObservableObject {
     }
     
     func loadCalculations() async {
-        isLoading = true
+        loadingState = .loading(message: "Loading calculations...")
         errorMessage = nil
         
         let result = await repositoryManager.calculationRepository.loadCalculationsSafely()
@@ -110,11 +113,11 @@ class DataManager: ObservableObject {
         switch result {
         case .success(let loadedCalculations):
             calculations = loadedCalculations.sorted { $0.modifiedDate > $1.modifiedDate }
+            loadingState = .idle
         case .failure(let error):
             errorMessage = error.localizedDescription
+            loadingState = .error(message: error.localizedDescription)
         }
-        
-        isLoading = false
     }
     
     func loadProjects() async {
@@ -520,21 +523,27 @@ class DataManager: ObservableObject {
     /// Exports calculation to PDF with progress indicator
     @MainActor
     private func exportCalculationToPDF(_ calculation: SavedCalculation) async {
-        isLoading = true
+        loadingState = .loading(message: "Generating PDF...")
         errorMessage = nil
         
         do {
             let pdfExportService = PDFExportServiceImpl()
             let fileURL = try await pdfExportService.exportToPDF(calculation)
             
+            loadingState = .success(message: "PDF generated successfully!")
+            
             // Show share sheet
             await showShareSheet(for: [fileURL], subject: "IRR Calculation: \(calculation.name)")
             
+            // Reset to idle after a brief success display
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                self.loadingState = .idle
+            }
+            
         } catch {
             errorMessage = "Failed to export calculation: \(error.localizedDescription)"
+            loadingState = .error(message: error.localizedDescription)
         }
-        
-        isLoading = false
     }
     
     /// Exports multiple calculations to PDF with progress indicator
@@ -652,6 +661,85 @@ class DataManager: ObservableObject {
             } catch {
                 print("Failed to cleanup temporary file: \(error)")
             }
+        }
+    }
+    
+    // MARK: - Calculation Loading and Editing
+    
+    /// Loads a calculation and populates form fields
+    func loadCalculationForEditing(_ calculation: SavedCalculation) {
+        // This will be handled by the view layer to populate form fields
+        // The DataManager provides the calculation data
+    }
+    
+    /// Duplicates a calculation for scenario analysis
+    func duplicateCalculation(_ calculation: SavedCalculation) async {
+        do {
+            let duplicatedCalculation = try SavedCalculation(
+                name: "\(calculation.name) (Copy)",
+                calculationType: calculation.calculationType,
+                projectId: calculation.projectId,
+                initialInvestment: calculation.initialInvestment,
+                outcomeAmount: calculation.outcomeAmount,
+                timeInMonths: calculation.timeInMonths,
+                irr: calculation.irr,
+                followOnInvestments: calculation.followOnInvestments,
+                unitPrice: calculation.unitPrice,
+                successRate: calculation.successRate,
+                outcomePerUnit: calculation.outcomePerUnit,
+                investorShare: calculation.investorShare,
+                feePercentage: calculation.feePercentage,
+                calculatedResult: calculation.calculatedResult,
+                growthPoints: calculation.growthPoints,
+                notes: calculation.notes,
+                tags: calculation.tags
+            )
+            
+            await saveCalculation(duplicatedCalculation)
+        } catch {
+            errorMessage = "Failed to duplicate calculation: \(error.localizedDescription)"
+        }
+    }
+    
+    /// Gets calculation history (versions of the same calculation)
+    func getCalculationHistory(for calculation: SavedCalculation) async -> [SavedCalculation] {
+        // For now, return calculations with similar names (indicating versions)
+        let baseName = calculation.name.replacingOccurrences(of: " (Copy)", with: "")
+            .replacingOccurrences(of: " - v\\d+", with: "", options: .regularExpression)
+        
+        return calculations.filter { calc in
+            calc.id != calculation.id &&
+            calc.calculationType == calculation.calculationType &&
+            (calc.name.contains(baseName) || calc.name.hasPrefix(baseName))
+        }.sorted { $0.modifiedDate > $1.modifiedDate }
+    }
+    
+    /// Creates a new version of a calculation
+    func createCalculationVersion(_ calculation: SavedCalculation, withName name: String) async {
+        do {
+            let versionedCalculation = try SavedCalculation(
+                name: name,
+                calculationType: calculation.calculationType,
+                projectId: calculation.projectId,
+                initialInvestment: calculation.initialInvestment,
+                outcomeAmount: calculation.outcomeAmount,
+                timeInMonths: calculation.timeInMonths,
+                irr: calculation.irr,
+                followOnInvestments: calculation.followOnInvestments,
+                unitPrice: calculation.unitPrice,
+                successRate: calculation.successRate,
+                outcomePerUnit: calculation.outcomePerUnit,
+                investorShare: calculation.investorShare,
+                feePercentage: calculation.feePercentage,
+                calculatedResult: calculation.calculatedResult,
+                growthPoints: calculation.growthPoints,
+                notes: calculation.notes,
+                tags: calculation.tags + ["version"]
+            )
+            
+            await saveCalculation(versionedCalculation)
+        } catch {
+            errorMessage = "Failed to create calculation version: \(error.localizedDescription)"
         }
     }
     
