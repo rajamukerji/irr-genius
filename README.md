@@ -30,7 +30,10 @@ A cross-platform Internal Rate of Return calculator for iOS and Android, designe
 - **Save Calculations**: Store calculations locally with name, notes, and tags
 - **Project Organization**: Group related calculations into projects
 - **Search & Filter**: Find calculations by name, notes, tags, or project
-- **Import/Export**: Support for CSV import and export of calculation data (coming soon)
+- **Import/Export**: CSV export for single and multiple calculations
+- **Auto-save**: Automatic saving of calculations with configurable behavior
+- **Data Validation**: Real-time input validation with error severity levels
+- **Cloud Sync Ready**: Infrastructure for future cloud synchronization
 
 ### UI/UX
 - **Real-time Formatting**: Automatic currency and percentage formatting
@@ -52,8 +55,18 @@ A cross-platform Internal Rate of Return calculator for iOS and Android, designe
 ├── android/                      # Android application  
 │   ├── app/                      # Main Android module
 │   │   ├── data/                 # Room database and repositories
+│   │   │   ├── dao/              # Data Access Objects
+│   │   │   ├── database/         # Room database configuration
+│   │   │   ├── repository/       # Repository implementations
+│   │   │   ├── export/           # Export services (CSV/PDF)
+│   │   │   └── sync/             # Cloud sync infrastructure
 │   │   ├── ui/                   # Compose UI and ViewModels
-│   │   └── utils/                # Utility classes and helpers
+│   │   │   ├── components/       # Reusable UI components
+│   │   │   ├── screens/          # Screen implementations
+│   │   │   └── theme/            # Material Design theme
+│   │   ├── utils/                # Utility classes and helpers
+│   │   ├── validation/           # Input validation services
+│   │   └── services/             # Business logic services
 │   ├── build.gradle.kts          # Build configuration
 │   └── settings.gradle.kts       # Project settings
 ├── .kiro/                        # Kiro AI specifications
@@ -64,6 +77,19 @@ A cross-platform Internal Rate of Return calculator for iOS and Android, designe
 │   └── specs/                    # Technical specifications
 └── README.md                     # This file
 ```
+
+## 📈 Recent Updates
+
+### Android Build System Improvements (Latest)
+- **Simplified ValidationService**: Clean single-object design with comprehensive validation rules
+- **Fixed Material Design Icons**: Replaced deprecated icons with available alternatives
+- **Resolved Compilation Issues**: Reduced errors from 100+ to minimal warnings
+- **Enhanced Services**:
+  - ValidationService with field-specific rules and severity levels
+  - ErrorRecoveryService for graceful error handling
+  - CloudSyncService with proper async/await patterns
+  - SharingService for CSV/PDF export functionality
+- **Improved Architecture**: Repository pattern with proper interface segregation
 
 ## 🚀 Quick Start
 
@@ -81,6 +107,12 @@ cd android/
 ./gradlew build
 ./gradlew installDebug
 ```
+
+#### Build Requirements
+- **Gradle**: 8.0
+- **Android Gradle Plugin**: 8.1.4
+- **Kotlin**: 1.9.0
+- **Java**: 17 or higher
 
 ## 🧮 Calculation Examples
 
@@ -117,6 +149,8 @@ cd android/
 - **Charts**: Vico charting library
 - **Testing**: JUnit with Kotlin test extensions
 - **Minimum Version**: Android API 26 (Android 8.0)
+- **Compose BOM**: 2024.04.01
+- **Material Design 3**: Full implementation
 
 ### Shared Specifications
 - **Calculations**: Identical mathematical formulas across platforms
