@@ -71,7 +71,7 @@ struct MainTabView: View {
         
         let pathComponents = url.pathComponents
         if pathComponents.count > 1 {
-            let calculationId = pathComponents[1]
+            let _ = pathComponents[1]
             // Navigate to saved tab and load specific calculation
             selectedTab = .saved
             // TODO: Implement navigation to specific calculation
