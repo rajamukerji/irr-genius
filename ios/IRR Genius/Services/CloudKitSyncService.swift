@@ -149,11 +149,8 @@ class CloudKitSyncService: CloudKitSyncServiceProtocol {
             throw CloudKitError.accountNotAvailable(accountStatus)
         }
         
-        // Request permissions
-        let permissionStatus = try await container.requestApplicationPermission(.userDiscoverability)
-        guard permissionStatus == .granted else {
-            throw CloudKitError.permissionDenied
-        }
+        // Permissions are no longer required for basic CloudKit operations in iOS 17+
+        // User discoverability has been deprecated
         
         isSyncEnabled = true
         startAutomaticSync()
