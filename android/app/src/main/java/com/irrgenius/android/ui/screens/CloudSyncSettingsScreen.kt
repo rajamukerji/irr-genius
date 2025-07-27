@@ -16,6 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.irrgenius.android.data.sync.CloudSyncService
+import com.irrgenius.android.data.sync.SyncStatus
+import com.irrgenius.android.data.sync.SyncConflict
+import com.irrgenius.android.data.sync.ConflictResolution
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 

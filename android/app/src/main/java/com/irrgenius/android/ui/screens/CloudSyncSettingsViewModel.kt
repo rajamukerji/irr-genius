@@ -3,8 +3,10 @@ package com.irrgenius.android.ui.screens
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.irrgenius.android.data.repository.RepositoryFactory
+import com.irrgenius.android.data.repository.RepositoryManager
 import com.irrgenius.android.data.sync.CloudSyncService
+import com.irrgenius.android.data.sync.SyncStatus
+import com.irrgenius.android.data.sync.SyncConflict
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,13 +14,13 @@ import kotlinx.coroutines.launch
 
 class CloudSyncSettingsViewModel(application: Application) : AndroidViewModel(application) {
     
-    private val repositoryFactory = RepositoryFactory(application)
-    private val cloudSyncService = CloudSyncService(application, repositoryFactory)
+    private val repositoryManager = RepositoryManager.getInstance(application)
+    private val cloudSyncService = CloudSyncService(application, repositoryManager)
     
     // Expose sync service state flows
-    val syncStatus: StateFlow<CloudSyncService.SyncStatus> = cloudSyncService.syncStatus
+    val syncStatus: StateFlow<SyncStatus> = cloudSyncService.syncStatus
     val syncProgress: StateFlow<Double> = cloudSyncService.syncProgress
-    val pendingConflicts: StateFlow<List<CloudSyncService.SyncConflict>> = cloudSyncService.pendingConflicts
+    val pendingConflicts: StateFlow<List<SyncConflict>> = cloudSyncService.pendingConflicts
     
     // Local state for sync enabled status
     private val _isSyncEnabled = MutableStateFlow(false)

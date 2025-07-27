@@ -36,7 +36,9 @@ fun InputField(
     validationService: ValidationService? = null,
     isRequired: Boolean = false,
     enabled: Boolean = true,
-    suffix: String? = null
+    suffix: String? = null,
+    isError: Boolean = false,
+    errorMessage: String? = null
 ) {
     var textFieldValue by remember(value) { mutableStateOf(value) }
     var hasBeenEdited by remember { mutableStateOf(false) }
@@ -46,10 +48,24 @@ fun InputField(
     LaunchedEffect(validationService, fieldName, value) {
         if (fieldName != null && validationService != null && value.isNotEmpty()) {
             validationErrors = validationService.validateField(fieldName, value)
+        } else {
+            validationErrors = emptyList()
         }
     }
     
-    val hasErrors = validationErrors.isNotEmpty()
+    // Use legacy error parameters if provided, otherwise use validation service
+    val hasErrors = if (isError && errorMessage != null) {
+        true
+    } else {
+        validationErrors.isNotEmpty()
+    }
+    
+    val displayErrorMessage = if (isError && errorMessage != null) {
+        errorMessage
+    } else {
+        validationErrors.firstOrNull()?.message
+    }
+    
     val isValid = hasBeenEdited && !hasErrors && value.isNotEmpty()
     
     Column(modifier = modifier) {
@@ -148,49 +164,28 @@ fun InputField(
         )
         
         // Error messages
-        if (validationErrors.isNotEmpty()) {
+        if (hasErrors && displayErrorMessage != null) {
             Spacer(modifier = Modifier.height(4.dp))
             
-            validationErrors.forEach { error ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Icon(
-                        imageVector = when (error.severity) {
-                            ValidationSeverity.ERROR -> Icons.Default.Warning
-                            ValidationSeverity.WARNING -> Icons.Default.Warning
-                            ValidationSeverity.INFO -> Icons.Default.Info
-                        },
-                        contentDescription = null,
-                        tint = when (error.severity) {
-                            ValidationSeverity.ERROR -> MaterialTheme.colorScheme.error
-                            ValidationSeverity.WARNING -> Color(0xFFFF9800)
-                            ValidationSeverity.INFO -> MaterialTheme.colorScheme.primary
-                        },
-                        modifier = Modifier.size(12.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.width(4.dp))
-                    
-                    Column {
-                        Text(
-                            text = error.message,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = when (error.severity) {
-                                ValidationSeverity.ERROR -> MaterialTheme.colorScheme.error
-                                ValidationSeverity.WARNING -> Color(0xFFFF9800)
-                                ValidationSeverity.INFO -> MaterialTheme.colorScheme.primary
-                            }
-                        )
-                        
-                    }
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.Top
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(12.dp)
+                )
                 
-                if (error != validationErrors.last()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                }
+                Spacer(modifier = Modifier.width(4.dp))
+                
+                Text(
+                    text = displayErrorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
     }
