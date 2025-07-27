@@ -31,7 +31,7 @@ import com.irrgenius.android.data.models.SavedCalculation
 import com.irrgenius.android.data.displayName
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoadCalculationDialog(
     autoSaveManager: AutoSaveManager,
