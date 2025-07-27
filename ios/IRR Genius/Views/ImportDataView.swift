@@ -60,7 +60,7 @@ struct ImportDataView: View {
             allowsMultipleSelection: false
         ) { result in
             Task {
-                await viewModel.handleFileSelection(result)
+                viewModel.handleFileSelection(result)
                 if viewModel.importResult != nil {
                     showingColumnMapping = true
                 }
