@@ -30,10 +30,14 @@ A cross-platform Internal Rate of Return calculator for iOS and Android, designe
 - **Save Calculations**: Store calculations locally with name, notes, and tags
 - **Project Organization**: Group related calculations into projects
 - **Search & Filter**: Find calculations by name, notes, tags, or project
-- **Import/Export**: CSV export for single and multiple calculations
+- **Import/Export**: 
+  - **iOS**: Full CSV, Excel import/export and PDF generation
+  - **Android**: CSV export for single and multiple calculations
 - **Auto-save**: Automatic saving of calculations with configurable behavior
 - **Data Validation**: Real-time input validation with error severity levels
-- **Cloud Sync Ready**: Infrastructure for future cloud synchronization
+- **Cloud Synchronization**: 
+  - **iOS**: Full CloudKit integration with conflict resolution
+  - **Android**: Infrastructure ready for future cloud sync
 
 ### UI/UX
 - **Real-time Formatting**: Automatic currency and percentage formatting
@@ -47,8 +51,25 @@ A cross-platform Internal Rate of Return calculator for iOS and Android, designe
 ├── ios/                          # iOS application
 │   ├── IRR Genius/               # Main iOS project
 │   │   ├── Data/                 # Core Data persistence layer
+│   │   │   ├── CoreDataStack.swift       # Core Data configuration
+│   │   │   ├── Repositories/             # Repository implementations
+│   │   │   └── DataManager.swift         # Data management service
 │   │   ├── Models/               # Data models and business logic
-│   │   └── Views/                # SwiftUI views and components
+│   │   │   ├── SavedCalculation.swift    # Calculation data model
+│   │   │   ├── Project.swift             # Project organization
+│   │   │   └── Enums.swift              # Supporting enumerations
+│   │   ├── Views/                # SwiftUI views and components
+│   │   │   ├── MainTabView.swift         # Primary navigation
+│   │   │   ├── Calculator/               # Calculation views
+│   │   │   ├── SavedCalculationsView.swift # Data management
+│   │   │   ├── ProjectsView.swift        # Project organization
+│   │   │   └── SettingsView.swift        # App configuration
+│   │   ├── Services/             # Business logic services
+│   │   │   ├── CloudKitSyncService.swift # Cloud synchronization
+│   │   │   ├── CSVImportService.swift    # Data import
+│   │   │   ├── PDFExportService.swift    # PDF generation
+│   │   │   └── ValidationService.swift   # Input validation
+│   │   └── Utilities/            # Helper utilities and extensions
 │   ├── IRR Genius.xcodeproj/     # Xcode project file
 │   ├── IRR GeniusTests/          # Unit tests
 │   └── IRR GeniusUITests/        # UI tests
@@ -79,6 +100,19 @@ A cross-platform Internal Rate of Return calculator for iOS and Android, designe
 ```
 
 ## 📈 Recent Updates
+
+### iOS Feature Enhancements
+- **CloudKit Integration**: Full cloud synchronization with conflict resolution
+- **Enhanced Data Management**: Core Data with repository pattern and auto-save
+- **Import/Export Suite**: CSV, Excel import and PDF export capabilities
+- **Portfolio Unit Investment**: Advanced portfolio calculations with unit tracking
+- **Tabbed Navigation**: Modern 4-tab interface (Calculator, Saved, Projects, Settings)
+- **Comprehensive Services**:
+  - CloudKitSyncService with automatic sync and retry logic
+  - Import services for CSV and Excel data
+  - PDF export with formatted calculation reports
+  - Enhanced validation and error recovery
+- **Performance Optimizations**: Background Core Data contexts and memory management
 
 ### Android Build System Improvements (Latest)
 - **Simplified ValidationService**: Clean single-object design with comprehensive validation rules
@@ -137,11 +171,15 @@ cd android/
 ## 🔧 Technical Details
 
 ### iOS (Swift/SwiftUI)
-- **Architecture**: MVVM with SwiftUI state management
-- **Persistence**: Core Data with async/await patterns
-- **Charts**: Native Swift Charts framework
-- **Testing**: Swift Testing framework
+- **Architecture**: MVVM with SwiftUI state management and repository pattern
+- **Persistence**: Core Data with async/await patterns, WAL mode, background contexts
+- **Cloud Sync**: Full CloudKit integration with conflict resolution strategies
+- **Import/Export**: CSV, Excel import and PDF export capabilities
+- **Charts**: Native Swift Charts framework for growth visualization
+- **Navigation**: Tab-based architecture with 4 main sections
+- **Testing**: Swift Testing framework with Core Data and CloudKit test coverage
 - **Minimum Version**: iOS 17.0, macOS 14.0
+- **CloudKit**: Requires iCloud entitlements and user account
 
 ### Android (Kotlin/Compose)
 - **Architecture**: MVVM with StateFlow and Repository pattern
@@ -191,6 +229,19 @@ cd android/
 - Input validation and error handling
 - Follow-on investment scenarios
 
+### iOS-Specific Tests
+- Core Data repository operations and migrations
+- CloudKit sync with conflict resolution scenarios
+- CSV/Excel import with various data formats
+- PDF export generation and formatting
+- Auto-save and unsaved changes detection
+
+### Android-Specific Tests
+- Room database operations and queries
+- Repository pattern implementations
+- Validation service rule processing
+- Export service functionality
+
 ## 🎨 Design Assets
 
 Design specifications and assets are located in `shared/assets/`:
@@ -212,10 +263,14 @@ Design specifications and assets are located in `shared/assets/`:
 
 ## 🔒 Security & Privacy
 
-- **No Network Access**: All calculations performed locally
-- **No Data Collection**: No user data transmitted or stored remotely
+- **Local-First**: All calculations performed locally with optional cloud sync
+- **Privacy-Focused Data Handling**: 
+  - **iOS**: CloudKit sync requires explicit user consent and uses Apple's private cloud
+  - **Android**: All data stored locally, no remote transmission
+- **No Analytics**: No user behavior tracking or data collection
 - **Input Sanitization**: All user inputs validated and sanitized
 - **Secure Calculations**: Financial calculations use double-precision arithmetic
+- **CloudKit Security**: iOS cloud sync uses Apple's encrypted CloudKit infrastructure
 
 ## 📄 License
 
