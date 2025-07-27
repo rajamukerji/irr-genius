@@ -91,9 +91,7 @@ struct SettingsView: View {
                             .foregroundColor(.blue)
                             .frame(width: 24)
                         Button("Export All Calculations") {
-                            Task {
-                                await dataManager.exportCalculations(dataManager.calculations)
-                            }
+                            dataManager.exportCalculations(dataManager.calculations)
                         }
                     }
                     
@@ -102,9 +100,7 @@ struct SettingsView: View {
                             .foregroundColor(.blue)
                             .frame(width: 24)
                         Button("Export to CSV") {
-                            Task {
-                                await dataManager.exportCalculationsToCSV(dataManager.calculations)
-                            }
+                            dataManager.exportCalculationsToCSV(dataManager.calculations)
                         }
                     }
                     
