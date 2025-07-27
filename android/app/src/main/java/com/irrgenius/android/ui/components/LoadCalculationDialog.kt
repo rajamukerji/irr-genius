@@ -253,7 +253,7 @@ fun LoadCalculationDialog(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            Icons.Default.Folder,
+                            Icons.Default.Home,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant

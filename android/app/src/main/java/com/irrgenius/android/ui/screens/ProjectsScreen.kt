@@ -256,7 +256,7 @@ fun ProjectsEmptyStateView(searchText: String) {
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = if (searchText.isEmpty()) Icons.Default.FolderSpecial else Icons.Default.Search,
+            imageVector = if (searchText.isEmpty()) Icons.Default.Settings else Icons.Default.Search,
             contentDescription = null,
             modifier = Modifier.size(80.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant

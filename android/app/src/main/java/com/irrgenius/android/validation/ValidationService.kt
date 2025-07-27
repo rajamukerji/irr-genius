@@ -127,50 +127,50 @@ class CalculationValidationService : ValidationService() {
     
     private fun setupCalculationRules() {
         // IRR Calculation validation
-        registerField("initialInvestment", listOf(
+        calculationValidationService.registerField("initialInvestment", listOf(
             ValidationRule.Required("Initial investment is required"),
             ValidationRule.Numeric(),
             ValidationRule.PositiveNumber("Initial investment must be positive")
         ))
         
-        registerField("outcomeAmount", listOf(
+        calculationValidationService.registerField("outcomeAmount", listOf(
             ValidationRule.Required("Outcome amount is required"),
             ValidationRule.Numeric(),
             ValidationRule.PositiveNumber("Outcome amount must be positive")
         ))
         
-        registerField("timeInMonths", listOf(
+        calculationValidationService.registerField("timeInMonths", listOf(
             ValidationRule.Required("Time period is required"),
             ValidationRule.Numeric(),
             ValidationRule.PositiveNumber("Time period must be positive")
         ))
         
         // Portfolio validation
-        registerField("numberOfUnits", listOf(
+        calculationValidationService.registerField("numberOfUnits", listOf(
             ValidationRule.Required("Number of units is required"),
             ValidationRule.Numeric(),
             ValidationRule.PositiveNumber("Number of units must be positive")
         ))
         
-        registerField("unitPrice", listOf(
+        calculationValidationService.registerField("unitPrice", listOf(
             ValidationRule.Required("Unit price is required"),
             ValidationRule.Numeric(),
             ValidationRule.PositiveNumber("Unit price must be positive")
         ))
         
-        registerField("successRate", listOf(
+        calculationValidationService.registerField("successRate", listOf(
             ValidationRule.Required("Success rate is required"),
             ValidationRule.Numeric()
         ))
         
         // Project validation
-        registerField("projectName", listOf(
+        calculationValidationService.registerField("projectName", listOf(
             ValidationRule.Required("Project name is required"),
             ValidationRule.MinLength(1),
             ValidationRule.MaxLength(50, "Project name must be no more than 50 characters")
         ))
         
-        registerField("projectDescription", listOf(
+        calculationValidationService.registerField("projectDescription", listOf(
             ValidationRule.MaxLength(500, "Description must be no more than 500 characters")
         ))
     }

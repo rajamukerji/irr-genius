@@ -209,7 +209,7 @@ fun PortfolioUnitInvestmentView(
                     }
                 }
                 
-                HorizontalDivider()
+                Divider()
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -512,7 +512,7 @@ fun PortfolioUnitInvestmentView(
                             }
                         }
                         
-                        HorizontalDivider()
+                        Divider()
                         
                         Row(
                             modifier = Modifier.fillMaxWidth(),

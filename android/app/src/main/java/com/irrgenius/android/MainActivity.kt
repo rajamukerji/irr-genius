@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,9 +41,9 @@ enum class AppTab(
     val title: String,
     val icon: ImageVector
 ) {
-    CALCULATOR("calculator", "Calculator", Icons.Default.Calculate),
-    SAVED("saved", "Saved", Icons.Default.Folder),
-    PROJECTS("projects", "Projects", Icons.Default.FolderSpecial),
+    CALCULATOR("calculator", "Calculator", Icons.Default.AccountBox),
+    SAVED("saved", "Saved", Icons.Default.Home),
+    PROJECTS("projects", "Projects", Icons.Default.Home),
     SETTINGS("settings", "Settings", Icons.Default.Settings)
 }
 
@@ -93,7 +94,11 @@ fun MainTabScreen() {
                 ProjectsScreen(dataManager = dataManager)
             }
             composable(AppTab.SETTINGS.route) {
-                SettingsScreen()
+                SettingsScreen(
+                    dataManager = dataManager,
+                    onNavigateToCloudSync = { /* TODO: implement */ },
+                    onNavigateToImport = { /* TODO: implement */ }
+                )
             }
         }
     }
@@ -142,7 +147,7 @@ fun CalculatorTabScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(
-                            Icons.Default.Folder,
+                            Icons.Default.Home,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )

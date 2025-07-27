@@ -3,12 +3,14 @@ package com.irrgenius.android.data
 import android.content.Context
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import com.irrgenius.android.data.export.SharingService
-import com.irrgenius.android.data.export.SharingException
 import com.irrgenius.android.data.models.SavedCalculation
 import com.irrgenius.android.data.models.Project
-import com.irrgenius.android.data.repository.RepositoryFactory
+import com.irrgenius.android.data.repository.RepositoryManager
 import com.irrgenius.android.data.sync.CloudSyncService
+import com.irrgenius.android.data.sync.SyncStatus
+import com.irrgenius.android.data.sync.SyncConflict
+import com.irrgenius.android.data.sync.ConflictResolution
+import com.irrgenius.android.data.export.SharingException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,41 +34,22 @@ class DataManager(private val context: Context) {
     private val _isSyncEnabled = MutableStateFlow(false)
     val isSyncEnabled: StateFlow<Boolean> = _isSyncEnabled.asStateFlow()
     
-    private val _syncStatus = MutableStateFlow<CloudSyncService.SyncStatus>(CloudSyncService.SyncStatus.Idle)
-    val syncStatus: StateFlow<CloudSyncService.SyncStatus> = _syncStatus.asStateFlow()
+    private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
+    val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
     
     private val _syncProgress = MutableStateFlow(0.0)
     val syncProgress: StateFlow<Double> = _syncProgress.asStateFlow()
     
-    private val _pendingConflicts = MutableStateFlow<List<CloudSyncService.SyncConflict>>(emptyList())
-    val pendingConflicts: StateFlow<List<CloudSyncService.SyncConflict>> = _pendingConflicts.asStateFlow()
+    private val _pendingConflicts = MutableStateFlow<List<String>>(emptyList())
+    val pendingConflicts: StateFlow<List<String>> = _pendingConflicts.asStateFlow()
     
     // Services
-    private val repositoryFactory = RepositoryFactory(context)
-    private val cloudSyncService = CloudSyncService(context, repositoryFactory)
-    private val sharingService = SharingService(context)
+    private val repositoryManager = RepositoryManager.getInstance(context)
+    private val cloudSyncService = CloudSyncService(context, repositoryManager)
+    private val sharingService = com.irrgenius.android.data.export.SharingService(context)
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
     
     init {
-        // Initialize sync state flows
-        coroutineScope.launch {
-            cloudSyncService.syncStatus.collect { status ->
-                _syncStatus.value = status
-            }
-        }
-        
-        coroutineScope.launch {
-            cloudSyncService.syncProgress.collect { progress ->
-                _syncProgress.value = progress
-            }
-        }
-        
-        coroutineScope.launch {
-            cloudSyncService.pendingConflicts.collect { conflicts ->
-                _pendingConflicts.value = conflicts
-            }
-        }
-        
         // Initialize sync enabled status
         val prefs = context.getSharedPreferences("cloud_sync", Context.MODE_PRIVATE)
         _isSyncEnabled.value = prefs.getBoolean("cloud_sync_enabled", false)
@@ -256,7 +239,7 @@ class DataManager(private val context: Context) {
     /**
      * Resolves a sync conflict
      */
-    fun resolveSyncConflict(conflict: CloudSyncService.SyncConflict, resolution: CloudSyncService.ConflictResolution) {
+    fun resolveSyncConflict(conflict: SyncConflict, resolution: ConflictResolution) {
         coroutineScope.launch {
             val result = cloudSyncService.resolveConflict(conflict, resolution)
             result.onFailure { error ->

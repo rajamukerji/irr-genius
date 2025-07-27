@@ -18,7 +18,7 @@ fun ModeSelectorView(
         selectedTabIndex = selectedMode.ordinal,
         modifier = modifier,
         edgePadding = 16.dp,
-        divider = { HorizontalDivider() }
+        divider = { Divider() }
     ) {
         Tab(
             selected = selectedMode == CalculationMode.CALCULATE_IRR,
