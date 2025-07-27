@@ -142,8 +142,8 @@ struct SaveCalculationDialog: View {
         .onAppear {
             selectedProject = dataManager.projects.first { $0.id == dataManager.saveDialogData.projectId }
         }
-        .onChange(of: selectedProject) { newProject in
-            dataManager.saveDialogData.projectId = newProject?.id
+        .onChange(of: selectedProject) {
+            dataManager.saveDialogData.projectId = selectedProject?.id
         }
     }
     
