@@ -68,11 +68,35 @@ class CSVImportService {
         columnMapping: [String: CalculationField],
         calculationType: CalculationMode,
         projectId: UUID? = nil
-    ) async throws -> ValidationResult {
-        var validationErrors: [ValidationError] = []
+    ) async throws -> ImportValidationResult {
+        let importValidationService = ImportValidationService()
+        var validationErrors: [ImportValidationError] = []
         var validCalculations: [SavedCalculation] = []
         
+        // First, validate the raw data using the validation service
+        let fieldMapping = Dictionary(uniqueKeysWithValues: columnMapping.map { ($0.key, $0.value.rawValue) })
+        let rawValidationResults = importValidationService.validateImportedData(
+            importResult.rows,
+            headers: importResult.headers,
+            fieldMapping: fieldMapping
+        )
+        
+        // Convert validation results to our format
+        for result in rawValidationResults {
+            validationErrors.append(ImportValidationError(
+                row: result.row,
+                column: result.column,
+                value: result.value,
+                error: result.error
+            ))
+        }
+        
+        // Then, try to convert valid rows to SavedCalculation objects
         for (rowIndex, row) in importResult.rows.enumerated() {
+            // Skip rows that already have validation errors
+            let hasRowErrors = validationErrors.contains { $0.row == rowIndex + 1 }
+            if hasRowErrors { continue }
+            
             do {
                 let calculation = try convertRowToCalculation(
                     row: row,
@@ -83,23 +107,28 @@ class CSVImportService {
                     rowIndex: rowIndex
                 )
                 
-                // Validate the calculation
+                // Additional validation using the calculation's built-in validation
                 try calculation.validate()
                 validCalculations.append(calculation)
                 
             } catch {
                 validationErrors.append(
-                    ValidationError(
+                    ImportValidationError(
                         row: rowIndex + 1,
                         column: nil,
-                        message: error.localizedDescription,
-                        severity: .error
+                        value: "",
+                        error: ValidationError(
+                            field: "calculation",
+                            message: error.localizedDescription,
+                            suggestion: "Check all required fields are properly filled",
+                            severity: .error
+                        )
                     )
                 )
             }
         }
         
-        return ValidationResult(
+        return ImportValidationResult(
             validCalculations: validCalculations,
             validationErrors: validationErrors,
             totalRows: importResult.rows.count,
@@ -377,10 +406,10 @@ struct ImportResult {
     let validationErrors: [ValidationError]
 }
 
-/// Result of data validation
-struct ValidationResult {
+/// Result of data validation for imports
+struct ImportValidationResult {
     let validCalculations: [SavedCalculation]
-    let validationErrors: [ValidationError]
+    let validationErrors: [ImportValidationError]
     let totalRows: Int
     let validRows: Int
     
@@ -388,18 +417,12 @@ struct ValidationResult {
     var successRate: Double { totalRows > 0 ? Double(validRows) / Double(totalRows) : 0.0 }
 }
 
-/// Validation error information
-struct ValidationError {
+/// Import validation error for specific row/column
+struct ImportValidationError {
     let row: Int
     let column: String?
-    let message: String
-    let severity: ValidationSeverity
-}
-
-/// Severity levels for validation errors
-enum ValidationSeverity {
-    case warning
-    case error
+    let value: String
+    let error: ValidationError
 }
 
 /// Errors that can occur during import operations

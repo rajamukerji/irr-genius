@@ -125,8 +125,8 @@ class ExcelImportService {
         columnMapping: [String: CalculationField],
         calculationType: CalculationMode,
         projectId: UUID? = nil
-    ) async throws -> ValidationResult {
-        var validationErrors: [ValidationError] = []
+    ) async throws -> ImportValidationResult {
+        var validationErrors: [ImportValidationError] = []
         var validCalculations: [SavedCalculation] = []
         
         for (rowIndex, row) in importResult.rows.enumerated() {
@@ -146,17 +146,22 @@ class ExcelImportService {
                 
             } catch {
                 validationErrors.append(
-                    ValidationError(
+                    ImportValidationError(
                         row: rowIndex + 1,
                         column: nil,
-                        message: error.localizedDescription,
-                        severity: .error
+                        value: "",
+                        error: ValidationError(
+                            field: "calculation",
+                            message: error.localizedDescription,
+                            suggestion: "Check all required fields are properly filled",
+                            severity: .error
+                        )
                     )
                 )
             }
         }
         
-        return ValidationResult(
+        return ImportValidationResult(
             validCalculations: validCalculations,
             validationErrors: validationErrors,
             totalRows: importResult.rows.count,

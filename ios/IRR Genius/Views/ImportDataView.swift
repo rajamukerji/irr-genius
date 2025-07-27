@@ -317,7 +317,7 @@ struct ColumnMappingRow: View {
 // MARK: - Validation Results View
 
 struct ValidationResultsView: View {
-    let validationResult: ValidationResult?
+    let validationResult: ImportValidationResult?
     let onConfirm: () -> Void
     
     @Environment(\.dismiss) private var dismiss
@@ -390,26 +390,26 @@ struct ValidationResultsView: View {
 }
 
 struct ValidationErrorRow: View {
-    let error: ValidationError
+    let error: ImportValidationError
     
     var body: some View {
         HStack {
-            Image(systemName: error.severity == .error ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
-                .foregroundColor(error.severity == .error ? .red : .orange)
+            Image(systemName: error.error.severity == .error ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
+                .foregroundColor(error.error.severity == .error ? .red : .orange)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("Row \(error.row)\(error.column.map { ", Column \($0)" } ?? "")")
                     .font(.caption)
                     .fontWeight(.semibold)
                 
-                Text(error.message)
+                Text(error.error.message)
                     .font(.caption)
             }
             
             Spacer()
         }
         .padding(8)
-        .background(error.severity == .error ? Color.red.opacity(0.1) : Color.orange.opacity(0.1))
+        .background(error.error.severity == .error ? Color.red.opacity(0.1) : Color.orange.opacity(0.1))
         .cornerRadius(8)
     }
 }
@@ -424,7 +424,7 @@ class ImportDataViewModel: ObservableObject {
     @Published var fileType: ImportFileType?
     @Published var importResult: ImportResult?
     @Published var columnMapping: [String: CalculationField] = [:]
-    @Published var validationResult: ValidationResult?
+    @Published var validationResult: ImportValidationResult?
     
     private let csvImportService = CSVImportService()
     private let excelImportService = ExcelImportService()
@@ -509,7 +509,7 @@ class ImportDataViewModel: ObservableObject {
         clearError()
         
         do {
-            let validation: ValidationResult
+            let validation: ImportValidationResult
             
             switch fileType {
             case .csv:
