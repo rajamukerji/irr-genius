@@ -1,9 +1,10 @@
 package com.irrgenius.android.data
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.irrgenius.android.data.models.*
-import com.irrgenius.android.data.repository.RepositoryFactory
+import com.irrgenius.android.data.repository.RepositoryManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,9 +45,13 @@ data class UnsavedChanges(
 
 class AutoSaveManager : ViewModel() {
     
-    private val repositoryFactory = RepositoryFactory()
-    private val calculationRepository = repositoryFactory.createCalculationRepository()
-    private val projectRepository = repositoryFactory.createProjectRepository()
+    private lateinit var repositoryManager: RepositoryManager
+    private val calculationRepository by lazy { repositoryManager.calculationRepository }
+    private val projectRepository by lazy { repositoryManager.projectRepository }
+    
+    fun initialize(context: Context) {
+        repositoryManager = RepositoryManager.getInstance(context)
+    }
     
     // State flows
     private val _calculations = MutableStateFlow<List<SavedCalculation>>(emptyList())
@@ -128,7 +133,7 @@ class AutoSaveManager : ViewModel() {
             _errorMessage.value = null
             
             try {
-                val loadedCalculations = calculationRepository.getAllCalculations()
+                val loadedCalculations = calculationRepository.loadCalculations()
                 _calculations.value = loadedCalculations.sortedByDescending { it.modifiedDate }
                 _loadingState.value = com.irrgenius.android.ui.components.LoadingState.Idle
             } catch (e: Exception) {
@@ -141,7 +146,7 @@ class AutoSaveManager : ViewModel() {
     fun loadProjects() {
         viewModelScope.launch {
             try {
-                val loadedProjects = projectRepository.getAllProjects()
+                val loadedProjects = projectRepository.loadProjects()
                 _projects.value = loadedProjects.sortedByDescending { it.modifiedDate }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
@@ -364,7 +369,7 @@ class AutoSaveManager : ViewModel() {
     fun saveCalculation(calculation: SavedCalculation) {
         viewModelScope.launch {
             try {
-                calculationRepository.insertCalculation(calculation)
+                calculationRepository.saveCalculation(calculation)
                 
                 // Update local list
                 val currentCalculations = _calculations.value.toMutableList()
@@ -390,7 +395,7 @@ class AutoSaveManager : ViewModel() {
     fun deleteCalculation(calculation: SavedCalculation) {
         viewModelScope.launch {
             try {
-                calculationRepository.deleteCalculation(calculation)
+                calculationRepository.deleteCalculation(calculation.id)
                 _calculations.value = _calculations.value.filter { it.id != calculation.id }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
@@ -403,7 +408,7 @@ class AutoSaveManager : ViewModel() {
      */
     suspend fun loadCalculation(id: String): SavedCalculation? {
         return try {
-            calculationRepository.getCalculationById(id)
+            calculationRepository.loadCalculation(id)
         } catch (e: Exception) {
             _errorMessage.value = e.message
             null
@@ -418,7 +423,7 @@ class AutoSaveManager : ViewModel() {
     fun saveProject(project: Project) {
         viewModelScope.launch {
             try {
-                projectRepository.insertProject(project)
+                projectRepository.saveProject(project)
                 
                 val currentProjects = _projects.value.toMutableList()
                 val existingIndex = currentProjects.indexOfFirst { it.id == project.id }
@@ -442,7 +447,7 @@ class AutoSaveManager : ViewModel() {
     fun deleteProject(project: Project) {
         viewModelScope.launch {
             try {
-                projectRepository.deleteProject(project)
+                projectRepository.deleteProject(project.id)
                 _projects.value = _projects.value.filter { it.id != project.id }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
