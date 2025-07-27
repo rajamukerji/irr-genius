@@ -9,7 +9,7 @@ import CoreData
 
 class CoreDataCalculationRepository: CalculationRepository {
     private let container: NSPersistentContainer
-    private let context: NSManagedObjectContext
+    let context: NSManagedObjectContext
     
     init(container: NSPersistentContainer = CoreDataStack.shared.persistentContainer) {
         self.container = container
@@ -133,7 +133,7 @@ class CoreDataCalculationRepository: CalculationRepository {
         }
     }
     
-    private func convertToSavedCalculation(_ entity: SavedCalculationEntity) throws -> SavedCalculation {
+    func convertToSavedCalculation(_ entity: SavedCalculationEntity) throws -> SavedCalculation {
         guard let id = entity.id,
               let name = entity.name,
               let createdDate = entity.createdDate,
@@ -196,7 +196,7 @@ class CoreDataCalculationRepository: CalculationRepository {
 }
 
 // Helper structs for JSON encoding/decoding
-private struct CalculationInputData: Codable {
+struct CalculationInputData: Codable {
     let initialInvestment: Double?
     let outcomeAmount: Double?
     let timeInMonths: Double?
@@ -213,7 +213,7 @@ private struct CalculationInputData: Codable {
     let followOnInvestments: [FollowOnInvestment]?
 }
 
-private struct CalculationResultData: Codable {
+struct CalculationResultData: Codable {
     let calculatedResult: Double?
     let growthPoints: [GrowthPoint]?
 }
