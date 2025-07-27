@@ -151,7 +151,7 @@ private fun CloudSyncStatusCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        Icons.Default.Cloud,
+                        Icons.Default.Settings,
                         contentDescription = null,
                         tint = if (isSyncEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -329,7 +329,7 @@ private fun SyncInformationCard() {
             ) {
                 InfoRow(icon = Icons.Default.Security, text = "End-to-end encryption")
                 InfoRow(icon = Icons.Default.Sync, text = "Automatic sync every 5 minutes")
-                InfoRow(icon = Icons.Default.CloudOff, text = "Offline-first with conflict resolution")
+                InfoRow(icon = Icons.Default.SettingsOff, text = "Offline-first with conflict resolution")
                 InfoRow(icon = Icons.Default.Devices, text = "Cross-platform compatibility")
             }
         }

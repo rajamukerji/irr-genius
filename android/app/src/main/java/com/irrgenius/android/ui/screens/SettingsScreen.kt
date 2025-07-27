@@ -139,7 +139,7 @@ fun CloudSyncSettingsItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.Default.Cloud,
+            imageVector = Icons.Default.Settings,
             contentDescription = null,
             tint = if (isSyncEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(24.dp)
@@ -196,7 +196,7 @@ fun CloudSyncSettingsItem(
             
             IconButton(onClick = onClick) {
                 Icon(
-                    imageVector = Icons.Default.ChevronRight,
+                    imageVector = Icons.Default.ArrowForward,
                     contentDescription = "Open Cloud Sync Settings"
                 )
             }
@@ -343,7 +343,7 @@ fun SettingsActionItem(
         
         IconButton(onClick = onClick) {
             Icon(
-                imageVector = Icons.Default.ChevronRight,
+                imageVector = Icons.Default.ArrowForward,
                 contentDescription = "Open"
             )
         }
@@ -360,7 +360,7 @@ fun AboutDialog(
         text = {
             Column {
                 Icon(
-                    imageVector = Icons.Default.Calculate,
+                    imageVector = Icons.Default.Settings,
                     contentDescription = null,
                     modifier = Modifier
                         .size(60.dp)

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.irrgenius.android.ui.theme.*
 
 // MARK: - Animated Button
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AnimatedButton(
     text: String,
@@ -123,6 +124,7 @@ fun AnimatedButton(
 }
 
 // MARK: - Floating Action Button
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AnimatedFloatingActionButton(
     onClick: () -> Unit,
