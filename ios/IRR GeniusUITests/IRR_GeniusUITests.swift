@@ -275,10 +275,10 @@ final class IRR_GeniusUITests: XCTestCase {
         app.buttons["Export All"].tap()
         
         // Then: Export options should appear
-        XCTAssertTrue(app.actionSheets["Export Options"].exists)
+        XCTAssertTrue(app.sheets["Export Options"].exists)
         
         // When: Select PDF export
-        app.actionSheets["Export Options"].buttons["PDF"].tap()
+        app.sheets["Export Options"].buttons["PDF"].tap()
         
         // Then: Should show export progress
         XCTAssertTrue(app.staticTexts["Generating PDF..."].exists)

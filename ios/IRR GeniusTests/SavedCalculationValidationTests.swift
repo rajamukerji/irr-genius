@@ -173,8 +173,8 @@ final class SavedCalculationValidationTests: XCTestCase {
             name: "Outcome Test",
             calculationType: .calculateOutcome,
             initialInvestment: 100000,
-            irr: 15,
             timeInMonths: 24,
+            irr: 15,
             calculatedResult: 132500
         )
         

@@ -116,7 +116,7 @@ class ExcelImportServiceTests: XCTestCase {
         
         XCTAssertEqual(validationResult.validCalculations.count, 0)
         XCTAssertEqual(validationResult.validationErrors.count, 1)
-        XCTAssertTrue(validationResult.validationErrors[0].message.contains("Invalid number format"))
+        XCTAssertTrue(validationResult.validationErrors[0].error.message.contains("Invalid number format"))
     }
     
     func testPortfolioUnitInvestmentFields() async throws {
