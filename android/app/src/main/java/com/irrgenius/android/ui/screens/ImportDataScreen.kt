@@ -108,19 +108,18 @@ fun ImportDataScreen(
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Description, contentDescription = null)
+                            Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("CSV File")
                         }
                         
                         Button(
                             onClick = { 
-                                viewModel.setFileType(ImportFileType.EXCEL)
-                                filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                                // TODO: Implement Excel import when ImportFileType is available
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.TableChart, contentDescription = null)
+                            Icon(Icons.Default.List, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Excel File")
                         }
@@ -180,7 +179,7 @@ fun ImportDataScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            Icons.Default.Error,
+                            Icons.Default.Warning,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onErrorContainer
                         )

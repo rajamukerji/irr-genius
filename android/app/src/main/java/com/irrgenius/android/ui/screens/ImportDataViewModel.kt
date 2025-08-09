@@ -24,7 +24,7 @@ class ImportDataViewModel : ViewModel() {
     var fileType by mutableStateOf<ImportFileType?>(null)
         private set
     
-    var importResult by mutableStateOf<ImportResult?>(null)
+    var importResult by mutableStateOf<ImportResultWithMapping?>(null)
         private set
     
     var columnMapping by mutableStateOf<Map<String, CalculationField>>(emptyMap())

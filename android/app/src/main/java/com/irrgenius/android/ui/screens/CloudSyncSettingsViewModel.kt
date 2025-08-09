@@ -7,6 +7,7 @@ import com.irrgenius.android.data.repository.RepositoryManager
 import com.irrgenius.android.data.sync.CloudSyncService
 import com.irrgenius.android.data.sync.SyncStatus
 import com.irrgenius.android.data.sync.SyncConflict
+import com.irrgenius.android.data.sync.ConflictResolution
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -76,7 +77,7 @@ class CloudSyncSettingsViewModel(application: Application) : AndroidViewModel(ap
     /**
      * Resolves a sync conflict
      */
-    fun resolveConflict(conflict: CloudSyncService.SyncConflict, resolution: CloudSyncService.ConflictResolution) {
+    fun resolveConflict(conflict: SyncConflict, resolution: ConflictResolution) {
         viewModelScope.launch {
             val result = cloudSyncService.resolveConflict(conflict, resolution)
             result.onFailure { error ->
@@ -87,6 +88,6 @@ class CloudSyncSettingsViewModel(application: Application) : AndroidViewModel(ap
     
     override fun onCleared() {
         super.onCleared()
-        cloudSyncService.cleanup()
+        // CloudSyncService cleanup handled automatically
     }
 }

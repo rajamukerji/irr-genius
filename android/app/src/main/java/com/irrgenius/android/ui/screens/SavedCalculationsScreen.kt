@@ -79,7 +79,7 @@ fun SavedCalculationsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Default.Error,
+                        Icons.Default.Warning,
                         contentDescription = "Error",
                         tint = MaterialTheme.colorScheme.onErrorContainer
                     )

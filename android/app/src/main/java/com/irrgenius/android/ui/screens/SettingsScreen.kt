@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.irrgenius.android.data.sync.SyncStatus
+import com.irrgenius.android.data.sync.SyncConflict
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +53,7 @@ fun SettingsScreen(
                     )
                     
                     SettingsToggleItem(
-                        icon = Icons.Default.Save,
+                        icon = Icons.Default.Check,
                         title = "Auto-Save Calculations",
                         description = "Automatically save completed calculations",
                         checked = autoSaveEnabled,
@@ -71,14 +73,14 @@ fun SettingsScreen(
             item {
                 SettingsSection(title = "Import & Export") {
                     SettingsActionItem(
-                        icon = Icons.Default.Upload,
+                        icon = Icons.Default.Share,
                         title = "Export All Calculations",
                         description = "Export all calculations to a file",
                         onClick = { /* TODO: Implement bulk export */ }
                     )
                     
                     SettingsActionItem(
-                        icon = Icons.Default.Download,
+                        icon = Icons.Default.GetApp,
                         title = "Import from File",
                         description = "Import calculations from CSV or Excel",
                         onClick = { /* TODO: Implement import */ }

@@ -19,6 +19,7 @@ import com.irrgenius.android.data.sync.CloudSyncService
 import com.irrgenius.android.data.sync.SyncStatus
 import com.irrgenius.android.data.sync.SyncConflict
 import com.irrgenius.android.data.sync.ConflictResolution
+import com.irrgenius.android.data.sync.ConflictType
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -39,8 +40,9 @@ fun CloudSyncSettingsScreen(
     
     // Handle sync status changes
     LaunchedEffect(syncStatus) {
-        if (syncStatus is CloudSyncService.SyncStatus.Error) {
-            errorMessage = syncStatus.errorMessage ?: "Unknown sync error"
+        val currentStatus = syncStatus
+        if (currentStatus is SyncStatus.Error) {
+            errorMessage = currentStatus.message
             showErrorDialog = true
         }
     }
@@ -127,7 +129,7 @@ fun CloudSyncSettingsScreen(
 @Composable
 private fun CloudSyncStatusCard(
     isSyncEnabled: Boolean,
-    syncStatus: CloudSyncService.SyncStatus,
+    syncStatus: SyncStatus,
     syncProgress: Double,
     onToggleSync: (Boolean) -> Unit,
     onManualSync: () -> Unit
@@ -176,26 +178,26 @@ private fun CloudSyncStatusCard(
                 ) {
                     Icon(
                         imageVector = when (syncStatus) {
-                            is CloudSyncService.SyncStatus.Idle -> Icons.Default.CheckCircle
-                            is CloudSyncService.SyncStatus.Syncing -> Icons.Default.Sync
-                            is CloudSyncService.SyncStatus.Success -> Icons.Default.CheckCircle
-                            is CloudSyncService.SyncStatus.Error -> Icons.Default.Error
+                            is SyncStatus.Idle -> Icons.Default.CheckCircle
+                            is SyncStatus.Syncing -> Icons.Default.Refresh
+                            is SyncStatus.Success -> Icons.Default.CheckCircle
+                            is SyncStatus.Error -> Icons.Default.Warning
                         },
                         contentDescription = null,
                         tint = when (syncStatus) {
-                            is CloudSyncService.SyncStatus.Idle -> MaterialTheme.colorScheme.onSurfaceVariant
-                            is CloudSyncService.SyncStatus.Syncing -> MaterialTheme.colorScheme.primary
-                            is CloudSyncService.SyncStatus.Success -> Color(0xFF4CAF50)
-                            is CloudSyncService.SyncStatus.Error -> MaterialTheme.colorScheme.error
+                            is SyncStatus.Idle -> MaterialTheme.colorScheme.onSurfaceVariant
+                            is SyncStatus.Syncing -> MaterialTheme.colorScheme.primary
+                            is SyncStatus.Success -> Color(0xFF4CAF50)
+                            is SyncStatus.Error -> MaterialTheme.colorScheme.error
                         }
                     )
                     
                     Text(
                         text = when (syncStatus) {
-                            is CloudSyncService.SyncStatus.Idle -> "Ready to sync"
-                            is CloudSyncService.SyncStatus.Syncing -> "Syncing..."
-                            is CloudSyncService.SyncStatus.Success -> "Last synced ${syncStatus.timestamp.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))}"
-                            is CloudSyncService.SyncStatus.Error -> "Sync failed"
+                            is SyncStatus.Idle -> "Ready to sync"
+                            is SyncStatus.Syncing -> "Syncing..."
+                            is SyncStatus.Success -> "Last synced ${java.text.SimpleDateFormat("MM/dd/yy HH:mm", java.util.Locale.getDefault()).format(java.util.Date(syncStatus.timestamp))}"
+                            is SyncStatus.Error -> "Sync failed"
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -203,7 +205,7 @@ private fun CloudSyncStatusCard(
                 }
                 
                 // Sync Progress
-                if (syncStatus is CloudSyncService.SyncStatus.Syncing) {
+                if (syncStatus is SyncStatus.Syncing) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -231,9 +233,9 @@ private fun CloudSyncStatusCard(
                 Button(
                     onClick = onManualSync,
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !syncStatus.isActive
+                    enabled = syncStatus !is SyncStatus.Syncing
                 ) {
-                    Icon(Icons.Default.Sync, contentDescription = null)
+                    Icon(Icons.Default.Refresh, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Sync Now")
                 }
@@ -242,6 +244,7 @@ private fun CloudSyncStatusCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ConflictResolutionCard(
     conflictCount: Int,
@@ -327,10 +330,10 @@ private fun SyncInformationCard() {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                InfoRow(icon = Icons.Default.Security, text = "End-to-end encryption")
-                InfoRow(icon = Icons.Default.Sync, text = "Automatic sync every 5 minutes")
-                InfoRow(icon = Icons.Default.SettingsOff, text = "Offline-first with conflict resolution")
-                InfoRow(icon = Icons.Default.Devices, text = "Cross-platform compatibility")
+                InfoRow(icon = Icons.Default.Lock, text = "End-to-end encryption")
+                InfoRow(icon = Icons.Default.Refresh, text = "Automatic sync every 5 minutes")
+                InfoRow(icon = Icons.Default.Settings, text = "Offline-first with conflict resolution")
+                InfoRow(icon = Icons.Default.Phone, text = "Cross-platform compatibility")
             }
         }
     }
@@ -361,9 +364,9 @@ private fun InfoRow(
 
 @Composable
 private fun ConflictResolutionDialog(
-    conflicts: List<CloudSyncService.SyncConflict>,
+    conflicts: List<SyncConflict>,
     onDismiss: () -> Unit,
-    onResolveConflict: (CloudSyncService.SyncConflict, CloudSyncService.ConflictResolution) -> Unit
+    onResolveConflict: (SyncConflict, ConflictResolution) -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -392,8 +395,8 @@ private fun ConflictResolutionDialog(
 
 @Composable
 private fun ConflictItem(
-    conflict: CloudSyncService.SyncConflict,
-    onResolve: (CloudSyncService.ConflictResolution) -> Unit
+    conflict: SyncConflict,
+    onResolve: (ConflictResolution) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -404,17 +407,19 @@ private fun ConflictItem(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                conflict.localRecord.name,
+                "Conflict Item",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             
             Text(
                 when (conflict.conflictType) {
-                    CloudSyncService.SyncConflict.ConflictType.MODIFICATION_DATE ->
-                        "Both local and remote versions were modified at the same time."
-                    CloudSyncService.SyncConflict.ConflictType.DATA_CONFLICT ->
+                    ConflictType.DATA_CONFLICT ->
                         "Conflicting data between local and remote versions."
+                    ConflictType.VERSION_CONFLICT ->
+                        "Both local and remote versions were modified at the same time."
+                    ConflictType.MERGE_CONFLICT ->
+                        "Automatic merge failed, manual resolution required."
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -424,21 +429,21 @@ private fun ConflictItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { onResolve(CloudSyncService.ConflictResolution.USE_LOCAL) },
+                    onClick = { onResolve(ConflictResolution.USE_LOCAL) },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Use Local", style = MaterialTheme.typography.bodySmall)
                 }
                 
                 OutlinedButton(
-                    onClick = { onResolve(CloudSyncService.ConflictResolution.USE_REMOTE) },
+                    onClick = { onResolve(ConflictResolution.USE_REMOTE) },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Use Remote", style = MaterialTheme.typography.bodySmall)
                 }
                 
                 Button(
-                    onClick = { onResolve(CloudSyncService.ConflictResolution.MERGE) },
+                    onClick = { onResolve(ConflictResolution.MERGE) },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Merge", style = MaterialTheme.typography.bodySmall)
