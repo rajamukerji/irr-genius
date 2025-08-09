@@ -21,8 +21,8 @@ class ImportDataViewModel : ViewModel() {
     var selectedCalculationType by mutableStateOf(CalculationMode.CALCULATE_IRR)
         private set
     
-    var fileType by mutableStateOf<ImportFileType?>(null)
-        private set
+    private var _fileType by mutableStateOf<ImportFileType?>(null)
+    val fileType: ImportFileType? get() = _fileType
     
     var importResult by mutableStateOf<ImportResultWithMapping?>(null)
         private set
@@ -38,7 +38,7 @@ class ImportDataViewModel : ViewModel() {
     private val excelImportService = ExcelImportService()
     
     fun setFileType(type: ImportFileType) {
-        fileType = type
+        _fileType = type
         clearError()
     }
     
@@ -143,7 +143,7 @@ class ImportDataViewModel : ViewModel() {
     fun reset() {
         isProcessing = false
         errorMessage = null
-        fileType = null
+        _fileType = null
         importResult = null
         columnMapping = emptyMap()
         validationResult = null

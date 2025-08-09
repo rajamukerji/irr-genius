@@ -48,7 +48,7 @@ fun SettingsScreen(
                     CloudSyncSettingsItem(
                         isSyncEnabled = isSyncEnabled,
                         syncStatus = syncStatus,
-                        pendingConflicts = pendingConflicts,
+                        pendingConflicts = emptyList(),
                         onClick = onNavigateToCloudSync
                     )
                     
@@ -80,7 +80,7 @@ fun SettingsScreen(
                     )
                     
                     SettingsActionItem(
-                        icon = Icons.Default.GetApp,
+                        icon = Icons.Default.Add,
                         title = "Import from File",
                         description = "Import calculations from CSV or Excel",
                         onClick = { /* TODO: Implement import */ }
@@ -127,11 +127,12 @@ fun SettingsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CloudSyncSettingsItem(
     isSyncEnabled: Boolean,
-    syncStatus: com.irrgenius.android.data.sync.CloudSyncService.SyncStatus,
-    pendingConflicts: List<com.irrgenius.android.data.sync.CloudSyncService.SyncConflict>,
+    syncStatus: SyncStatus,
+    pendingConflicts: List<SyncConflict>,
     onClick: () -> Unit
 ) {
     Row(
@@ -160,9 +161,9 @@ fun CloudSyncSettingsItem(
             
             val statusText = when {
                 !isSyncEnabled -> "Disabled"
-                syncStatus is com.irrgenius.android.data.sync.CloudSyncService.SyncStatus.Syncing -> "Syncing..."
-                syncStatus is com.irrgenius.android.data.sync.CloudSyncService.SyncStatus.Success -> "Enabled"
-                syncStatus is com.irrgenius.android.data.sync.CloudSyncService.SyncStatus.Error -> "Error"
+                syncStatus is SyncStatus.Syncing -> "Syncing..."
+                syncStatus is SyncStatus.Success -> "Enabled"
+                syncStatus is SyncStatus.Error -> "Error"
                 else -> "Ready"
             }
             
@@ -179,7 +180,7 @@ fun CloudSyncSettingsItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Sync progress indicator
-            if (syncStatus is com.irrgenius.android.data.sync.CloudSyncService.SyncStatus.Syncing) {
+            if (syncStatus is SyncStatus.Syncing) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(16.dp),
                     strokeWidth = 2.dp
@@ -188,12 +189,14 @@ fun CloudSyncSettingsItem(
             
             // Conflict indicator
             if (pendingConflicts.isNotEmpty()) {
-                Badge {
-                    Text(
-                        text = pendingConflicts.size.toString(),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
+                Badge(
+                    content = {
+                        Text(
+                            text = pendingConflicts.size.toString(),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                )
             }
             
             IconButton(onClick = onClick) {

@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.irrgenius.android.data.import.*
+import com.irrgenius.android.data.import.ImportResultWithMapping as ImportResult
 import com.irrgenius.android.data.models.CalculationMode
 import kotlinx.coroutines.launch
 
@@ -243,7 +244,7 @@ fun ImportDataScreen(
             validationResult = viewModel.validationResult,
             onConfirm = { 
                 showImportConfirmationDialog = false
-                viewModel.validationResult?.validCalculations?.let { calculations ->
+                viewModel.importResult?.validCalculations?.let { calculations ->
                     onImportComplete(calculations)
                 }
             },
@@ -252,6 +253,7 @@ fun ImportDataScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CalculationModeDropdown(
     selectedMode: CalculationMode,
@@ -321,8 +323,9 @@ private fun ImportSummaryCard(
             
             Text(
                 text = "Detected Format: ${when (importResult.detectedFormat) {
-                    is ImportFormat.CSV -> "CSV (delimiter: '${importResult.detectedFormat.delimiter}')"
-                    is ImportFormat.Excel -> "Excel (sheet: ${importResult.detectedFormat.sheetName})"
+                    ImportFormat.CSV -> "CSV"
+                    ImportFormat.Excel -> "Excel"
+                    else -> importResult.detectedFormat.name
                 }}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -384,7 +387,7 @@ private fun ColumnMappingDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(result.headers) { header ->
+                        items(result.headers) { header: String ->
                             ColumnMappingRow(
                                 columnName = header,
                                 selectedField = currentMapping[header],
@@ -419,6 +422,7 @@ private fun ColumnMappingDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ColumnMappingRow(
     columnName: String,
@@ -600,6 +604,7 @@ private fun ValidationErrorItem(error: ValidationError) {
             containerColor = when (error.severity) {
                 ValidationSeverity.ERROR -> MaterialTheme.colorScheme.errorContainer
                 ValidationSeverity.WARNING -> MaterialTheme.colorScheme.secondaryContainer
+                ValidationSeverity.INFO -> MaterialTheme.colorScheme.tertiaryContainer
             }
         )
     ) {
@@ -609,13 +614,15 @@ private fun ValidationErrorItem(error: ValidationError) {
         ) {
             Icon(
                 when (error.severity) {
-                    ValidationSeverity.ERROR -> Icons.Default.Error
+                    ValidationSeverity.ERROR -> Icons.Default.Warning
                     ValidationSeverity.WARNING -> Icons.Default.Warning
+                    ValidationSeverity.INFO -> Icons.Default.Info
                 },
                 contentDescription = null,
                 tint = when (error.severity) {
                     ValidationSeverity.ERROR -> MaterialTheme.colorScheme.onErrorContainer
                     ValidationSeverity.WARNING -> MaterialTheme.colorScheme.onSecondaryContainer
+                    ValidationSeverity.INFO -> MaterialTheme.colorScheme.onTertiaryContainer
                 }
             )
             
