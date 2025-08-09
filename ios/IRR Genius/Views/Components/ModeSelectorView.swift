@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ModeSelectorView: View {
     @Binding var selectedMode: CalculationMode
-    
+
     var body: some View {
         Picker("Calculation Mode", selection: $selectedMode) {
             ForEach(CalculationMode.allCases, id: \.self) { mode in
@@ -19,4 +19,4 @@ struct ModeSelectorView: View {
         .pickerStyle(SegmentedPickerStyle())
         .padding(.horizontal)
     }
-} 
+}

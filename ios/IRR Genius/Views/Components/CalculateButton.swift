@@ -11,7 +11,7 @@ struct CalculateButton: View {
     let title: String
     let isLoading: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             HStack {
@@ -20,7 +20,7 @@ struct CalculateButton: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(0.8)
                 }
-                
+
                 Text(isLoading ? "Calculating..." : title)
                     .font(.headline)
                     .fontWeight(.semibold)
@@ -34,4 +34,4 @@ struct CalculateButton: View {
         .disabled(isLoading)
         .opacity(isLoading ? 0.7 : 1.0)
     }
-} 
+}

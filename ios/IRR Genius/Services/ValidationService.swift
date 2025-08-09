@@ -19,13 +19,13 @@ protocol Validatable {
 struct ValidationResult {
     let isValid: Bool
     let errors: [ValidationError]
-    
+
     static let valid = ValidationResult(isValid: true, errors: [])
-    
+
     static func invalid(_ errors: [ValidationError]) -> ValidationResult {
         return ValidationResult(isValid: false, errors: errors)
     }
-    
+
     static func invalid(_ error: ValidationError) -> ValidationResult {
         return ValidationResult(isValid: false, errors: [error])
     }
@@ -38,17 +38,17 @@ struct ValidationError: Identifiable, LocalizedError {
     let message: String
     let suggestion: String?
     let severity: Severity
-    
+
     enum Severity {
         case error
         case warning
         case info
     }
-    
+
     var errorDescription: String? {
         return message
     }
-    
+
     var recoverySuggestion: String? {
         return suggestion
     }
@@ -65,7 +65,7 @@ enum ValidationRule {
     case currency
     case email
     case custom((String) -> ValidationResult)
-    
+
     func validate(_ value: String, fieldName: String) -> ValidationResult {
         switch self {
         case .required:
@@ -77,8 +77,8 @@ enum ValidationRule {
                     severity: .error
                 ))
                 : .valid
-                
-        case .minLength(let min):
+
+        case let .minLength(min):
             return value.count < min
                 ? .invalid(ValidationError(
                     field: fieldName,
@@ -87,8 +87,8 @@ enum ValidationRule {
                     severity: .error
                 ))
                 : .valid
-                
-        case .maxLength(let max):
+
+        case let .maxLength(max):
             return value.count > max
                 ? .invalid(ValidationError(
                     field: fieldName,
@@ -97,8 +97,8 @@ enum ValidationRule {
                     severity: .error
                 ))
                 : .valid
-                
-        case .range(let min, let max):
+
+        case let .range(min, max):
             guard let doubleValue = Double(value.replacingOccurrences(of: ",", with: "")) else {
                 return .invalid(ValidationError(
                     field: fieldName,
@@ -107,7 +107,7 @@ enum ValidationRule {
                     severity: .error
                 ))
             }
-            
+
             if doubleValue < min || doubleValue > max {
                 return .invalid(ValidationError(
                     field: fieldName,
@@ -117,7 +117,7 @@ enum ValidationRule {
                 ))
             }
             return .valid
-            
+
         case .positive:
             guard let doubleValue = Double(value.replacingOccurrences(of: ",", with: "")) else {
                 return .invalid(ValidationError(
@@ -127,7 +127,7 @@ enum ValidationRule {
                     severity: .error
                 ))
             }
-            
+
             return doubleValue <= 0
                 ? .invalid(ValidationError(
                     field: fieldName,
@@ -136,7 +136,7 @@ enum ValidationRule {
                     severity: .error
                 ))
                 : .valid
-                
+
         case .percentage:
             guard let doubleValue = Double(value.replacingOccurrences(of: ",", with: "")) else {
                 return .invalid(ValidationError(
@@ -146,7 +146,7 @@ enum ValidationRule {
                     severity: .error
                 ))
             }
-            
+
             if doubleValue < 0 || doubleValue > 100 {
                 return .invalid(ValidationError(
                     field: fieldName,
@@ -156,11 +156,11 @@ enum ValidationRule {
                 ))
             }
             return .valid
-            
+
         case .currency:
             let cleanValue = value.replacingOccurrences(of: "$", with: "")
                 .replacingOccurrences(of: ",", with: "")
-            
+
             guard let doubleValue = Double(cleanValue) else {
                 return .invalid(ValidationError(
                     field: fieldName,
@@ -169,7 +169,7 @@ enum ValidationRule {
                     severity: .error
                 ))
             }
-            
+
             return doubleValue < 0
                 ? .invalid(ValidationError(
                     field: fieldName,
@@ -178,11 +178,11 @@ enum ValidationRule {
                     severity: .error
                 ))
                 : .valid
-                
+
         case .email:
             let emailRegex = "^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
             let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
-            
+
             return emailPredicate.evaluate(with: value)
                 ? .valid
                 : .invalid(ValidationError(
@@ -191,8 +191,8 @@ enum ValidationRule {
                     suggestion: "Enter a valid email address (e.g., user@example.com)",
                     severity: .error
                 ))
-                
-        case .custom(let validator):
+
+        case let .custom(validator):
             return validator(value)
         }
     }
@@ -202,46 +202,46 @@ enum ValidationRule {
 class ValidationService: ObservableObject {
     @Published var fieldErrors: [String: [ValidationError]] = [:]
     @Published var hasErrors: Bool = false
-    
-    internal var fieldRules: [String: [ValidationRule]] = [:]
+
+    var fieldRules: [String: [ValidationRule]] = [:]
     private var realTimeValidation: Bool = true
-    
+
     /// Registers validation rules for a field
     func registerField(_ fieldName: String, rules: [ValidationRule]) {
         fieldRules[fieldName] = rules
     }
-    
+
     /// Validates a single field
     func validateField(_ fieldName: String, value: String) -> ValidationResult {
         guard let rules = fieldRules[fieldName] else {
             return .valid
         }
-        
+
         var errors: [ValidationError] = []
-        
+
         for rule in rules {
             let result = rule.validate(value, fieldName: fieldName)
             if !result.isValid {
                 errors.append(contentsOf: result.errors)
             }
         }
-        
+
         // Update field errors
         if errors.isEmpty {
             fieldErrors.removeValue(forKey: fieldName)
         } else {
             fieldErrors[fieldName] = errors
         }
-        
+
         updateHasErrors()
-        
+
         return errors.isEmpty ? .valid : .invalid(errors)
     }
-    
+
     /// Validates all registered fields
     func validateAllFields(_ values: [String: String]) -> ValidationResult {
         var allErrors: [ValidationError] = []
-        
+
         for (fieldName, _) in fieldRules {
             let value = values[fieldName] ?? ""
             let result = validateField(fieldName, value: value)
@@ -249,37 +249,37 @@ class ValidationService: ObservableObject {
                 allErrors.append(contentsOf: result.errors)
             }
         }
-        
+
         return allErrors.isEmpty ? .valid : .invalid(allErrors)
     }
-    
+
     /// Clears all validation errors
     func clearErrors() {
         fieldErrors.removeAll()
         updateHasErrors()
     }
-    
+
     /// Clears errors for a specific field
     func clearFieldErrors(_ fieldName: String) {
         fieldErrors.removeValue(forKey: fieldName)
         updateHasErrors()
     }
-    
+
     /// Gets errors for a specific field
     func getFieldErrors(_ fieldName: String) -> [ValidationError] {
         return fieldErrors[fieldName] ?? []
     }
-    
+
     /// Checks if a field has errors
     func hasFieldErrors(_ fieldName: String) -> Bool {
         return !(fieldErrors[fieldName]?.isEmpty ?? true)
     }
-    
+
     /// Enables or disables real-time validation
     func setRealTimeValidation(_ enabled: Bool) {
         realTimeValidation = enabled
     }
-    
+
     private func updateHasErrors() {
         hasErrors = !fieldErrors.isEmpty
     }
@@ -289,12 +289,11 @@ class ValidationService: ObservableObject {
 
 /// Validation service specifically for calculation forms
 class CalculationValidationService: ValidationService {
-    
     /// Sets up validation rules for a specific calculation type
     func setupValidationRules(for calculationType: CalculationMode) {
         clearErrors()
         fieldRules.removeAll()
-        
+
         // Common validation rules
         registerField("name", rules: [
             .required,
@@ -309,31 +308,31 @@ class CalculationValidationService: ValidationService {
                         suggestion: "Remove characters like < > : \" / \\ | ? *",
                         severity: .error
                     ))
-            }
+            },
         ])
-        
+
         // Calculation-specific rules
         switch calculationType {
         case .calculateIRR:
             registerField("initialInvestment", rules: [.required, .currency, .positive])
             registerField("outcomeAmount", rules: [.required, .currency, .positive])
             registerField("timeInMonths", rules: [.required, .positive, .range(min: 0.1, max: 1200)])
-            
+
         case .calculateOutcome:
             registerField("initialInvestment", rules: [.required, .currency, .positive])
             registerField("irr", rules: [.required, .range(min: -100, max: 1000)])
             registerField("timeInMonths", rules: [.required, .positive, .range(min: 0.1, max: 1200)])
-            
+
         case .calculateInitial:
             registerField("outcomeAmount", rules: [.required, .currency, .positive])
             registerField("irr", rules: [.required, .range(min: -100, max: 1000)])
             registerField("timeInMonths", rules: [.required, .positive, .range(min: 0.1, max: 1200)])
-            
+
         case .calculateBlendedIRR:
             registerField("initialInvestment", rules: [.required, .currency, .positive])
             registerField("outcomeAmount", rules: [.required, .currency, .positive])
             registerField("timeInMonths", rules: [.required, .positive, .range(min: 0.1, max: 1200)])
-            
+
         case .portfolioUnitInvestment:
             registerField("initialInvestment", rules: [.required, .currency, .positive])
             registerField("unitPrice", rules: [.required, .currency, .positive])
@@ -343,11 +342,11 @@ class CalculationValidationService: ValidationService {
             registerField("timeInMonths", rules: [.required, .positive, .range(min: 0.1, max: 1200)])
         }
     }
-    
+
     /// Validates follow-on investment data
     func validateFollowOnInvestment(_ investment: FollowOnInvestment) -> ValidationResult {
         var errors: [ValidationError] = []
-        
+
         // Validate amount
         if let amountValue = Double(investment.amount.replacingOccurrences(of: ",", with: "")), amountValue <= 0 {
             errors.append(ValidationError(
@@ -364,7 +363,7 @@ class CalculationValidationService: ValidationService {
                 severity: .error
             ))
         }
-        
+
         // Validate timing
         switch investment.timingType {
         case .absoluteDate:
@@ -376,7 +375,7 @@ class CalculationValidationService: ValidationService {
                     severity: .warning
                 ))
             }
-            
+
         case .relativeTime:
             if let relativeTimeValue = Double(investment.relativeAmount), relativeTimeValue <= 0 {
                 errors.append(ValidationError(
@@ -394,7 +393,7 @@ class CalculationValidationService: ValidationService {
                 ))
             }
         }
-        
+
         // Validate valuation
         switch investment.valuationMode {
         case .custom:
@@ -415,7 +414,7 @@ class CalculationValidationService: ValidationService {
                     ))
                 }
             } else if investment.valuationType == .computed {
-                if let irrValue = Double(investment.irr), (irrValue <= -100 || irrValue >= 1000) {
+                if let irrValue = Double(investment.irr), irrValue <= -100 || irrValue >= 1000 {
                     errors.append(ValidationError(
                         field: "irr",
                         message: "IRR must be between -100% and 1000%",
@@ -435,7 +434,7 @@ class CalculationValidationService: ValidationService {
             // Tag-along mode doesn't require additional validation
             break
         }
-        
+
         return errors.isEmpty ? .valid : .invalid(errors)
     }
 }
@@ -446,25 +445,25 @@ class CalculationValidationService: ValidationService {
 class ImportValidationService: ObservableObject {
     @Published var validationResults: [ImportFieldValidationResult] = []
     @Published var hasValidationErrors: Bool = false
-    
+
     struct ImportFieldValidationResult {
         let row: Int
         let column: String
         let value: String
         let error: ValidationError
     }
-    
+
     /// Validates imported CSV/Excel data
     func validateImportedData(_ data: [[String]], headers: [String], fieldMapping: [String: String]) -> [ImportFieldValidationResult] {
         var results: [ImportFieldValidationResult] = []
-        
+
         for (rowIndex, row) in data.enumerated() {
             for (columnIndex, value) in row.enumerated() {
                 guard columnIndex < headers.count else { continue }
-                
+
                 let header = headers[columnIndex]
                 guard let fieldName = fieldMapping[header] else { continue }
-                
+
                 let validationResult = validateImportedField(fieldName, value: value)
                 if !validationResult.isValid {
                     for error in validationResult.errors {
@@ -478,41 +477,41 @@ class ImportValidationService: ObservableObject {
                 }
             }
         }
-        
+
         validationResults = results
         hasValidationErrors = !results.isEmpty
-        
+
         return results
     }
-    
+
     private func validateImportedField(_ fieldName: String, value: String) -> ValidationResult {
         switch fieldName {
         case "initialInvestment", "outcomeAmount", "unitPrice", "outcomePerUnit", "customValuation":
             return ValidationRule.currency.validate(value, fieldName: fieldName)
-            
+
         case "irr":
             return ValidationRule.range(min: -100, max: 1000).validate(value, fieldName: fieldName)
-            
+
         case "timeInMonths":
             return ValidationRule.positive.validate(value, fieldName: fieldName)
-            
+
         case "successRate", "investorShare", "feePercentage":
             return ValidationRule.percentage.validate(value, fieldName: fieldName)
-            
+
         case "name":
             let requiredResult = ValidationRule.required.validate(value, fieldName: fieldName)
             if !requiredResult.isValid { return requiredResult }
-            
+
             let lengthResult = ValidationRule.maxLength(100).validate(value, fieldName: fieldName)
             if !lengthResult.isValid { return lengthResult }
-            
+
             return .valid
-            
+
         default:
             return .valid
         }
     }
-    
+
     /// Clears validation results
     func clearValidationResults() {
         validationResults.removeAll()
@@ -525,7 +524,7 @@ class ImportValidationService: ObservableObject {
 extension View {
     /// Adds validation error display to a view
     func validationError(_ errors: [ValidationError]) -> some View {
-        self.overlay(
+        overlay(
             VStack {
                 Spacer()
                 if !errors.isEmpty {
@@ -534,11 +533,11 @@ extension View {
                             HStack {
                                 Image(systemName: iconForSeverity(error.severity))
                                     .foregroundColor(colorForSeverity(error.severity))
-                                
+
                                 Text(error.message)
                                     .font(.caption)
                                     .foregroundColor(colorForSeverity(error.severity))
-                                
+
                                 Spacer()
                             }
                         }
@@ -553,7 +552,7 @@ extension View {
             alignment: .bottomLeading
         )
     }
-    
+
     private func iconForSeverity(_ severity: ValidationError.Severity) -> String {
         switch severity {
         case .error: return "exclamationmark.circle.fill"
@@ -561,7 +560,7 @@ extension View {
         case .info: return "info.circle.fill"
         }
     }
-    
+
     private func colorForSeverity(_ severity: ValidationError.Severity) -> Color {
         switch severity {
         case .error: return .red

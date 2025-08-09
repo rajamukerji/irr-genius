@@ -12,7 +12,7 @@ struct FollowOnInvestmentContent: View {
     let showingBatchDetails: Bool
     @Binding var selectedBatchIndex: Int?
     @Binding var showingAddInvestment: Bool
-    
+
     var body: some View {
         VStack(spacing: 12) {
             // Batch Summary Header
@@ -20,14 +20,14 @@ struct FollowOnInvestmentContent: View {
                 Text("Total Batches: \(followOnInvestments.count + 1)")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 Spacer()
-                
+
                 Text("Total Follow-on: \(NumberFormatting.formatCurrency(followOnInvestments.compactMap { Double($0.amount.replacingOccurrences(of: ",", with: "")) }.reduce(0, +)))")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             FollowOnInvestmentList(
                 followOnInvestments: $followOnInvestments,
                 showingBatchDetails: showingBatchDetails,
@@ -52,7 +52,7 @@ struct FollowOnInvestmentContent_Previews: PreviewProvider {
                     amount: "25000",
                     valuationMode: .custom,
                     valuation: "15"
-                )
+                ),
             ]),
             showingBatchDetails: true,
             selectedBatchIndex: .constant(nil),

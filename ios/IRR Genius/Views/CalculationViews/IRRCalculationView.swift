@@ -15,7 +15,7 @@ struct IRRCalculationView: View {
     @Binding var isCalculating: Bool
     @Binding var errorMessage: String?
     let onCalculate: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // Title
@@ -23,7 +23,7 @@ struct IRRCalculationView: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             // Input fields
             VStack(spacing: 16) {
                 InputField(
@@ -32,14 +32,14 @@ struct IRRCalculationView: View {
                     text: $initialInvestment,
                     formatType: .currency
                 )
-                
+
                 InputField(
                     title: "Outcome Amount",
                     placeholder: "Enter final outcome amount",
                     text: $outcomeAmount,
                     formatType: .currency
                 )
-                
+
                 InputField(
                     title: "Time Period (Months)",
                     placeholder: "Enter time period in months",
@@ -47,7 +47,7 @@ struct IRRCalculationView: View {
                     formatType: .number
                 )
             }
-            
+
             // Error message
             if let errorMessage = errorMessage {
                 Text(errorMessage)
@@ -55,7 +55,7 @@ struct IRRCalculationView: View {
                     .font(.caption)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            
+
             // Calculate button
             CalculateButton(
                 title: "Calculate IRR",
@@ -67,4 +67,4 @@ struct IRRCalculationView: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
     }
-} 
+}

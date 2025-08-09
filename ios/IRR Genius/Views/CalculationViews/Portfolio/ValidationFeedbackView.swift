@@ -10,7 +10,7 @@ import SwiftUI
 struct ValidationFeedbackView: View {
     let validationErrors: [String]
     @Binding var showingDetails: Bool
-    
+
     var body: some View {
         if !validationErrors.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
@@ -20,16 +20,16 @@ struct ValidationFeedbackView: View {
                     Text("Input Validation")
                         .font(.headline)
                         .foregroundColor(.orange)
-                    
+
                     Spacer()
-                    
+
                     Button(showingDetails ? "Hide Details" : "Show Details") {
                         showingDetails.toggle()
                     }
                     .font(.caption)
                     .foregroundColor(.blue)
                 }
-                
+
                 if showingDetails {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(validationErrors, id: \.self) { error in

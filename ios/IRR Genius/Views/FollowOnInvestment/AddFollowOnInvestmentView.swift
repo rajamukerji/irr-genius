@@ -11,9 +11,9 @@ struct AddFollowOnInvestmentView: View {
     @Binding var isPresented: Bool
     @Binding var followOnInvestments: [FollowOnInvestment]
     let initialInvestmentDate: Date
-    
+
     @State private var timingType: TimingType = .relativeTime
-    @State private var date: Date = Date()
+    @State private var date: Date = .init()
     @State private var relativeAmount: String = ""
     @State private var relativeUnit: TimeUnit = .months
     @State private var investmentType: InvestmentType = .buy
@@ -22,7 +22,7 @@ struct AddFollowOnInvestmentView: View {
     @State private var valuationType: ValuationType = .computed
     @State private var valuation: String = ""
     @State private var irr: String = ""
-    
+
     var body: some View {
         NavigationView {
             Form {
@@ -32,7 +32,7 @@ struct AddFollowOnInvestmentView: View {
                             Text(type.rawValue).tag(type)
                         }
                     }
-                    
+
                     InputField(
                         title: "Amount",
                         placeholder: "Enter investment amount",
@@ -40,14 +40,14 @@ struct AddFollowOnInvestmentView: View {
                         formatType: .currency
                     )
                 }
-                
+
                 Section("Timing") {
                     Picker("Timing Type", selection: $timingType) {
                         ForEach(TimingType.allCases, id: \.self) { type in
                             Text(type.rawValue).tag(type)
                         }
                     }
-                    
+
                     if timingType == .absoluteDate {
                         DatePicker("Date", selection: $date, displayedComponents: .date)
                     } else {
@@ -58,7 +58,7 @@ struct AddFollowOnInvestmentView: View {
                                 text: $relativeAmount,
                                 formatType: .number
                             )
-                            
+
                             Picker("Unit", selection: $relativeUnit) {
                                 ForEach(TimeUnit.allCases, id: \.self) { unit in
                                     Text(unit.rawValue).tag(unit)
@@ -68,21 +68,21 @@ struct AddFollowOnInvestmentView: View {
                         }
                     }
                 }
-                
+
                 Section("Valuation") {
                     Picker("Valuation Mode", selection: $valuationMode) {
                         ForEach(ValuationMode.allCases, id: \.self) { mode in
                             Text(mode.rawValue).tag(mode)
                         }
                     }
-                    
+
                     if valuationMode == .custom {
                         Picker("Valuation Type", selection: $valuationType) {
                             ForEach(ValuationType.allCases, id: \.self) { type in
                                 Text(type.rawValue).tag(type)
                             }
                         }
-                        
+
                         if valuationType == .computed {
                             InputField(
                                 title: "IRR for Computation (%)",
@@ -109,7 +109,7 @@ struct AddFollowOnInvestmentView: View {
                         isPresented = false
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add") {
                         addInvestment()
@@ -119,7 +119,7 @@ struct AddFollowOnInvestmentView: View {
             }
         }
     }
-    
+
     private func addInvestment() {
         let newInvestment = FollowOnInvestment(
             timingType: timingType,
@@ -134,8 +134,8 @@ struct AddFollowOnInvestmentView: View {
             irr: irr,
             initialInvestmentDate: initialInvestmentDate
         )
-        
+
         followOnInvestments.append(newInvestment)
         isPresented = false
     }
-} 
+}

@@ -14,18 +14,18 @@ struct ProjectsView: View {
     @State private var editingProject: Project?
     @State private var projectToDelete: Project?
     @State private var showingDeleteAlert = false
-    
+
     var filteredProjects: [Project] {
         if searchText.isEmpty {
             return dataManager.projects.sorted { $0.createdDate > $1.createdDate }
         } else {
             return dataManager.projects.filter { project in
                 project.name.localizedCaseInsensitiveContains(searchText) ||
-                (project.description?.localizedCaseInsensitiveContains(searchText) ?? false)
+                    (project.description?.localizedCaseInsensitiveContains(searchText) ?? false)
             }.sorted { $0.createdDate > $1.createdDate }
         }
     }
-    
+
     var body: some View {
         NavigationView {
             VStack {
@@ -78,7 +78,7 @@ struct ProjectsView: View {
             )
         }
         .alert("Delete Project", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 if let project = projectToDelete {
                     Task {
@@ -96,7 +96,7 @@ struct ProjectsView: View {
 
 struct ProjectRowView: View {
     let project: Project
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -110,9 +110,9 @@ struct ProjectRowView: View {
                             .lineLimit(2)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("0")
                         .font(.title3)
@@ -123,7 +123,7 @@ struct ProjectRowView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             Text(project.createdDate, style: .date)
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -134,20 +134,20 @@ struct ProjectRowView: View {
 
 struct ProjectsEmptyStateView: View {
     let searchText: String
-    
+
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: searchText.isEmpty ? "folder.badge.plus" : "magnifyingglass")
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
-            
+
             Text(searchText.isEmpty ? "No Projects" : "No Results Found")
                 .font(.title2)
                 .fontWeight(.medium)
-            
-            Text(searchText.isEmpty ? 
-                 "Create projects to organize your calculations. Projects help you group related calculations together." :
-                 "No projects match '\(searchText)'. Try adjusting your search terms.")
+
+            Text(searchText.isEmpty ?
+                "Create projects to organize your calculations. Projects help you group related calculations together." :
+                "No projects match '\(searchText)'. Try adjusting your search terms.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -162,14 +162,14 @@ struct CreateProjectView: View {
     let dataManager: DataManager
     @State private var projectName = ""
     @State private var projectDescription = ""
-    
+
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("Project Details")) {
                     TextField("Project Name", text: $projectName)
                     TextField("Description (Optional)", text: $projectDescription, axis: .vertical)
-                        .lineLimit(3...6)
+                        .lineLimit(3 ... 6)
                 }
             }
             .navigationTitle("New Project")
@@ -184,7 +184,7 @@ struct CreateProjectView: View {
                     Button("Create") {
                         let trimmedName = projectName.trimmingCharacters(in: .whitespacesAndNewlines)
                         let trimmedDescription = projectDescription.trimmingCharacters(in: .whitespacesAndNewlines)
-                        
+
                         Task {
                             do {
                                 let newProject = try Project(
@@ -212,25 +212,25 @@ struct EditProjectView: View {
     let onDismiss: () -> Void
     @State private var projectName: String
     @State private var projectDescription: String
-    
+
     init(project: Project, isPresented: Binding<Bool>, dataManager: DataManager, onDismiss: @escaping () -> Void) {
         self.project = project
-        self._isPresented = isPresented
+        _isPresented = isPresented
         self.dataManager = dataManager
         self.onDismiss = onDismiss
-        self._projectName = State(initialValue: project.name)
-        self._projectDescription = State(initialValue: project.description ?? "")
+        _projectName = State(initialValue: project.name)
+        _projectDescription = State(initialValue: project.description ?? "")
     }
-    
+
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("Project Details")) {
                     TextField("Project Name", text: $projectName)
                     TextField("Description (Optional)", text: $projectDescription, axis: .vertical)
-                        .lineLimit(3...6)
+                        .lineLimit(3 ... 6)
                 }
-                
+
                 Section {
                     Group {
                         HStack {
@@ -262,7 +262,7 @@ struct EditProjectView: View {
                     Button("Save") {
                         let trimmedName = projectName.trimmingCharacters(in: .whitespacesAndNewlines)
                         let trimmedDescription = projectDescription.trimmingCharacters(in: .whitespacesAndNewlines)
-                        
+
                         Task {
                             do {
                                 let updatedProject = try Project(

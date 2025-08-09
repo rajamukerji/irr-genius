@@ -12,10 +12,10 @@ struct UserFriendlyErrorView: View {
     let error: UserFriendlyError
     let onAction: (SuggestedAction) -> Void
     let onDismiss: () -> Void
-    
+
     @State private var showingHelp = false
     @State private var showingFeedback = false
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // Header
@@ -23,26 +23,26 @@ struct UserFriendlyErrorView: View {
                 Image(systemName: error.category.icon)
                     .font(.system(size: 48))
                     .foregroundColor(error.category.color)
-                
+
                 Text(error.title)
                     .font(.title2)
                     .fontWeight(.semibold)
                     .multilineTextAlignment(.center)
-                
+
                 Text(error.message)
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            
+
             // Action Suggestions
             if !error.actionSuggestions.isEmpty {
                 VStack(spacing: 12) {
                     Text("What you can do:")
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    ForEach(Array(error.actionSuggestions.enumerated()), id: \.offset) { index, suggestion in
+
+                    ForEach(Array(error.actionSuggestions.enumerated()), id: \.offset) { _, suggestion in
                         ActionSuggestionRow(
                             suggestion: suggestion,
                             onTap: { onAction(suggestion.action) }
@@ -50,7 +50,7 @@ struct UserFriendlyErrorView: View {
                     }
                 }
             }
-            
+
             // Help and Support
             VStack(spacing: 12) {
                 if let helpLink = error.helpLink {
@@ -70,7 +70,7 @@ struct UserFriendlyErrorView: View {
                         SafariView(url: helpLink.url)
                     }
                 }
-                
+
                 if error.reportable {
                     Button(action: {
                         showingFeedback = true
@@ -89,7 +89,7 @@ struct UserFriendlyErrorView: View {
                     }
                 }
             }
-            
+
             // Dismiss Button
             Button("Dismiss") {
                 onDismiss()
@@ -113,7 +113,7 @@ struct UserFriendlyErrorView: View {
 struct ActionSuggestionRow: View {
     let suggestion: ActionSuggestion
     let onTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
@@ -121,20 +121,20 @@ struct ActionSuggestionRow: View {
                     .font(.title3)
                     .foregroundColor(suggestion.isPrimary ? .white : .blue)
                     .frame(width: 24, height: 24)
-                
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(suggestion.title)
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(suggestion.isPrimary ? .white : .primary)
-                    
+
                     Text(suggestion.description)
                         .font(.caption)
                         .foregroundColor(suggestion.isPrimary ? .white.opacity(0.8) : .secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(suggestion.isPrimary ? .white.opacity(0.6) : .secondary)
@@ -148,7 +148,7 @@ struct ActionSuggestionRow: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
-    
+
     private func iconForAction(_ action: SuggestedAction) -> String {
         switch action {
         case .retry: return "arrow.clockwise"
@@ -173,26 +173,26 @@ struct ErrorAlert: View {
     let error: UserFriendlyError
     let onAction: ((SuggestedAction) -> Void)?
     let onDismiss: () -> Void
-    
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: error.category.icon)
                 .foregroundColor(error.severity.color)
                 .font(.title3)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(error.title)
                     .font(.headline)
                     .foregroundColor(.primary)
-                
+
                 Text(error.message)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
             }
-            
+
             Spacer()
-            
+
             if let primaryAction = error.actionSuggestions.first(where: { $0.isPrimary }) ?? error.actionSuggestions.first {
                 Button(primaryAction.title) {
                     onAction?(primaryAction.action)
@@ -200,7 +200,7 @@ struct ErrorAlert: View {
                 .font(.caption)
                 .buttonStyle(.bordered)
             }
-            
+
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
                     .font(.caption)
@@ -223,14 +223,14 @@ struct ErrorAlert: View {
 struct ErrorFeedbackView: View {
     let error: UserFriendlyError
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var userDescription = ""
     @State private var reproductionSteps = ""
     @State private var userEmail = ""
     @State private var isSubmitting = false
-    
+
     @StateObject private var errorReporting = ErrorReportingService()
-    
+
     var body: some View {
         NavigationView {
             Form {
@@ -241,33 +241,33 @@ struct ErrorFeedbackView: View {
                 } header: {
                     Text("Error Feedback")
                 }
-                
+
                 Section("What were you trying to do?") {
                     TextEditor(text: $userDescription)
                         .frame(minHeight: 80)
                 }
-                
+
                 Section("How can we reproduce this issue? (Optional)") {
                     TextEditor(text: $reproductionSteps)
                         .frame(minHeight: 60)
                 }
-                
+
                 Section("Email (Optional)") {
                     TextField("your.email@example.com", text: $userEmail)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                 }
-                
+
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Error Details:")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Text("Category: \(error.category)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                        
+
                         Text("Severity: \(error.severity)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
@@ -284,7 +284,7 @@ struct ErrorFeedbackView: View {
                         dismiss()
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Send") {
                         submitFeedback()
@@ -294,10 +294,10 @@ struct ErrorFeedbackView: View {
             }
         }
     }
-    
+
     private func submitFeedback() {
         isSubmitting = true
-        
+
         let feedback = UserErrorFeedback(
             errorId: UUID().uuidString,
             userDescription: userDescription,
@@ -305,9 +305,9 @@ struct ErrorFeedbackView: View {
             userEmail: userEmail.isEmpty ? nil : userEmail,
             timestamp: Date()
         )
-        
+
         errorReporting.submitUserFeedback(feedback)
-        
+
         // Simulate network delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             isSubmitting = false
@@ -319,12 +319,12 @@ struct ErrorFeedbackView: View {
 /// Safari view for help links
 struct SafariView: UIViewControllerRepresentable {
     let url: URL
-    
-    func makeUIViewController(context: Context) -> SFSafariViewController {
+
+    func makeUIViewController(context _: Context) -> SFSafariViewController {
         return SFSafariViewController(url: url)
     }
-    
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
+
+    func updateUIViewController(_: SFSafariViewController, context _: Context) {
         // No updates needed
     }
 }
@@ -332,12 +332,12 @@ struct SafariView: UIViewControllerRepresentable {
 /// Error category badge
 struct ErrorCategoryBadge: View {
     let category: ErrorCategory
-    
+
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: category.icon)
                 .font(.caption2)
-            
+
             Text(String(describing: category).capitalized)
                 .font(.caption2)
                 .fontWeight(.medium)
@@ -355,7 +355,7 @@ struct ErrorCategoryBadge: View {
 /// Error severity indicator
 struct ErrorSeverityIndicator: View {
     let severity: ErrorSeverity
-    
+
     var body: some View {
         Circle()
             .fill(severity.color)
@@ -366,81 +366,81 @@ struct ErrorSeverityIndicator: View {
 // MARK: - Preview Helpers
 
 #if DEBUG
-extension UserFriendlyError {
-    static let sampleValidationError = UserFriendlyError(
-        title: "Missing Calculation Name",
-        message: "Please enter a name for your calculation to save it.",
-        category: .validation,
-        severity: .error,
-        actionSuggestions: [
-            ActionSuggestion(
-                title: "Enter Name",
-                description: "Add a descriptive name for your calculation",
-                action: .focusField("name"),
-                isPrimary: true
-            ),
-            ActionSuggestion(
-                title: "Learn More",
-                description: "Understanding calculation naming",
-                action: .showHelp
+    extension UserFriendlyError {
+        static let sampleValidationError = UserFriendlyError(
+            title: "Missing Calculation Name",
+            message: "Please enter a name for your calculation to save it.",
+            category: .validation,
+            severity: .error,
+            actionSuggestions: [
+                ActionSuggestion(
+                    title: "Enter Name",
+                    description: "Add a descriptive name for your calculation",
+                    action: .focusField("name"),
+                    isPrimary: true
+                ),
+                ActionSuggestion(
+                    title: "Learn More",
+                    description: "Understanding calculation naming",
+                    action: .showHelp
+                ),
+            ],
+            helpLink: HelpLink(
+                title: "Naming Your Calculations",
+                url: URL(string: "https://help.irrgenius.com/calculations/naming")!
             )
-        ],
-        helpLink: HelpLink(
-            title: "Naming Your Calculations",
-            url: URL(string: "https://help.irrgenius.com/calculations/naming")!
         )
-    )
-    
-    static let sampleNetworkError = UserFriendlyError(
-        title: "No Internet Connection",
-        message: "Please check your internet connection and try again.",
-        category: .network,
-        severity: .error,
-        actionSuggestions: [
-            ActionSuggestion(
-                title: "Try Again",
-                description: "Retry the operation",
-                action: .retry,
-                isPrimary: true
-            ),
-            ActionSuggestion(
-                title: "Check Connection",
-                description: "Verify your Wi-Fi or cellular connection",
-                action: .checkNetwork
-            )
-        ]
-    )
-}
 
-struct UserFriendlyErrorView_Previews: PreviewProvider {
-    static var previews: some View {
-        Group {
-            UserFriendlyErrorView(
-                error: .sampleValidationError,
-                onAction: { _ in },
-                onDismiss: { }
-            )
-            .padding()
-            .previewDisplayName("Validation Error")
-            
-            ErrorAlert(
-                error: .sampleNetworkError,
-                onAction: { _ in },
-                onDismiss: { }
-            )
-            .padding()
-            .previewDisplayName("Error Alert")
-            
-            VStack {
-                ErrorCategoryBadge(category: .validation)
-                ErrorCategoryBadge(category: .network)
-                ErrorCategoryBadge(category: .storage)
+        static let sampleNetworkError = UserFriendlyError(
+            title: "No Internet Connection",
+            message: "Please check your internet connection and try again.",
+            category: .network,
+            severity: .error,
+            actionSuggestions: [
+                ActionSuggestion(
+                    title: "Try Again",
+                    description: "Retry the operation",
+                    action: .retry,
+                    isPrimary: true
+                ),
+                ActionSuggestion(
+                    title: "Check Connection",
+                    description: "Verify your Wi-Fi or cellular connection",
+                    action: .checkNetwork
+                ),
+            ]
+        )
+    }
+
+    struct UserFriendlyErrorView_Previews: PreviewProvider {
+        static var previews: some View {
+            Group {
+                UserFriendlyErrorView(
+                    error: .sampleValidationError,
+                    onAction: { _ in },
+                    onDismiss: {}
+                )
+                .padding()
+                .previewDisplayName("Validation Error")
+
+                ErrorAlert(
+                    error: .sampleNetworkError,
+                    onAction: { _ in },
+                    onDismiss: {}
+                )
+                .padding()
+                .previewDisplayName("Error Alert")
+
+                VStack {
+                    ErrorCategoryBadge(category: .validation)
+                    ErrorCategoryBadge(category: .network)
+                    ErrorCategoryBadge(category: .storage)
+                }
+                .padding()
+                .previewDisplayName("Category Badges")
             }
-            .padding()
-            .previewDisplayName("Category Badges")
         }
     }
-}
 #endif
 
 import SafariServices

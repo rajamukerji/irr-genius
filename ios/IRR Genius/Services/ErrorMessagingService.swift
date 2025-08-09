@@ -12,37 +12,36 @@ import SwiftUI
 
 /// Service for providing user-friendly error messages and help
 class ErrorMessagingService: ObservableObject {
-    
     /// Converts technical errors into user-friendly messages
     func getUserFriendlyMessage(for error: Error) -> UserFriendlyError {
         switch error {
         // Validation Errors
         case let validationError as SavedCalculationValidationError:
             return handleValidationError(validationError)
-            
+
         case let projectError as ProjectValidationError:
             return handleProjectValidationError(projectError)
-            
+
         // Import/Export Errors
         case let importError as ImportError:
             return handleImportError(importError)
-            
+
         // Network Errors
         case let urlError as URLError:
             return handleNetworkError(urlError)
-            
+
         // Core Data Errors
         case let nsError as NSError where nsError.domain == "NSCocoaErrorDomain":
             return handleCoreDataError(nsError)
-            
+
         // CloudKit Errors
         case let nsError as NSError where nsError.domain == "CKErrorDomain":
             return handleCloudKitError(nsError)
-            
+
         // File System Errors
         case let nsError as NSError where nsError.domain == NSCocoaErrorDomain:
             return handleFileSystemError(nsError)
-            
+
         // Generic Errors
         default:
             return UserFriendlyError(
@@ -60,7 +59,7 @@ class ErrorMessagingService: ObservableObject {
                         title: "Contact Support",
                         description: "Report this issue to our support team",
                         action: .contactSupport
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "General Troubleshooting",
@@ -69,9 +68,9 @@ class ErrorMessagingService: ObservableObject {
             )
         }
     }
-    
+
     // MARK: - Specific Error Handlers
-    
+
     private func handleValidationError(_ error: SavedCalculationValidationError) -> UserFriendlyError {
         switch error {
         case .emptyName:
@@ -85,14 +84,14 @@ class ErrorMessagingService: ObservableObject {
                         title: "Enter Name",
                         description: "Add a descriptive name for your calculation",
                         action: .focusField("name")
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "Naming Your Calculations",
                     url: URL(string: "https://help.irrgenius.com/calculations/naming")!
                 )
             )
-            
+
         case .negativeInvestment:
             return UserFriendlyError(
                 title: "Invalid Investment Amount",
@@ -109,14 +108,14 @@ class ErrorMessagingService: ObservableObject {
                         title: "Learn More",
                         description: "Understanding investment calculations",
                         action: .showHelp
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "Investment Amount Guidelines",
                     url: URL(string: "https://help.irrgenius.com/calculations/investment-amounts")!
                 )
             )
-            
+
         case .invalidTimeInMonths:
             return UserFriendlyError(
                 title: "Invalid Time Period",
@@ -133,14 +132,14 @@ class ErrorMessagingService: ObservableObject {
                         title: "Time Examples",
                         description: "See common time period examples",
                         action: .showExamples
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "Time Period Guidelines",
                     url: URL(string: "https://help.irrgenius.com/calculations/time-periods")!
                 )
             )
-            
+
         case .invalidIRR:
             return UserFriendlyError(
                 title: "Invalid IRR Value",
@@ -157,15 +156,15 @@ class ErrorMessagingService: ObservableObject {
                         title: "IRR Examples",
                         description: "See typical IRR ranges for different investments",
                         action: .showExamples
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "Understanding IRR",
                     url: URL(string: "https://help.irrgenius.com/concepts/irr")!
                 )
             )
-            
-        case .missingRequiredFields(let fields):
+
+        case let .missingRequiredFields(fields):
             return UserFriendlyError(
                 title: "Missing Required Information",
                 message: "Please fill in all required fields: \(fields.joined(separator: ", "))",
@@ -176,14 +175,14 @@ class ErrorMessagingService: ObservableObject {
                         title: "Complete Form",
                         description: "Fill in the highlighted required fields",
                         action: .highlightFields(fields)
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "Required Fields Guide",
                     url: URL(string: "https://help.irrgenius.com/calculations/required-fields")!
                 )
             )
-            
+
         default:
             return UserFriendlyError(
                 title: "Validation Error",
@@ -195,12 +194,12 @@ class ErrorMessagingService: ObservableObject {
                         title: "Review Input",
                         description: "Check your input values and try again",
                         action: .retry
-                    )
+                    ),
                 ]
             )
         }
     }
-    
+
     private func handleProjectValidationError(_ error: ProjectValidationError) -> UserFriendlyError {
         switch error {
         case .emptyName:
@@ -214,11 +213,11 @@ class ErrorMessagingService: ObservableObject {
                         title: "Enter Name",
                         description: "Add a descriptive name for your project",
                         action: .focusField("projectName")
-                    )
+                    ),
                 ]
             )
-            
-        case .invalidName(let reason):
+
+        case let .invalidName(reason):
             return UserFriendlyError(
                 title: "Invalid Project Name",
                 message: reason,
@@ -229,10 +228,10 @@ class ErrorMessagingService: ObservableObject {
                         title: "Fix Name",
                         description: "Use only letters, numbers, and basic punctuation",
                         action: .focusField("projectName")
-                    )
+                    ),
                 ]
             )
-            
+
         default:
             return UserFriendlyError(
                 title: "Project Error",
@@ -242,7 +241,7 @@ class ErrorMessagingService: ObservableObject {
             )
         }
     }
-    
+
     private func handleImportError(_ error: ImportError) -> UserFriendlyError {
         switch error {
         case .fileAccessDenied:
@@ -261,14 +260,14 @@ class ErrorMessagingService: ObservableObject {
                         title: "Check Permissions",
                         description: "Ensure the file isn't restricted or locked",
                         action: .showHelp
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "File Access Issues",
                     url: URL(string: "https://help.irrgenius.com/import/file-access")!
                 )
             )
-            
+
         case .emptyFile:
             return UserFriendlyError(
                 title: "Empty File",
@@ -285,14 +284,14 @@ class ErrorMessagingService: ObservableObject {
                         title: "Try Different File",
                         description: "Select a file that contains calculation data",
                         action: .selectFile
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "File Format Requirements",
                     url: URL(string: "https://help.irrgenius.com/import/file-formats")!
                 )
             )
-            
+
         case .unsupportedFormat:
             return UserFriendlyError(
                 title: "Unsupported File Format",
@@ -309,15 +308,15 @@ class ErrorMessagingService: ObservableObject {
                         title: "Download Template",
                         description: "Use our template to format your data correctly",
                         action: .downloadTemplate
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "Supported File Formats",
                     url: URL(string: "https://help.irrgenius.com/import/supported-formats")!
                 )
             )
-            
-        case .invalidNumberFormat(let row, let field, let value):
+
+        case let .invalidNumberFormat(row, field, value):
             return UserFriendlyError(
                 title: "Invalid Number Format",
                 message: "Row \(row) contains an invalid number in the '\(field)' column: '\(value)'",
@@ -333,14 +332,14 @@ class ErrorMessagingService: ObservableObject {
                         title: "Number Examples",
                         description: "See examples of valid number formats",
                         action: .showExamples
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "Number Format Guidelines",
                     url: URL(string: "https://help.irrgenius.com/import/number-formats")!
                 )
             )
-            
+
         default:
             return UserFriendlyError(
                 title: "Import Error",
@@ -352,12 +351,12 @@ class ErrorMessagingService: ObservableObject {
                         title: "Try Again",
                         description: "Retry the import operation",
                         action: .retry
-                    )
+                    ),
                 ]
             )
         }
     }
-    
+
     private func handleNetworkError(_ error: URLError) -> UserFriendlyError {
         switch error.code {
         case .notConnectedToInternet:
@@ -376,14 +375,14 @@ class ErrorMessagingService: ObservableObject {
                         title: "Try Again",
                         description: "Retry when connection is restored",
                         action: .retry
-                    )
+                    ),
                 ],
                 helpLink: HelpLink(
                     title: "Connection Troubleshooting",
                     url: URL(string: "https://help.irrgenius.com/troubleshooting/network")!
                 )
             )
-            
+
         case .timedOut:
             return UserFriendlyError(
                 title: "Request Timed Out",
@@ -400,10 +399,10 @@ class ErrorMessagingService: ObservableObject {
                         title: "Check Connection",
                         description: "Ensure you have a stable internet connection",
                         action: .checkNetwork
-                    )
+                    ),
                 ]
             )
-            
+
         default:
             return UserFriendlyError(
                 title: "Network Error",
@@ -415,13 +414,13 @@ class ErrorMessagingService: ObservableObject {
                         title: "Try Again",
                         description: "Retry the operation",
                         action: .retry
-                    )
+                    ),
                 ]
             )
         }
     }
-    
-    private func handleCoreDataError(_ error: NSError) -> UserFriendlyError {
+
+    private func handleCoreDataError(_: NSError) -> UserFriendlyError {
         return UserFriendlyError(
             title: "Data Storage Error",
             message: "There was a problem saving or loading your data. Your work may not be saved.",
@@ -437,7 +436,7 @@ class ErrorMessagingService: ObservableObject {
                     title: "Restart App",
                     description: "Close and reopen the app",
                     action: .restartApp
-                )
+                ),
             ],
             helpLink: HelpLink(
                 title: "Data Storage Issues",
@@ -445,7 +444,7 @@ class ErrorMessagingService: ObservableObject {
             )
         )
     }
-    
+
     private func handleCloudKitError(_ error: NSError) -> UserFriendlyError {
         switch error.code {
         case 3: // Network unavailable
@@ -459,10 +458,10 @@ class ErrorMessagingService: ObservableObject {
                         title: "Try Later",
                         description: "Sync will resume when connection is restored",
                         action: .dismiss
-                    )
+                    ),
                 ]
             )
-            
+
         case 9: // User deleted zone
             return UserFriendlyError(
                 title: "Cloud Data Reset",
@@ -474,10 +473,10 @@ class ErrorMessagingService: ObservableObject {
                         title: "Re-sync",
                         description: "Upload your local data to the cloud",
                         action: .resync
-                    )
+                    ),
                 ]
             )
-            
+
         default:
             return UserFriendlyError(
                 title: "Cloud Sync Error",
@@ -489,12 +488,12 @@ class ErrorMessagingService: ObservableObject {
                         title: "Try Again",
                         description: "Retry cloud sync",
                         action: .retry
-                    )
+                    ),
                 ]
             )
         }
     }
-    
+
     private func handleFileSystemError(_ error: NSError) -> UserFriendlyError {
         switch error.code {
         case NSFileReadNoSuchFileError:
@@ -508,10 +507,10 @@ class ErrorMessagingService: ObservableObject {
                         title: "Select Different File",
                         description: "Choose another file to import",
                         action: .selectFile
-                    )
+                    ),
                 ]
             )
-            
+
         case NSFileWriteFileExistsError:
             return UserFriendlyError(
                 title: "File Already Exists",
@@ -528,10 +527,10 @@ class ErrorMessagingService: ObservableObject {
                         title: "Replace File",
                         description: "Overwrite the existing file",
                         action: .replaceFile
-                    )
+                    ),
                 ]
             )
-            
+
         default:
             return UserFriendlyError(
                 title: "File System Error",
@@ -543,7 +542,7 @@ class ErrorMessagingService: ObservableObject {
                         title: "Try Again",
                         description: "Retry the operation",
                         action: .retry
-                    )
+                    ),
                 ]
             )
         }
@@ -561,7 +560,7 @@ struct UserFriendlyError {
     let actionSuggestions: [ActionSuggestion]
     let helpLink: HelpLink?
     let reportable: Bool
-    
+
     init(
         title: String,
         message: String,
@@ -593,7 +592,7 @@ enum ErrorCategory {
     case fileFormat
     case dataFormat
     case system
-    
+
     var icon: String {
         switch self {
         case .validation: return "exclamationmark.triangle"
@@ -608,7 +607,7 @@ enum ErrorCategory {
         case .system: return "gear.badge.xmark"
         }
     }
-    
+
     var color: Color {
         switch self {
         case .validation: return .orange
@@ -628,7 +627,7 @@ enum ErrorSeverity {
     case warning
     case error
     case critical
-    
+
     var color: Color {
         switch self {
         case .info: return .blue
@@ -645,7 +644,7 @@ struct ActionSuggestion {
     let description: String
     let action: SuggestedAction
     let isPrimary: Bool
-    
+
     init(title: String, description: String, action: SuggestedAction, isPrimary: Bool = false) {
         self.title = title
         self.description = description
@@ -682,11 +681,11 @@ struct HelpLink {
 /// Service for collecting and reporting errors
 class ErrorReportingService: ObservableObject {
     @Published var reportingEnabled: Bool = true
-    
+
     /// Reports an error for analysis
     func reportError(_ error: Error, context: [String: Any] = [:]) {
         guard reportingEnabled else { return }
-        
+
         // In a real app, this would send to analytics/crash reporting service
         let errorReport = ErrorReport(
             error: error,
@@ -694,14 +693,14 @@ class ErrorReportingService: ObservableObject {
             timestamp: Date(),
             appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
         )
-        
+
         // Log locally for debugging
         print("Error Report: \(errorReport)")
-        
+
         // TODO: Send to analytics service
         // Analytics.shared.reportError(errorReport)
     }
-    
+
     /// Allows user to send feedback about an error
     func submitUserFeedback(_ feedback: UserErrorFeedback) {
         // TODO: Send feedback to support system

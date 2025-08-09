@@ -6,11 +6,12 @@
 import SwiftUI
 
 // MARK: - Onboarding View
+
 struct OnboardingView: View {
     @Binding var isPresented: Bool
     @State private var currentPage = 0
     @State private var showingPermissions = false
-    
+
     private let pages: [OnboardingPage] = [
         OnboardingPage(
             title: "Welcome to IRR Genius",
@@ -39,9 +40,9 @@ struct OnboardingView: View {
             description: "Portfolio unit investments, follow-on investment tracking, and comprehensive reporting for serious investors.",
             imageName: "briefcase.fill",
             primaryColor: .info
-        )
+        ),
     ]
-    
+
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -54,12 +55,12 @@ struct OnboardingView: View {
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .animation(AnimationStyle.smooth, value: currentPage)
-                
+
                 // Bottom Controls
                 VStack(spacing: Spacing.lg) {
                     // Page Indicator
                     HStack(spacing: Spacing.sm) {
-                        ForEach(0..<pages.count, id: \.self) { index in
+                        ForEach(0 ..< pages.count, id: \.self) { index in
                             Circle()
                                 .fill(index == currentPage ? pages[currentPage].primaryColor : Color.textTertiary)
                                 .frame(width: 8, height: 8)
@@ -67,7 +68,7 @@ struct OnboardingView: View {
                                 .animation(AnimationStyle.spring, value: currentPage)
                         }
                     }
-                    
+
                     // Action Buttons
                     HStack(spacing: Spacing.md) {
                         if currentPage > 0 {
@@ -81,9 +82,9 @@ struct OnboardingView: View {
                                 hint: "Go to previous onboarding page"
                             )
                         }
-                        
+
                         Spacer()
-                        
+
                         if currentPage < pages.count - 1 {
                             AnimatedButton("Next", icon: "arrow.right", style: .primary, size: .medium) {
                                 withAnimation(AnimationStyle.smooth) {
@@ -132,7 +133,7 @@ struct OnboardingView: View {
             AccessibilityAnnouncement.announcePageChange("Onboarding")
         }
     }
-    
+
     private func completeOnboarding() {
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         withAnimation(AnimationStyle.smooth) {
@@ -143,19 +144,20 @@ struct OnboardingView: View {
 }
 
 // MARK: - Onboarding Page View
+
 struct OnboardingPageView: View {
     let page: OnboardingPage
-    
+
     var body: some View {
         VStack(spacing: Spacing.xl) {
             Spacer()
-            
+
             // Icon
             Image(systemName: page.imageName)
                 .font(.system(size: 80))
                 .foregroundColor(page.primaryColor)
                 .accessibilityHidden(true)
-            
+
             // Content
             VStack(spacing: Spacing.md) {
                 Text(page.title)
@@ -164,19 +166,19 @@ struct OnboardingPageView: View {
                     .foregroundColor(.textPrimary)
                     .multilineTextAlignment(.center)
                     .accessibleHeader()
-                
+
                 Text(page.subtitle)
                     .font(.titleMedium)
                     .foregroundColor(page.primaryColor)
                     .multilineTextAlignment(.center)
-                
+
                 Text(page.description)
                     .font(.bodyLarge)
                     .foregroundColor(.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(nil)
             }
-            
+
             Spacer()
         }
         .padding(.horizontal, Spacing.xl)
@@ -186,14 +188,15 @@ struct OnboardingPageView: View {
 }
 
 // MARK: - Permissions View
+
 struct PermissionsView: View {
     @Binding var isPresented: Bool
     let onComplete: () -> Void
-    
+
     @State private var notificationsGranted = false
     @State private var cloudSyncEnabled = false
     @State private var analyticsEnabled = false
-    
+
     private let permissions: [PermissionItem] = [
         PermissionItem(
             title: "Notifications",
@@ -215,9 +218,9 @@ struct PermissionsView: View {
             icon: "chart.bar.fill",
             color: .primaryOrange,
             isRequired: false
-        )
+        ),
     ]
-    
+
     var body: some View {
         NavigationView {
             VStack(spacing: Spacing.xl) {
@@ -227,20 +230,20 @@ struct PermissionsView: View {
                         .font(.system(size: 60))
                         .foregroundColor(.primaryBlue)
                         .accessibilityHidden(true)
-                    
+
                     Text("Privacy & Permissions")
                         .font(.headlineLarge)
                         .fontWeight(.bold)
                         .foregroundColor(.textPrimary)
                         .accessibleHeader()
-                    
+
                     Text("Choose which features you'd like to enable. You can change these settings anytime.")
                         .font(.bodyMedium)
                         .foregroundColor(.textSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, Spacing.xl)
-                
+
                 // Permissions List
                 VStack(spacing: Spacing.md) {
                     ForEach(Array(permissions.enumerated()), id: \.offset) { index, permission in
@@ -250,9 +253,9 @@ struct PermissionsView: View {
                         )
                     }
                 }
-                
+
                 Spacer()
-                
+
                 // Action Button
                 AnimatedButton("Continue", icon: "arrow.right", style: .primary, size: .large) {
                     requestPermissions()
@@ -282,7 +285,7 @@ struct PermissionsView: View {
             AccessibilityAnnouncement.announcePageChange("Permissions Setup")
         }
     }
-    
+
     private func binding(for index: Int) -> Binding<Bool> {
         switch index {
         case 0:
@@ -295,7 +298,7 @@ struct PermissionsView: View {
             return .constant(false)
         }
     }
-    
+
     private func requestPermissions() {
         // Request notifications if enabled
         if notificationsGranted {
@@ -307,20 +310,21 @@ struct PermissionsView: View {
                 }
             }
         }
-        
+
         // Save preferences
         UserDefaults.standard.set(cloudSyncEnabled, forKey: "cloudSyncEnabled")
         UserDefaults.standard.set(analyticsEnabled, forKey: "analyticsEnabled")
-        
+
         onComplete()
     }
 }
 
 // MARK: - Permission Row
+
 struct PermissionRow: View {
     let permission: PermissionItem
     @Binding var isEnabled: Bool
-    
+
     var body: some View {
         HStack(spacing: Spacing.md) {
             // Icon
@@ -329,14 +333,14 @@ struct PermissionRow: View {
                 .foregroundColor(permission.color)
                 .frame(width: 32, height: 32)
                 .accessibilityHidden(true)
-            
+
             // Content
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 HStack {
                     Text(permission.title)
                         .font(.titleMedium)
                         .foregroundColor(.textPrimary)
-                    
+
                     if permission.isRequired {
                         Text("Required")
                             .font(.caption)
@@ -347,16 +351,16 @@ struct PermissionRow: View {
                             .background(Color.error)
                             .cornerRadius(4)
                     }
-                    
+
                     Spacer()
                 }
-                
+
                 Text(permission.description)
                     .font(.bodySmall)
                     .foregroundColor(.textSecondary)
                     .lineLimit(nil)
             }
-            
+
             // Toggle
             AnimatedToggle(isOn: $isEnabled)
                 .disabled(permission.isRequired)
@@ -378,6 +382,7 @@ struct PermissionRow: View {
 }
 
 // MARK: - Data Models
+
 struct OnboardingPage {
     let title: String
     let subtitle: String
@@ -395,6 +400,7 @@ struct PermissionItem {
 }
 
 // MARK: - Preview
+
 #Preview {
     OnboardingView(isPresented: .constant(true))
 }

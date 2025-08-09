@@ -12,7 +12,7 @@ struct FollowOnInvestmentList: View {
     let showingBatchDetails: Bool
     @Binding var selectedBatchIndex: Int?
     @Binding var showingAddInvestment: Bool
-    
+
     var body: some View {
         VStack(spacing: 8) {
             ForEach(followOnInvestments.indices, id: \.self) { index in
@@ -30,13 +30,13 @@ struct FollowOnInvestmentList: View {
             }
         }
     }
-    
+
     private func deleteInvestment(at index: Int) {
         _ = withAnimation(.easeInOut(duration: 0.3)) {
             followOnInvestments.remove(at: index)
         }
     }
-    
+
     private func editInvestment(at index: Int) {
         selectedBatchIndex = index
         showingAddInvestment = true
@@ -68,7 +68,7 @@ struct FollowOnInvestmentList_Previews: PreviewProvider {
                         amount: "30000",
                         valuationMode: .custom,
                         valuation: "20"
-                    )
+                    ),
                 ]),
                 showingBatchDetails: true,
                 selectedBatchIndex: .constant(nil),

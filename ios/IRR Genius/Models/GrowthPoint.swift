@@ -11,4 +11,4 @@ struct GrowthPoint: Identifiable, Codable {
     let month: Int
     let value: Double
     var id: Int { month }
-} 
+}

@@ -9,34 +9,34 @@ import UniformTypeIdentifiers
 struct ImportDataView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = ImportDataViewModel()
-    
+
     @State private var showingFilePicker = false
     @State private var showingColumnMapping = false
     @State private var showingValidationResults = false
     @State private var showingImportConfirmation = false
-    
+
     let onImportComplete: ([SavedCalculation]) -> Void
-    
+
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
                     // File Selection Section
                     fileSelectionSection
-                    
+
                     // Calculation Type Selection
                     calculationTypeSection
-                    
+
                     // Import Progress
                     if viewModel.isProcessing {
                         progressSection
                     }
-                    
+
                     // Error Display
                     if let error = viewModel.errorMessage {
                         errorSection(error)
                     }
-                    
+
                     // Import Summary
                     if let result = viewModel.importResult {
                         importSummarySection(result)
@@ -90,7 +90,7 @@ struct ImportDataView: View {
             )
         }
         .alert("Confirm Import", isPresented: $showingImportConfirmation) {
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
             Button("Import") {
                 if let calculations = viewModel.validationResult?.validCalculations {
                     onImportComplete(calculations)
@@ -103,19 +103,19 @@ struct ImportDataView: View {
             }
         }
     }
-    
+
     // MARK: - View Components
-    
+
     private var fileSelectionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Select File to Import")
                 .font(.headline)
                 .fontWeight(.bold)
-            
+
             Text("Choose a CSV or Excel file containing your calculation data")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            
+
             HStack(spacing: 12) {
                 Button(action: {
                     viewModel.setFileType(.csv)
@@ -125,7 +125,7 @@ struct ImportDataView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                
+
                 Button(action: {
                     viewModel.setFileType(.excel)
                     showingFilePicker = true
@@ -140,13 +140,13 @@ struct ImportDataView: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
     }
-    
+
     private var calculationTypeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Calculation Type")
                 .font(.headline)
                 .fontWeight(.bold)
-            
+
             Picker("Calculation Type", selection: $viewModel.selectedCalculationType) {
                 ForEach(CalculationMode.allCases, id: \.self) { mode in
                     Text(mode.rawValue).tag(mode)
@@ -158,7 +158,7 @@ struct ImportDataView: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
     }
-    
+
     private var progressSection: some View {
         VStack(spacing: 8) {
             ProgressView()
@@ -170,7 +170,7 @@ struct ImportDataView: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
     }
-    
+
     private func errorSection(_ error: String) -> some View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -182,30 +182,30 @@ struct ImportDataView: View {
         .background(Color.red.opacity(0.1))
         .cornerRadius(12)
     }
-    
+
     private func importSummarySection(_ result: ImportResult) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Import Summary")
                 .font(.headline)
                 .fontWeight(.bold)
-            
+
             HStack {
                 Text("Columns: \(result.headers.count)")
                 Spacer()
                 Text("Rows: \(result.rows.count)")
             }
             .font(.subheadline)
-            
+
             Text("Detected Format: \(formatDescription(result.detectedFormat))")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             HStack(spacing: 12) {
                 Button("Edit Mapping") {
                     showingColumnMapping = true
                 }
                 .buttonStyle(.bordered)
-                
+
                 Button("Validate") {
                     Task {
                         await viewModel.validateData()
@@ -219,12 +219,12 @@ struct ImportDataView: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
     }
-    
+
     private func formatDescription(_ format: ImportFormat) -> String {
         switch format {
-        case .csv(let delimiter, _):
+        case let .csv(delimiter, _):
             return "CSV (delimiter: '\(delimiter)')"
-        case .excel(let sheetName, _):
+        case let .excel(sheetName, _):
             return "Excel (sheet: \(sheetName))"
         }
     }
@@ -237,9 +237,9 @@ struct ColumnMappingView: View {
     @State var currentMapping: [String: CalculationField]
     let onMappingChanged: (String, CalculationField?) -> Void
     let onConfirm: () -> Void
-    
+
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationView {
             List {
@@ -268,7 +268,7 @@ struct ColumnMappingView: View {
                         dismiss()
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Confirm") {
                         onConfirm()
@@ -284,19 +284,19 @@ struct ColumnMappingRow: View {
     let columnName: String
     let selectedField: CalculationField?
     let onFieldSelected: (CalculationField?) -> Void
-    
+
     var body: some View {
         HStack {
             Text(columnName)
                 .font(.subheadline)
-            
+
             Spacer()
-            
+
             Menu {
                 Button("Not mapped") {
                     onFieldSelected(nil)
                 }
-                
+
                 ForEach(CalculationField.allCases, id: \.self) { field in
                     Button(field.displayName) {
                         onFieldSelected(field)
@@ -319,9 +319,9 @@ struct ColumnMappingRow: View {
 struct ValidationResultsView: View {
     let validationResult: ImportValidationResult?
     let onConfirm: () -> Void
-    
+
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -332,7 +332,7 @@ struct ValidationResultsView: View {
                             Text("Valid: \(result.validRows)/\(result.totalRows) rows")
                                 .font(.headline)
                                 .fontWeight(.bold)
-                            
+
                             Text("Success Rate: \(Int(result.successRate * 100))%")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
@@ -340,14 +340,14 @@ struct ValidationResultsView: View {
                         .padding()
                         .background(result.hasErrors ? Color.red.opacity(0.1) : Color.green.opacity(0.1))
                         .cornerRadius(12)
-                        
+
                         // Errors
                         if !result.validationErrors.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Errors:")
                                     .font(.headline)
                                     .fontWeight(.bold)
-                                
+
                                 ForEach(Array(result.validationErrors.enumerated()), id: \.offset) { _, error in
                                     ValidationErrorRow(error: error)
                                 }
@@ -357,7 +357,7 @@ struct ValidationResultsView: View {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 48))
                                     .foregroundColor(.green)
-                                
+
                                 Text("All data is valid!")
                                     .font(.title2)
                                     .fontWeight(.semibold)
@@ -376,7 +376,7 @@ struct ValidationResultsView: View {
                         dismiss()
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Continue") {
                         onConfirm()
@@ -391,21 +391,21 @@ struct ValidationResultsView: View {
 
 struct ValidationErrorRow: View {
     let error: ImportValidationError
-    
+
     var body: some View {
         HStack {
             Image(systemName: error.error.severity == .error ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
                 .foregroundColor(error.error.severity == .error ? .red : .orange)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text("Row \(error.row)\(error.column.map { ", Column \($0)" } ?? "")")
                     .font(.caption)
                     .fontWeight(.semibold)
-                
+
                 Text(error.error.message)
                     .font(.caption)
             }
-            
+
             Spacer()
         }
         .padding(8)
@@ -425,10 +425,10 @@ class ImportDataViewModel: ObservableObject {
     @Published var importResult: ImportResult?
     @Published var columnMapping: [String: CalculationField] = [:]
     @Published var validationResult: ImportValidationResult?
-    
+
     private let csvImportService = CSVImportService()
     private let excelImportService = ExcelImportService()
-    
+
     var allowedFileTypes: [UTType] {
         switch fileType {
         case .csv:
@@ -439,42 +439,42 @@ class ImportDataViewModel: ObservableObject {
             return [.commaSeparatedText, .text, .spreadsheet]
         }
     }
-    
+
     func setFileType(_ type: ImportFileType) {
         fileType = type
         clearError()
     }
-    
+
     func setError(_ message: String) {
         errorMessage = message
         isProcessing = false
     }
-    
+
     func clearError() {
         errorMessage = nil
     }
-    
+
     func handleFileSelection(_ result: Result<[URL], Error>) {
         switch result {
-        case .success(let urls):
+        case let .success(urls):
             guard let url = urls.first else { return }
-            
+
             Task {
                 await processFile(url)
             }
-            
-        case .failure(let error):
+
+        case let .failure(error):
             setError("File selection failed: \(error.localizedDescription)")
         }
     }
-    
+
     func processFile(_ url: URL) async {
         isProcessing = true
         clearError()
-        
+
         do {
             let result: ImportResult
-            
+
             switch fileType {
             case .csv:
                 result = try await csvImportService.importCSV(from: url)
@@ -483,17 +483,17 @@ class ImportDataViewModel: ObservableObject {
             case .none:
                 throw ImportError.unsupportedFormat
             }
-            
+
             importResult = result
             columnMapping = result.suggestedMapping
-            
+
         } catch {
             setError("Failed to process file: \(error.localizedDescription)")
         }
-        
+
         isProcessing = false
     }
-    
+
     func updateColumnMapping(_ columnName: String, _ field: CalculationField?) {
         if let field = field {
             columnMapping[columnName] = field
@@ -501,16 +501,16 @@ class ImportDataViewModel: ObservableObject {
             columnMapping.removeValue(forKey: columnName)
         }
     }
-    
+
     func validateData() async {
         guard let result = importResult else { return }
-        
+
         isProcessing = true
         clearError()
-        
+
         do {
             let validation: ImportValidationResult
-            
+
             switch fileType {
             case .csv:
                 validation = try await csvImportService.validateAndConvert(
@@ -527,13 +527,13 @@ class ImportDataViewModel: ObservableObject {
             case .none:
                 throw ImportError.unsupportedFormat
             }
-            
+
             validationResult = validation
-            
+
         } catch {
             setError("Validation failed: \(error.localizedDescription)")
         }
-        
+
         isProcessing = false
     }
 }

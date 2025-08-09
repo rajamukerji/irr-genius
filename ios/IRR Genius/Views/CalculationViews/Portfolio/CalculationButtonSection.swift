@@ -14,7 +14,7 @@ struct CalculationButtonSection: View {
     @Binding var showingValidationDetails: Bool
     let validateInputs: () -> [String]
     let onCalculate: () -> Void
-    
+
     var body: some View {
         CalculateButton(
             title: title,
@@ -44,7 +44,7 @@ struct CalculationButtonSection_Previews: PreviewProvider {
                 validateInputs: { [] },
                 onCalculate: {}
             )
-            
+
             CalculationButtonSection(
                 title: "Calculate Portfolio IRR",
                 isCalculating: true,
@@ -53,7 +53,7 @@ struct CalculationButtonSection_Previews: PreviewProvider {
                 validateInputs: { [] },
                 onCalculate: {}
             )
-            
+
             CalculationButtonSection(
                 title: "Calculate Portfolio IRR",
                 isCalculating: false,

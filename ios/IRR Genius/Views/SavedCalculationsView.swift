@@ -13,17 +13,17 @@ struct SavedCalculationsView: View {
     @State private var selectedProject: Project?
     @State private var showingImportSheet = false
     @State private var isRefreshing = false
-    
+
     var filteredCalculations: [SavedCalculation] {
         dataManager.calculations.filter { calculation in
-            let matchesSearch = searchText.isEmpty || 
+            let matchesSearch = searchText.isEmpty ||
                 calculation.name.localizedCaseInsensitiveContains(searchText) ||
                 calculation.calculationType.rawValue.localizedCaseInsensitiveContains(searchText)
             let matchesProject = selectedProject == nil || calculation.projectId == selectedProject?.id
             return matchesSearch && matchesProject
         }
     }
-    
+
     var body: some View {
         NavigationView {
             VStack {
@@ -36,7 +36,7 @@ struct SavedCalculationsView: View {
                                 isSelected: selectedProject == nil,
                                 action: { selectedProject = nil }
                             )
-                            
+
                             ForEach(dataManager.projects) { project in
                                 FilterChip(
                                     title: project.name,
@@ -49,7 +49,7 @@ struct SavedCalculationsView: View {
                     }
                     .padding(.vertical, 8)
                 }
-                
+
                 if filteredCalculations.isEmpty {
                     EmptyStateView(searchText: searchText)
                 } else {
@@ -100,7 +100,7 @@ struct SavedCalculationsView: View {
             ImportFileView(isPresented: $showingImportSheet)
         }
     }
-    
+
     private func refreshCalculations() async {
         isRefreshing = true
         // Simulate data refresh
@@ -114,7 +114,7 @@ struct FilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -132,7 +132,7 @@ struct FilterChip: View {
 
 struct CalculationRowView: View {
     let calculation: SavedCalculation
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -143,9 +143,9 @@ struct CalculationRowView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing, spacing: 4) {
                     if let result = calculation.calculatedResult {
                         Text("\(result, specifier: "%.2f")%")
@@ -165,20 +165,20 @@ struct CalculationRowView: View {
 
 struct EmptyStateView: View {
     let searchText: String
-    
+
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: searchText.isEmpty ? "folder" : "magnifyingglass")
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
-            
+
             Text(searchText.isEmpty ? "No Saved Calculations" : "No Results Found")
                 .font(.title2)
                 .fontWeight(.medium)
-            
-            Text(searchText.isEmpty ? 
-                 "Your saved calculations will appear here. Start by performing a calculation and saving it." :
-                 "No calculations match '\(searchText)'. Try adjusting your search terms.")
+
+            Text(searchText.isEmpty ?
+                "Your saved calculations will appear here. Start by performing a calculation and saving it." :
+                "No calculations match '\(searchText)'. Try adjusting your search terms.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -191,7 +191,7 @@ struct EmptyStateView: View {
 // Placeholder for import functionality
 struct ImportFileView: View {
     @Binding var isPresented: Bool
-    
+
     var body: some View {
         NavigationView {
             VStack {

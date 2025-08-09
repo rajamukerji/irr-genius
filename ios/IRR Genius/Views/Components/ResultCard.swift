@@ -11,7 +11,7 @@ struct ResultCard: View {
     let mode: CalculationMode
     let result: Double
     let inputs: [String: Double]
-    
+
     private var resultTitle: String {
         switch mode {
         case .calculateIRR:
@@ -26,7 +26,7 @@ struct ResultCard: View {
             return "Portfolio Unit IRR"
         }
     }
-    
+
     private var resultUnit: String {
         switch mode {
         case .calculateIRR, .calculateBlendedIRR, .portfolioUnitInvestment:
@@ -35,13 +35,13 @@ struct ResultCard: View {
             return ""
         }
     }
-    
+
     private var formattedResult: String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 2
         formatter.minimumFractionDigits = 2
-        
+
         if mode == .calculateIRR || mode == .calculateBlendedIRR {
             return "\(formatter.string(from: NSNumber(value: result)) ?? String(format: "%.2f", result))%"
         } else {
@@ -49,7 +49,7 @@ struct ResultCard: View {
             return "$\(formatter.string(from: NSNumber(value: result)) ?? String(format: "%.2f", result))"
         }
     }
-    
+
     var body: some View {
         VStack(spacing: 16) {
             // Result
@@ -57,19 +57,19 @@ struct ResultCard: View {
                 Text(resultTitle)
                     .font(.headline)
                     .foregroundColor(.secondary)
-                
+
                 Text(formattedResult)
                     .font(.system(size: 36, weight: .bold, design: .rounded))
                     .foregroundColor(.blue)
             }
-            
+
             // Inputs used
             VStack(alignment: .leading, spacing: 8) {
                 Text("Inputs Used:")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
-                
+
                 ForEach(Array(inputs.keys.sorted()), id: \.self) { key in
                     HStack {
                         Text(key)
@@ -91,12 +91,12 @@ struct ResultCard: View {
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
-    
+
     private func formatInputValue(_ value: Double, for key: String) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 2
-        
+
         if key.contains("Investment") || key.contains("Amount") || key.contains("Valuation") {
             formatter.groupingSeparator = ","
             return "$\(formatter.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value))"
@@ -108,4 +108,4 @@ struct ResultCard: View {
             return "\(formatter.string(from: NSNumber(value: value)) ?? String(format: "%.0f", value))"
         }
     }
-} 
+}

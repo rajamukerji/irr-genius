@@ -13,30 +13,30 @@ struct PortfolioFollowOnInvestmentRow: View {
     let showDetails: Bool
     let onDelete: () -> Void
     let onEdit: () -> Void
-    
+
     private var batchSummary: String {
         let amount = Double(investment.amount.replacingOccurrences(of: ",", with: "")) ?? 0
         let unitPrice = Double(investment.valuation.replacingOccurrences(of: ",", with: "")) ?? 0
         let units = unitPrice > 0 ? amount / unitPrice : 0.0
         return "\(NumberFormatting.formatNumber(units)) units @ \(NumberFormatting.formatCurrency(unitPrice))"
     }
-    
+
     private var investmentAmount: Double {
         return Double(investment.amount.replacingOccurrences(of: ",", with: "")) ?? 0
     }
-    
+
     private var unitPrice: Double {
         return Double(investment.valuation.replacingOccurrences(of: ",", with: "")) ?? 0
     }
-    
+
     private var numberOfUnits: Double {
         return unitPrice > 0 ? investmentAmount / unitPrice : 0
     }
-    
+
     private var dateDisplay: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        
+
         switch investment.timingType {
         case .absoluteDate:
             return formatter.string(from: investment.date)
@@ -44,7 +44,7 @@ struct PortfolioFollowOnInvestmentRow: View {
             return "\(investment.relativeAmount) \(investment.relativeUnit.rawValue.lowercased()) from initial"
         }
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -52,7 +52,7 @@ struct PortfolioFollowOnInvestmentRow: View {
                     Text("Investment Batch")
                         .font(.headline)
                         .foregroundColor(.primary)
-                    
+
                     // Unit details
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
@@ -63,9 +63,9 @@ struct PortfolioFollowOnInvestmentRow: View {
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                         }
-                        
+
                         Spacer()
-                        
+
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("Unit Price")
                                 .font(.caption2)
@@ -74,9 +74,9 @@ struct PortfolioFollowOnInvestmentRow: View {
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                         }
-                        
+
                         Spacer()
-                        
+
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("Total Investment")
                                 .font(.caption2)
@@ -87,7 +87,7 @@ struct PortfolioFollowOnInvestmentRow: View {
                                 .foregroundColor(.blue)
                         }
                     }
-                    
+
                     // Timing information
                     HStack {
                         Image(systemName: "calendar")
@@ -97,7 +97,7 @@ struct PortfolioFollowOnInvestmentRow: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     // Investment type badge
                     HStack {
                         Text(investment.investmentType.rawValue.capitalized)
@@ -107,13 +107,13 @@ struct PortfolioFollowOnInvestmentRow: View {
                             .background(Color.blue.opacity(0.1))
                             .foregroundColor(.blue)
                             .cornerRadius(4)
-                        
+
                         Spacer()
                     }
                 }
-                
+
                 Spacer()
-                
+
                 VStack(spacing: 8) {
                     Button(action: onDelete) {
                         Image(systemName: "trash.fill")
@@ -124,7 +124,7 @@ struct PortfolioFollowOnInvestmentRow: View {
                             .cornerRadius(8)
                     }
                     .buttonStyle(.plain)
-                    
+
                     Text("Delete")
                         .font(.caption2)
                         .foregroundColor(.red)

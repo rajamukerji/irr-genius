@@ -5,8 +5,8 @@
 //  Created by Raja Mukerji on 7/1/25.
 //
 
-import SwiftUI
 import Charts
+import SwiftUI
 
 struct GrowthChartView: View {
     let data: [GrowthPoint]
@@ -18,7 +18,7 @@ struct GrowthChartView: View {
             Text("Growth Over Time")
                 .font(.headline)
                 .foregroundColor(.primary)
-            
+
             GeometryReader { geo in
                 ZStack {
                     Chart(data) { point in
@@ -28,7 +28,7 @@ struct GrowthChartView: View {
                         )
                         .foregroundStyle(.blue)
                         .lineStyle(StrokeStyle(lineWidth: 3))
-                        
+
                         AreaMark(
                             x: .value("Month", point.month),
                             y: .value("Value", point.value)
@@ -58,7 +58,7 @@ struct GrowthChartView: View {
                         }
                     }
                     .frame(height: 200)
-                    
+
                     // Draggable overlay
                     Rectangle()
                         .fill(Color.clear)
@@ -82,21 +82,21 @@ struct GrowthChartView: View {
                         )
                         .frame(width: geo.size.width, height: geo.size.height)
                         .allowsHitTesting(true)
-                    
+
                     // Tooltip and vertical line
                     if let dragX = dragLocation, let point = selectedPoint {
                         let xPos = max(0, min(dragX, geo.size.width))
                         let maxValue = data.map { $0.value }.max() ?? 1
                         let yRatio = 1 - (point.value / maxValue)
                         let yPos = yRatio * geo.size.height
-                        
+
                         // Vertical line
                         Path { path in
                             path.move(to: CGPoint(x: xPos, y: 0))
                             path.addLine(to: CGPoint(x: xPos, y: geo.size.height))
                         }
                         .stroke(Color.blue, style: StrokeStyle(lineWidth: 1, dash: [5]))
-                        
+
                         // Tooltip with X and Y values
                         VStack(spacing: 2) {
                             Text("\(point.month)m")
@@ -126,20 +126,20 @@ struct GrowthChartView: View {
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
-    
+
     private func formatChartValue(_ value: Double, decimals: Int = 0) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = decimals
         formatter.minimumFractionDigits = decimals
         formatter.groupingSeparator = ","
-        
+
         if value >= 1_000_000 {
             return "$\(formatter.string(from: NSNumber(value: value / 1_000_000)) ?? "0")M"
-        } else if value >= 1_000 {
-            return "$\(formatter.string(from: NSNumber(value: value / 1_000)) ?? "0")K"
+        } else if value >= 1000 {
+            return "$\(formatter.string(from: NSNumber(value: value / 1000)) ?? "0")K"
         } else {
             return "$\(formatter.string(from: NSNumber(value: value)) ?? "0")"
         }
     }
-} 
+}

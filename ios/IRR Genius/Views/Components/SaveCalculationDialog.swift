@@ -13,25 +13,25 @@ struct SaveCalculationDialog: View {
     @State private var newProjectName: String = ""
     @State private var showingNewProjectField: Bool = false
     @State private var tagInput: String = ""
-    
+
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("Calculation Details")) {
                     TextField("Calculation Name", text: $dataManager.saveDialogData.name)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                    
+
                     TextField("Notes (Optional)", text: $dataManager.saveDialogData.notes, axis: .vertical)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .lineLimit(3...6)
+                        .lineLimit(3 ... 6)
                 }
-                
+
                 Section(header: Text("Project")) {
                     if showingNewProjectField {
                         HStack {
                             TextField("New Project Name", text: $newProjectName)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                            
+
                             Button("Cancel") {
                                 showingNewProjectField = false
                                 newProjectName = ""
@@ -54,14 +54,14 @@ struct SaveCalculationDialog: View {
                             }
                         }
                         .pickerStyle(MenuPickerStyle())
-                        
+
                         Button("Create New Project") {
                             showingNewProjectField = true
                         }
                         .foregroundColor(.blue)
                     }
                 }
-                
+
                 Section(header: Text("Tags")) {
                     HStack {
                         TextField("Add tag", text: $tagInput)
@@ -69,13 +69,13 @@ struct SaveCalculationDialog: View {
                             .onSubmit {
                                 addTag()
                             }
-                        
+
                         Button("Add") {
                             addTag()
                         }
                         .disabled(tagInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
-                    
+
                     if !dataManager.saveDialogData.tags.isEmpty {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 8) {
                             ForEach(dataManager.saveDialogData.tags, id: \.self) { tag in
@@ -86,7 +86,7 @@ struct SaveCalculationDialog: View {
                         }
                     }
                 }
-                
+
                 if let calculation = dataManager.saveDialogData.calculationToSave {
                     Section(header: Text("Calculation Summary")) {
                         VStack(alignment: .leading, spacing: 8) {
@@ -97,7 +97,7 @@ struct SaveCalculationDialog: View {
                                 Text(calculation.calculationType.displayName)
                                     .foregroundColor(.secondary)
                             }
-                            
+
                             if let result = calculation.calculatedResult {
                                 HStack {
                                     Text("Result:")
@@ -108,7 +108,7 @@ struct SaveCalculationDialog: View {
                                         .fontWeight(.semibold)
                                 }
                             }
-                            
+
                             HStack {
                                 Text("Created:")
                                     .fontWeight(.medium)
@@ -128,7 +128,7 @@ struct SaveCalculationDialog: View {
                         dataManager.dismissSaveDialog()
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         Task {
@@ -146,23 +146,23 @@ struct SaveCalculationDialog: View {
             dataManager.saveDialogData.projectId = selectedProject?.id
         }
     }
-    
+
     private func addTag() {
         let trimmedTag = tagInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTag.isEmpty,
               !dataManager.saveDialogData.tags.contains(trimmedTag) else { return }
-        
+
         dataManager.saveDialogData.tags.append(trimmedTag)
         tagInput = ""
     }
-    
+
     private func removeTag(_ tag: String) {
         dataManager.saveDialogData.tags.removeAll { $0 == tag }
     }
-    
+
     private func saveCalculation() async {
         // Create new project if needed
-        if showingNewProjectField && !newProjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if showingNewProjectField, !newProjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             do {
                 let newProject = try Project(
                     name: newProjectName.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -175,10 +175,10 @@ struct SaveCalculationDialog: View {
                 return
             }
         }
-        
+
         await dataManager.saveFromDialog()
     }
-    
+
     private func formatResult(_ result: Double, for calculationType: CalculationMode) -> String {
         switch calculationType {
         case .calculateIRR, .calculateBlendedIRR, .portfolioUnitInvestment:
@@ -192,13 +192,13 @@ struct SaveCalculationDialog: View {
 struct TagView: View {
     let tag: String
     let onRemove: () -> Void
-    
+
     var body: some View {
         HStack(spacing: 4) {
             Text(tag)
                 .font(.caption)
                 .foregroundColor(.white)
-            
+
             Button(action: onRemove) {
                 Image(systemName: "xmark")
                     .font(.caption2)
@@ -234,7 +234,7 @@ extension Color {
             .sRGB,
             red: Double(r) / 255,
             green: Double(g) / 255,
-            blue:  Double(b) / 255,
+            blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
     }

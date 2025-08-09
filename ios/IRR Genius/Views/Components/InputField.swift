@@ -16,16 +16,16 @@ struct InputField: View {
     let fieldName: String?
     let validationService: ValidationService?
     let isRequired: Bool
-    
+
     @State private var validationErrors: [ValidationError] = []
     @State private var hasBeenEdited: Bool = false
-    
+
     enum FormatType {
         case currency
         case number
         case none
     }
-    
+
     init(
         title: String,
         placeholder: String,
@@ -38,18 +38,18 @@ struct InputField: View {
     ) {
         self.title = title
         self.placeholder = placeholder
-        self._text = text
+        _text = text
         self.keyboardType = keyboardType
         self.formatType = formatType
         self.fieldName = fieldName
         self.validationService = validationService
         self.isRequired = isRequired
     }
-    
+
     private var hasErrors: Bool {
         return !validationErrors.isEmpty
     }
-    
+
     private var borderColor: Color {
         if hasErrors {
             return .red
@@ -59,29 +59,29 @@ struct InputField: View {
             return Color(.systemGray4)
         }
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(title)
                     .font(.headline)
                     .foregroundColor(.primary)
-                
+
                 if isRequired {
                     Text("*")
                         .foregroundColor(.red)
                         .font(.headline)
                 }
-                
+
                 Spacer()
-                
+
                 if hasBeenEdited && !hasErrors && !text.isEmpty {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
                         .font(.caption)
                 }
             }
-            
+
             TextField(placeholder, text: $text)
                 .keyboardType(keyboardType)
                 .textFieldStyle(PlainTextFieldStyle())
@@ -97,7 +97,7 @@ struct InputField: View {
                 )
                 .onChange(of: text) { _, newValue in
                     hasBeenEdited = true
-                    
+
                     // Format input
                     switch formatType {
                     case .currency:
@@ -107,7 +107,7 @@ struct InputField: View {
                     case .none:
                         break
                     }
-                    
+
                     // Validate if validation service is provided
                     if let fieldName = fieldName, let validationService = validationService {
                         let result = validationService.validateField(fieldName, value: text)
@@ -121,7 +121,7 @@ struct InputField: View {
                         validationErrors = result.errors
                     }
                 }
-            
+
             // Error messages
             if !validationErrors.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
@@ -130,19 +130,19 @@ struct InputField: View {
                             Image(systemName: iconForSeverity(error.severity))
                                 .foregroundColor(colorForSeverity(error.severity))
                                 .font(.caption)
-                            
+
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(error.message)
                                     .font(.caption)
                                     .foregroundColor(colorForSeverity(error.severity))
-                                
+
                                 if let suggestion = error.suggestion {
                                     Text(suggestion)
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
                             }
-                            
+
                             Spacer()
                         }
                     }
@@ -151,7 +151,7 @@ struct InputField: View {
             }
         }
     }
-    
+
     private func iconForSeverity(_ severity: ValidationError.Severity) -> String {
         switch severity {
         case .error: return "exclamationmark.circle.fill"
@@ -159,7 +159,7 @@ struct InputField: View {
         case .info: return "info.circle.fill"
         }
     }
-    
+
     private func colorForSeverity(_ severity: ValidationError.Severity) -> Color {
         switch severity {
         case .error: return .red
@@ -167,4 +167,4 @@ struct InputField: View {
         case .info: return .blue
         }
     }
-} 
+}

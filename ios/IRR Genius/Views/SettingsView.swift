@@ -12,7 +12,7 @@ struct SettingsView: View {
     @State private var showingAbout = false
     @State private var showingCloudKitSettings = false
     @State private var showingClearDataAlert = false
-    
+
     var body: some View {
         NavigationView {
             List {
@@ -45,7 +45,7 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    
+
                     // Auto-Save Settings
                     HStack {
                         Image(systemName: "square.and.arrow.down")
@@ -72,7 +72,7 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    
+
                     // Clear Data
                     HStack {
                         Image(systemName: "trash")
@@ -84,7 +84,7 @@ struct SettingsView: View {
                         .foregroundColor(.red)
                     }
                 }
-                
+
                 Section(header: Text("Import & Export")) {
                     HStack {
                         Image(systemName: "square.and.arrow.up")
@@ -94,7 +94,7 @@ struct SettingsView: View {
                             dataManager.exportCalculations(dataManager.calculations)
                         }
                     }
-                    
+
                     HStack {
                         Image(systemName: "doc.badge.plus")
                             .foregroundColor(.blue)
@@ -103,7 +103,7 @@ struct SettingsView: View {
                             dataManager.exportCalculationsToCSV(dataManager.calculations)
                         }
                     }
-                    
+
                     HStack {
                         Image(systemName: "square.and.arrow.down")
                             .foregroundColor(.green)
@@ -113,7 +113,7 @@ struct SettingsView: View {
                         }
                     }
                 }
-                
+
                 Section(header: Text("Storage Info")) {
                     HStack {
                         Image(systemName: "folder")
@@ -127,7 +127,7 @@ struct SettingsView: View {
                         }
                         Spacer()
                     }
-                    
+
                     HStack {
                         Image(systemName: "folder.badge.plus")
                             .foregroundColor(.green)
@@ -140,7 +140,7 @@ struct SettingsView: View {
                         }
                         Spacer()
                     }
-                    
+
                     if dataManager.isCloudKitEnabled {
                         HStack {
                             Image(systemName: "icloud")
@@ -162,7 +162,7 @@ struct SettingsView: View {
                         }
                     }
                 }
-                
+
                 Section(header: Text("App Information")) {
                     HStack {
                         Image(systemName: "info.circle")
@@ -172,7 +172,7 @@ struct SettingsView: View {
                             showingAbout = true
                         }
                     }
-                    
+
                     HStack {
                         Image(systemName: "star")
                             .foregroundColor(.yellow)
@@ -192,7 +192,7 @@ struct SettingsView: View {
             AboutView(isPresented: $showingAbout)
         }
         .alert("Clear All Data", isPresented: $showingClearDataAlert) {
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
             Button("Clear", role: .destructive) {
                 Task {
                     await clearAllData()
@@ -202,21 +202,21 @@ struct SettingsView: View {
             Text("This will permanently delete all your saved calculations and projects. This action cannot be undone.")
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func clearAllData() async {
         // Clear all calculations
         for calculation in dataManager.calculations {
             await dataManager.deleteCalculation(calculation)
         }
-        
+
         // Clear all projects
         for project in dataManager.projects {
             await dataManager.deleteProject(project)
         }
     }
-    
+
     private var relativeDateFormatter: RelativeDateTimeFormatter {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
@@ -226,27 +226,27 @@ struct SettingsView: View {
 
 struct AboutView: View {
     @Binding var isPresented: Bool
-    
+
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
                 Image(systemName: "function")
                     .font(.system(size: 80))
                     .foregroundColor(.blue)
-                
+
                 Text("IRR Genius")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                
+
                 Text("Version 1.0")
                     .font(.title3)
                     .foregroundColor(.secondary)
-                
+
                 Text("A powerful tool for calculating Internal Rate of Return (IRR) and managing investment calculations.")
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
-                
+
                 Spacer()
             }
             .padding()

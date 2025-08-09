@@ -4,8 +4,8 @@
 //
 //
 
-import Foundation
 import CoreData
+import Foundation
 import SwiftUI
 
 // MARK: - Repository Protocols
@@ -38,15 +38,15 @@ protocol RepositoryFactory {
 
 class ProductionRepositoryFactory: RepositoryFactory {
     private let container: NSPersistentContainer
-    
+
     init(container: NSPersistentContainer = CoreDataStack.shared.persistentContainer) {
         self.container = container
     }
-    
+
     func makeCalculationRepository() -> CalculationRepository {
         return CoreDataCalculationRepository(container: container)
     }
-    
+
     func makeProjectRepository() -> ProjectRepository {
         return CoreDataProjectRepository(container: container)
     }
@@ -56,15 +56,15 @@ class ProductionRepositoryFactory: RepositoryFactory {
 
 class TestRepositoryFactory: RepositoryFactory {
     private let container: NSPersistentContainer
-    
+
     init() {
-        self.container = CoreDataStack.createInMemoryContainer()
+        container = CoreDataStack.createInMemoryContainer()
     }
-    
+
     func makeCalculationRepository() -> CalculationRepository {
         return CoreDataCalculationRepository(container: container)
     }
-    
+
     func makeProjectRepository() -> ProjectRepository {
         return CoreDataProjectRepository(container: container)
     }
@@ -74,19 +74,15 @@ class TestRepositoryFactory: RepositoryFactory {
 
 class RepositoryManager: ObservableObject {
     private let factory: RepositoryFactory
-    
-    lazy var calculationRepository: CalculationRepository = {
-        factory.makeCalculationRepository()
-    }()
-    
-    lazy var projectRepository: ProjectRepository = {
-        factory.makeProjectRepository()
-    }()
-    
+
+    lazy var calculationRepository: CalculationRepository = factory.makeCalculationRepository()
+
+    lazy var projectRepository: ProjectRepository = factory.makeProjectRepository()
+
     init(factory: RepositoryFactory = ProductionRepositoryFactory()) {
         self.factory = factory
     }
-    
+
     // For testing purposes
     static func createTestManager() -> RepositoryManager {
         return RepositoryManager(factory: TestRepositoryFactory())
@@ -102,10 +98,10 @@ enum RepositoryError: LocalizedError {
     case duplicateEntry
     case networkError(underlying: Error)
     case syncError(underlying: Error)
-    
+
     var errorDescription: String? {
         switch self {
-        case .persistenceError(let error):
+        case let .persistenceError(error):
             return "Failed to save data: \(error.localizedDescription)"
         case .notFound:
             return "Item not found"
@@ -113,13 +109,13 @@ enum RepositoryError: LocalizedError {
             return "Invalid data provided"
         case .duplicateEntry:
             return "Item already exists"
-        case .networkError(let error):
+        case let .networkError(error):
             return "Network error: \(error.localizedDescription)"
-        case .syncError(let error):
+        case let .syncError(error):
             return "Sync error: \(error.localizedDescription)"
         }
     }
-    
+
     var recoverySuggestion: String? {
         switch self {
         case .persistenceError:
@@ -152,7 +148,7 @@ extension CalculationRepository {
             return .failure(.persistenceError(underlying: error))
         }
     }
-    
+
     /// Convenience method to load calculations with error handling
     func loadCalculationsSafely() async -> Result<[SavedCalculation], RepositoryError> {
         do {
@@ -178,7 +174,7 @@ extension ProjectRepository {
             return .failure(.persistenceError(underlying: error))
         }
     }
-    
+
     /// Convenience method to load projects with error handling
     func loadProjectsSafely() async -> Result<[Project], RepositoryError> {
         do {

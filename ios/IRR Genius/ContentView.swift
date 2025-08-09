@@ -11,49 +11,49 @@ struct ContentView: View {
     @StateObject private var dataManager = DataManager()
     @State private var selectedMode: CalculationMode = .calculateIRR
     @State private var showingLoadCalculation = false
-    
+
     // IRR Calculation inputs
     @State private var initialInvestment: String = ""
     @State private var outcomeAmount: String = ""
     @State private var timeInMonths: String = ""
-    
+
     // Outcome Calculation inputs
     @State private var outcomeInitialInvestment: String = ""
     @State private var outcomeIRR: String = ""
     @State private var outcomeTimeInMonths: String = ""
-    
+
     // Initial Investment Calculation inputs
     @State private var initialOutcomeAmount: String = ""
     @State private var initialIRR: String = ""
     @State private var initialTimeInMonths: String = ""
-    
+
     // Blended IRR Calculation inputs
     @State private var blendedInitialInvestment: String = ""
-    @State private var blendedInitialDate: Date = Date()
+    @State private var blendedInitialDate: Date = .init()
     @State private var blendedFinalValuation: String = ""
     @State private var blendedTimeInMonths: String = ""
     @State private var followOnInvestments: [FollowOnInvestment] = []
     @State private var showingAddInvestment = false
-    
+
     // Portfolio Unit Investment inputs
     @State private var portfolioInitialInvestment: String = ""
     @State private var portfolioUnitPrice: String = ""
     @State private var portfolioNumberOfUnits: String = ""
     @State private var portfolioSuccessRate: String = "100"
     @State private var portfolioTimeInMonths: String = ""
-    @State private var portfolioInitialDate: Date = Date()
+    @State private var portfolioInitialDate: Date = .init()
     @State private var portfolioFollowOnInvestments: [FollowOnInvestment] = []
     @State private var showingAddPortfolioInvestment = false
-    
+
     @State private var calculatedResult: Double?
     @State private var showingResult = false
     @State private var isCalculating = false
     @State private var errorMessage: String?
-    
+
     var body: some View {
         configuredMainView
     }
-    
+
     private var configuredMainView: some View {
         mainView
             .sheet(isPresented: $showingAddInvestment) {
@@ -95,9 +95,9 @@ struct ContentView: View {
                 .padding(.top, 8)
             }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     @ViewBuilder
     private var mainView: some View {
         HStack {
@@ -106,10 +106,10 @@ struct ContentView: View {
                 VStack(spacing: 24) {
                     // Header
                     HeaderView()
-                    
+
                     // Mode Selector
                     ModeSelectorView(selectedMode: $selectedMode)
-                    
+
                     // Load Calculation Button
                     Button(action: { showingLoadCalculation = true }) {
                         HStack {
@@ -122,10 +122,10 @@ struct ContentView: View {
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(8)
                     }
-                    
+
                     // Input Form based on selected mode
                     calculationView
-                    
+
                     // Results Section
                     if let result = calculatedResult {
                         ResultCard(
@@ -137,7 +137,7 @@ struct ContentView: View {
                             GrowthChartView(data: chartData)
                         }
                     }
-                    
+
                     Spacer(minLength: 50)
                 }
                 .frame(maxWidth: 420)
@@ -147,7 +147,7 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }
-    
+
     @ViewBuilder
     private var calculationView: some View {
         switch selectedMode {
@@ -210,31 +210,32 @@ struct ContentView: View {
             )
         }
     }
-    
+
     // MARK: - Calculation Methods
-    
+
     private func calculateIRR() {
         let cleanInitial = initialInvestment.replacingOccurrences(of: ",", with: "")
         let cleanOutcome = outcomeAmount.replacingOccurrences(of: ",", with: "")
-        
+
         guard let initial = Double(cleanInitial),
               let outcome = Double(cleanOutcome),
               let months = Double(timeInMonths),
-              initial > 0, outcome > 0, months > 0 else {
+              initial > 0, outcome > 0, months > 0
+        else {
             errorMessage = "Please enter valid numbers"
             return
         }
-        
+
         isCalculating = true
         errorMessage = nil
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let years = months / 12.0
             let irr = IRRCalculator.calculateIRRValue(initialInvestment: initial, outcomeAmount: outcome, timeInYears: years)
             calculatedResult = irr
             isCalculating = false
             showingResult = true
-            
+
             // Trigger auto-save
             let inputs = getInputsForMode()
             let growthPoints = chartDataForCurrentInputs()
@@ -246,28 +247,29 @@ struct ContentView: View {
             )
         }
     }
-    
+
     private func calculateOutcome() {
         let cleanInitial = outcomeInitialInvestment.replacingOccurrences(of: ",", with: "")
-        
+
         guard let initial = Double(cleanInitial),
               let irr = Double(outcomeIRR),
               let months = Double(outcomeTimeInMonths),
-              initial > 0, months > 0 else {
+              initial > 0, months > 0
+        else {
             errorMessage = "Please enter valid numbers"
             return
         }
-        
+
         isCalculating = true
         errorMessage = nil
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let years = months / 12.0
             let outcome = IRRCalculator.calculateOutcomeValue(initialInvestment: initial, irr: irr, timeInYears: years)
             calculatedResult = outcome
             isCalculating = false
             showingResult = true
-            
+
             // Trigger auto-save
             let inputs = getInputsForMode()
             let growthPoints = chartDataForCurrentInputs()
@@ -279,28 +281,29 @@ struct ContentView: View {
             )
         }
     }
-    
+
     private func calculateInitialInvestment() {
         let cleanOutcome = initialOutcomeAmount.replacingOccurrences(of: ",", with: "")
-        
+
         guard let outcome = Double(cleanOutcome),
               let irr = Double(initialIRR),
               let months = Double(initialTimeInMonths),
-              outcome > 0, months > 0 else {
+              outcome > 0, months > 0
+        else {
             errorMessage = "Please enter valid numbers"
             return
         }
-        
+
         isCalculating = true
         errorMessage = nil
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let years = months / 12.0
             let initial = IRRCalculator.calculateInitialValue(outcomeAmount: outcome, irr: irr, timeInYears: years)
             calculatedResult = initial
             isCalculating = false
             showingResult = true
-            
+
             // Trigger auto-save
             let inputs = getInputsForMode()
             let growthPoints = chartDataForCurrentInputs()
@@ -312,42 +315,45 @@ struct ContentView: View {
             )
         }
     }
-    
+
     private func calculateBlendedIRR() {
         let cleanInitial = blendedInitialInvestment.replacingOccurrences(of: ",", with: "")
         let cleanFinalValuation = blendedFinalValuation.replacingOccurrences(of: ",", with: "")
-        
+
         guard let initial = Double(cleanInitial),
               let finalValuation = Double(cleanFinalValuation),
-              let totalMonths = Double(blendedTimeInMonths) else {
+              let totalMonths = Double(blendedTimeInMonths)
+        else {
             errorMessage = "Please enter valid numbers"
             return
         }
-        
+
         // Validate follow-on investments
         for investment in followOnInvestments {
             let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
-            
+
             guard let amount = Double(cleanAmount),
-                  amount > 0 else {
+                  amount > 0
+            else {
                 errorMessage = "Please enter valid amounts for all follow-on investments"
                 return
             }
-            
+
             // For custom valuations, validate the valuation field
             if investment.valuationMode == .custom {
                 let cleanValuation = investment.valuation.replacingOccurrences(of: ",", with: "")
                 guard let valuation = Double(cleanValuation),
-                      valuation > 0 else {
+                      valuation > 0
+                else {
                     errorMessage = "Please enter valid valuations for all custom follow-on investments"
                     return
                 }
             }
         }
-        
+
         isCalculating = true
         errorMessage = nil
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let totalYears = totalMonths / 12.0
             let blendedIRR = IRRCalculator.calculateBlendedIRRValue(
@@ -359,7 +365,7 @@ struct ContentView: View {
             calculatedResult = blendedIRR
             isCalculating = false
             showingResult = true
-            
+
             // Trigger auto-save
             let inputs = getInputsForMode()
             let growthPoints = chartDataForCurrentInputs()
@@ -371,53 +377,55 @@ struct ContentView: View {
             )
         }
     }
-    
+
     private func calculatePortfolioUnitInvestment() {
         let cleanInitial = portfolioInitialInvestment.replacingOccurrences(of: ",", with: "")
         let cleanUnitPrice = portfolioUnitPrice.replacingOccurrences(of: ",", with: "")
-        
+
         guard let initialInvestment = Double(cleanInitial),
               let unitPrice = Double(cleanUnitPrice),
               let numberOfUnits = Double(portfolioNumberOfUnits),
               let successRate = Double(portfolioSuccessRate),
               let months = Double(portfolioTimeInMonths),
-              initialInvestment > 0, unitPrice > 0, numberOfUnits > 0, 
-              successRate > 0, successRate <= 100, months > 0 else {
+              initialInvestment > 0, unitPrice > 0, numberOfUnits > 0,
+              successRate > 0, successRate <= 100, months > 0
+        else {
             errorMessage = "Please enter valid numbers"
             return
         }
-        
+
         // Validate follow-on investments
         for investment in portfolioFollowOnInvestments {
             let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
             let cleanValuation = investment.valuation.replacingOccurrences(of: ",", with: "")
-            
+
             guard let amount = Double(cleanAmount),
                   let valuation = Double(cleanValuation),
-                  amount > 0, valuation > 0 else {
+                  amount > 0, valuation > 0
+            else {
                 errorMessage = "Please enter valid amounts and unit prices for all follow-on investments"
                 return
             }
         }
-        
+
         isCalculating = true
         errorMessage = nil
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let years = months / 12.0
             let successRateDecimal = successRate / 100.0
             let successfulUnits = numberOfUnits * successRateDecimal
-            
+
             // Calculate total investment including follow-ons
             let followOnTotal = portfolioFollowOnInvestments.compactMap { investment in
                 Double(investment.amount.replacingOccurrences(of: ",", with: ""))
             }.reduce(0, +)
             let totalInvestment = initialInvestment + followOnTotal
-            
+
             // Calculate expected outcome based on successful units
             // Simplified calculation: assume 2x return on successful units
             let expectedOutcome = successfulUnits * unitPrice * 2.0
-            
+
             // Calculate portfolio IRR
             let portfolioIRR = if portfolioFollowOnInvestments.isEmpty {
                 IRRCalculator.calculateIRRValue(
@@ -434,11 +442,11 @@ struct ContentView: View {
                     totalTimeInYears: years
                 )
             }
-            
+
             calculatedResult = portfolioIRR
             isCalculating = false
             showingResult = true
-            
+
             // Trigger auto-save
             let inputs = getInputsForMode()
             let growthPoints = chartDataForCurrentInputs()
@@ -450,9 +458,9 @@ struct ContentView: View {
             )
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func getInputsForMode() -> [String: Double] {
         switch selectedMode {
         case .calculateIRR:
@@ -463,7 +471,7 @@ struct ContentView: View {
                 "Initial Investment": Double(cleanInitial) ?? 0,
                 "Outcome Amount": Double(cleanOutcome) ?? 0,
                 "Time Period (Months)": months,
-                "Time Period (Years)": months / 12.0
+                "Time Period (Years)": months / 12.0,
             ]
         case .calculateOutcome:
             let cleanInitial = outcomeInitialInvestment.replacingOccurrences(of: ",", with: "")
@@ -472,7 +480,7 @@ struct ContentView: View {
                 "Initial Investment": Double(cleanInitial) ?? 0,
                 "IRR": Double(outcomeIRR) ?? 0,
                 "Time Period (Months)": months,
-                "Time Period (Years)": months / 12.0
+                "Time Period (Years)": months / 12.0,
             ]
         case .calculateInitial:
             let cleanOutcome = initialOutcomeAmount.replacingOccurrences(of: ",", with: "")
@@ -481,7 +489,7 @@ struct ContentView: View {
                 "Outcome Amount": Double(cleanOutcome) ?? 0,
                 "IRR": Double(initialIRR) ?? 0,
                 "Time Period (Months)": months,
-                "Time Period (Years)": months / 12.0
+                "Time Period (Years)": months / 12.0,
             ]
         case .calculateBlendedIRR:
             let cleanInitial = blendedInitialInvestment.replacingOccurrences(of: ",", with: "")
@@ -492,7 +500,7 @@ struct ContentView: View {
                 "Final Valuation": Double(cleanFinalValuation) ?? 0,
                 "Time Period (Months)": months,
                 "Time Period (Years)": months / 12.0,
-                "Follow-on Investments": Double(followOnInvestments.count)
+                "Follow-on Investments": Double(followOnInvestments.count),
             ]
         case .portfolioUnitInvestment:
             let cleanInitial = portfolioInitialInvestment.replacingOccurrences(of: ",", with: "")
@@ -509,11 +517,11 @@ struct ContentView: View {
                 "Expected Successful Units": successfulUnits,
                 "Time Period (Months)": months,
                 "Time Period (Years)": months / 12.0,
-                "Follow-on Batches": Double(portfolioFollowOnInvestments.count)
+                "Follow-on Batches": Double(portfolioFollowOnInvestments.count),
             ]
         }
     }
-    
+
     private func chartDataForCurrentInputs() -> [GrowthPoint]? {
         switch selectedMode {
         case .calculateIRR:
@@ -553,7 +561,7 @@ struct ContentView: View {
                   initial > 0, finalValuation > 0 else { return nil }
             let months = Int(monthsDouble)
             guard months > 0 else { return nil }
-            
+
             return IRRCalculator.growthPointsWithFollowOn(
                 initial: initial,
                 followOnInvestments: followOnInvestments,
@@ -569,11 +577,11 @@ struct ContentView: View {
                   initial > 0, unitPrice > 0, numberOfUnits > 0, successRate > 0 else { return nil }
             let months = Int(monthsDouble)
             guard months > 0 else { return nil }
-            
+
             let successRateDecimal = successRate / 100.0
             let successfulUnits = numberOfUnits * successRateDecimal
             let expectedOutcome = successfulUnits * unitPrice * 2.0 // Simplified 2x return
-            
+
             if portfolioFollowOnInvestments.isEmpty {
                 let years = Double(months) / 12.0
                 let irr = IRRCalculator.calculateIRRValue(
@@ -592,24 +600,24 @@ struct ContentView: View {
             }
         }
     }
-    
+
     // MARK: - Auto-Save Methods
-    
+
     private func updateInputTracking() {
         let inputs = getInputsForMode()
         dataManager.updateInputs(inputs)
     }
-    
+
     // MARK: - Calculation Loading Methods
-    
+
     private func loadCalculation(_ calculation: SavedCalculation) {
         // Clear current results
         calculatedResult = nil
         errorMessage = nil
-        
+
         // Set the calculation mode
         selectedMode = calculation.calculationType
-        
+
         // Populate form fields based on calculation type
         switch calculation.calculationType {
         case .calculateIRR:
@@ -617,26 +625,26 @@ struct ContentView: View {
             outcomeAmount = formatCurrency(calculation.outcomeAmount)
             timeInMonths = formatNumber(calculation.timeInMonths)
             calculatedResult = calculation.calculatedResult
-            
+
         case .calculateOutcome:
             outcomeInitialInvestment = formatCurrency(calculation.initialInvestment)
             outcomeIRR = formatNumber(calculation.irr)
             outcomeTimeInMonths = formatNumber(calculation.timeInMonths)
             calculatedResult = calculation.calculatedResult
-            
+
         case .calculateInitial:
             initialOutcomeAmount = formatCurrency(calculation.outcomeAmount)
             initialIRR = formatNumber(calculation.irr)
             initialTimeInMonths = formatNumber(calculation.timeInMonths)
             calculatedResult = calculation.calculatedResult
-            
+
         case .calculateBlendedIRR:
             blendedInitialInvestment = formatCurrency(calculation.initialInvestment)
             blendedFinalValuation = formatCurrency(calculation.outcomeAmount)
             blendedTimeInMonths = formatNumber(calculation.timeInMonths)
             followOnInvestments = calculation.followOnInvestments ?? []
             calculatedResult = calculation.calculatedResult
-            
+
         case .portfolioUnitInvestment:
             portfolioInitialInvestment = formatCurrency(calculation.initialInvestment)
             portfolioUnitPrice = formatCurrency(calculation.unitPrice)
@@ -646,18 +654,18 @@ struct ContentView: View {
             portfolioFollowOnInvestments = calculation.followOnInvestments ?? []
             calculatedResult = calculation.calculatedResult
         }
-        
+
         // Clear unsaved changes since we just loaded a calculation
         dataManager.clearUnsavedChanges()
     }
-    
+
     private func formatCurrency(_ value: Double?) -> String {
         guard let value = value else { return "" }
         return String(format: "%.2f", value)
     }
-    
+
     private func formatNumber(_ value: Double?) -> String {
         guard let value = value else { return "" }
         return String(format: "%.0f", value)
     }
-} 
+}

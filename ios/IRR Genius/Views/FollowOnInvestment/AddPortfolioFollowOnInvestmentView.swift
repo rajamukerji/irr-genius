@@ -11,24 +11,24 @@ struct AddPortfolioFollowOnInvestmentView: View {
     @Binding var isPresented: Bool
     @Binding var followOnInvestments: [FollowOnInvestment]
     let initialInvestmentDate: Date
-    
+
     @State private var investmentType: InvestmentType = .buy
     @State private var amount: String = ""
     @State private var unitPrice: String = ""
     @State private var numberOfUnits: String = ""
     @State private var timingType: TimingType = .absoluteDate
-    @State private var date: Date = Date()
+    @State private var date: Date = .init()
     @State private var relativeAmount: String = "1"
     @State private var relativeUnit: TimeUnit = .years
     @State private var errorMessage: String?
-    
+
     // Computed property for amount calculation
     private var calculatedAmount: Double {
         let units = Double(numberOfUnits) ?? 0
         let price = Double(unitPrice.replacingOccurrences(of: ",", with: "")) ?? 0
         return units * price
     }
-    
+
     var body: some View {
         NavigationView {
             Form {
@@ -39,7 +39,7 @@ struct AddPortfolioFollowOnInvestmentView: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Unit Price")
                             .font(.headline)
@@ -51,7 +51,7 @@ struct AddPortfolioFollowOnInvestmentView: View {
                                 updateAmount()
                             }
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Number of Units")
                             .font(.headline)
@@ -63,7 +63,7 @@ struct AddPortfolioFollowOnInvestmentView: View {
                                 updateAmount()
                             }
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Total Investment Amount")
                             .font(.headline)
@@ -73,7 +73,7 @@ struct AddPortfolioFollowOnInvestmentView: View {
                             .foregroundColor(.blue)
                     }
                 }
-                
+
                 Section(header: Text("Timing")) {
                     Picker("Timing Type", selection: $timingType) {
                         ForEach(TimingType.allCases, id: \.self) { type in
@@ -81,7 +81,7 @@ struct AddPortfolioFollowOnInvestmentView: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    
+
                     if timingType == .absoluteDate {
                         DatePicker("Investment Date", selection: $date, displayedComponents: .date)
                     } else {
@@ -90,20 +90,20 @@ struct AddPortfolioFollowOnInvestmentView: View {
                                 .keyboardType(.decimalPad)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .frame(width: 80)
-                            
+
                             Picker("Unit", selection: $relativeUnit) {
                                 ForEach(TimeUnit.allCases, id: \.self) { unit in
                                     Text(unit.rawValue).tag(unit)
                                 }
                             }
                             .pickerStyle(.menu)
-                            
+
                             Text("after initial investment")
                                 .foregroundColor(.secondary)
                         }
                     }
                 }
-                
+
                 if let errorMessage = errorMessage {
                     Section {
                         Text(errorMessage)
@@ -120,7 +120,7 @@ struct AddPortfolioFollowOnInvestmentView: View {
                         isPresented = false
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add") {
                         addInvestment()
@@ -130,19 +130,20 @@ struct AddPortfolioFollowOnInvestmentView: View {
             }
         }
     }
-    
+
     private func updateAmount() {
         let units = Double(numberOfUnits) ?? 0
         let price = Double(unitPrice.replacingOccurrences(of: ",", with: "")) ?? 0
         amount = String(units * price)
     }
-    
+
     private func isValidInput() -> Bool {
         guard let units = Double(numberOfUnits), units > 0,
-              let price = Double(unitPrice.replacingOccurrences(of: ",", with: "")), price > 0 else {
+              let price = Double(unitPrice.replacingOccurrences(of: ",", with: "")), price > 0
+        else {
             return false
         }
-        
+
         if timingType == .relativeTime {
             guard let relativeValue = Double(relativeAmount), relativeValue > 0 else {
                 return false
@@ -152,16 +153,16 @@ struct AddPortfolioFollowOnInvestmentView: View {
                 return false
             }
         }
-        
+
         return true
     }
-    
+
     private func addInvestment() {
         guard isValidInput() else {
             errorMessage = "Please check all input values"
             return
         }
-        
+
         // Create the follow-on investment with unit price as the valuation
         let investment = FollowOnInvestment(
             timingType: timingType,
@@ -176,7 +177,7 @@ struct AddPortfolioFollowOnInvestmentView: View {
             irr: "0",
             initialInvestmentDate: initialInvestmentDate
         )
-        
+
         do {
             try investment.validate()
             followOnInvestments.append(investment)

@@ -7,16 +7,15 @@ import Foundation
 
 /// Service for importing calculation data from CSV files
 class CSVImportService {
-    
     // MARK: - Constants
-    
+
     private static let supportedDelimiters: [Character] = [",", ";", "\t", "|"]
     private static let dateFormatters: [DateFormatter] = {
         let formatters = [
             "yyyy-MM-dd",
             "MM/dd/yyyy",
             "dd/MM/yyyy",
-            "yyyy/MM/dd"
+            "yyyy/MM/dd",
         ].map { pattern in
             let formatter = DateFormatter()
             formatter.dateFormat = pattern
@@ -25,27 +24,27 @@ class CSVImportService {
         }
         return formatters
     }()
-    
+
     // MARK: - Public Methods
-    
+
     /// Imports CSV data from a URL
     func importCSV(from url: URL, delimiter: Character = ",", hasHeaders: Bool = true) async throws -> ImportResult {
         guard url.startAccessingSecurityScopedResource() else {
             throw ImportError.fileAccessDenied
         }
         defer { url.stopAccessingSecurityScopedResource() }
-        
+
         do {
             let content = try String(contentsOf: url, encoding: .utf8)
             let lines = content.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            
+
             guard !lines.isEmpty else {
                 throw ImportError.emptyFile
             }
-            
+
             let actualDelimiter = detectDelimiter(in: lines.first!, preferred: delimiter)
             let parsedData = parseCSVLines(lines, delimiter: actualDelimiter, hasHeaders: hasHeaders)
-            
+
             return ImportResult(
                 headers: parsedData.headers,
                 rows: parsedData.rows,
@@ -61,7 +60,7 @@ class CSVImportService {
             }
         }
     }
-    
+
     /// Validates imported data and converts to SavedCalculation objects
     func validateAndConvert(
         importResult: ImportResult,
@@ -72,7 +71,7 @@ class CSVImportService {
         let importValidationService = ImportValidationService()
         var validationErrors: [ImportValidationError] = []
         var validCalculations: [SavedCalculation] = []
-        
+
         // First, validate the raw data using the validation service
         let fieldMapping = Dictionary(uniqueKeysWithValues: columnMapping.map { ($0.key, $0.value.rawValue) })
         let rawValidationResults = importValidationService.validateImportedData(
@@ -80,7 +79,7 @@ class CSVImportService {
             headers: importResult.headers,
             fieldMapping: fieldMapping
         )
-        
+
         // Convert validation results to our format
         for result in rawValidationResults {
             validationErrors.append(ImportValidationError(
@@ -90,13 +89,13 @@ class CSVImportService {
                 error: result.error
             ))
         }
-        
+
         // Then, try to convert valid rows to SavedCalculation objects
         for (rowIndex, row) in importResult.rows.enumerated() {
             // Skip rows that already have validation errors
             let hasRowErrors = validationErrors.contains { $0.row == rowIndex + 1 }
             if hasRowErrors { continue }
-            
+
             do {
                 let calculation = try convertRowToCalculation(
                     row: row,
@@ -106,11 +105,11 @@ class CSVImportService {
                     projectId: projectId,
                     rowIndex: rowIndex
                 )
-                
+
                 // Additional validation using the calculation's built-in validation
                 try calculation.validate()
                 validCalculations.append(calculation)
-                
+
             } catch {
                 validationErrors.append(
                     ImportValidationError(
@@ -127,7 +126,7 @@ class CSVImportService {
                 )
             }
         }
-        
+
         return ImportValidationResult(
             validCalculations: validCalculations,
             validationErrors: validationErrors,
@@ -135,20 +134,20 @@ class CSVImportService {
             validRows: validCalculations.count
         )
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// Detects the most likely delimiter in a CSV line
     private func detectDelimiter(in line: String, preferred: Character) -> Character {
         if line.contains(preferred) {
             return preferred
         }
-        
+
         return Self.supportedDelimiters.max { delimiter1, delimiter2 in
             line.filter { $0 == delimiter1 }.count < line.filter { $0 == delimiter2 }.count
         } ?? ","
     }
-    
+
     /// Parses CSV lines into headers and rows
     private func parseCSVLines(_ lines: [String], delimiter: Character, hasHeaders: Bool) -> ParsedCSVData {
         let headers: [String]
@@ -158,31 +157,31 @@ class CSVImportService {
             // Generate default headers if no headers provided
             let firstLine = lines.first ?? ""
             let columnCount = parseCSVLine(firstLine, delimiter: delimiter).count
-            headers = (1...columnCount).map { "Column \($0)" }
+            headers = (1 ... columnCount).map { "Column \($0)" }
         }
-        
+
         let dataStartIndex = hasHeaders ? 1 : 0
         let rows = lines.dropFirst(dataStartIndex).compactMap { line in
             let parsedLine = parseCSVLine(line, delimiter: delimiter)
             return parsedLine.isEmpty ? nil : parsedLine
         }
-        
+
         return ParsedCSVData(headers: headers, rows: Array(rows))
     }
-    
+
     /// Parses a single CSV line, handling quoted values
     private func parseCSVLine(_ line: String, delimiter: Character) -> [String] {
         var result: [String] = []
         var current = ""
         var inQuotes = false
         var i = line.startIndex
-        
+
         while i < line.endIndex {
             let char = line[i]
-            
+
             switch char {
             case "\"":
-                if inQuotes && line.index(after: i) < line.endIndex && line[line.index(after: i)] == "\"" {
+                if inQuotes, line.index(after: i) < line.endIndex, line[line.index(after: i)] == "\"" {
                     // Escaped quote
                     current.append("\"")
                     i = line.index(after: i) // Skip next quote
@@ -196,21 +195,21 @@ class CSVImportService {
             default:
                 current.append(char)
             }
-            
+
             i = line.index(after: i)
         }
-        
+
         result.append(current.trimmingCharacters(in: .whitespacesAndNewlines))
         return result
     }
-    
+
     /// Suggests column mapping based on header names
     private func suggestColumnMapping(for headers: [String]) -> [String: CalculationField] {
         var mapping: [String: CalculationField] = [:]
-        
+
         for header in headers {
             let normalizedHeader = header.lowercased().replacingOccurrences(of: "[^a-z0-9]", with: "", options: .regularExpression)
-            
+
             let suggestedField: CalculationField?
             switch normalizedHeader {
             case let h where h.contains("initial") || h.contains("investment"):
@@ -240,15 +239,15 @@ class CSVImportService {
             default:
                 suggestedField = nil
             }
-            
+
             if let field = suggestedField {
                 mapping[header] = field
             }
         }
-        
+
         return mapping
     }
-    
+
     /// Converts a CSV row to a SavedCalculation object
     private func convertRowToCalculation(
         row: [String],
@@ -259,61 +258,61 @@ class CSVImportService {
         rowIndex: Int
     ) throws -> SavedCalculation {
         var fieldValues: [CalculationField: String] = [:]
-        
+
         // Map row values to calculation fields
         for (index, header) in headers.enumerated() {
             if index < row.count, let field = columnMapping[header] {
                 fieldValues[field] = row[index]
             }
         }
-        
+
         // Extract and validate field values
         let name = fieldValues[.name]?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             ? fieldValues[.name]!
             : "Imported Calculation \(rowIndex + 1)"
-        
-        let initialInvestment = try fieldValues[.initialInvestment].flatMap { 
+
+        let initialInvestment = try fieldValues[.initialInvestment].flatMap {
             try parseDouble($0, fieldName: "Initial Investment", rowNumber: rowIndex + 1)
         }
-        
+
         let outcomeAmount = try fieldValues[.outcomeAmount].flatMap {
             try parseDouble($0, fieldName: "Outcome Amount", rowNumber: rowIndex + 1)
         }
-        
+
         let timeInMonths = try fieldValues[.timeInMonths].flatMap {
             try parseDouble($0, fieldName: "Time in Months", rowNumber: rowIndex + 1)
         }
-        
+
         let irr = try fieldValues[.irr].flatMap {
             try parseDouble($0, fieldName: "IRR", rowNumber: rowIndex + 1)
         }
-        
+
         let unitPrice = try fieldValues[.unitPrice].flatMap {
             try parseDouble($0, fieldName: "Unit Price", rowNumber: rowIndex + 1)
         }
-        
+
         let successRate = try fieldValues[.successRate].flatMap {
             try parseDouble($0, fieldName: "Success Rate", rowNumber: rowIndex + 1)
         }
-        
+
         let outcomePerUnit = try fieldValues[.outcomePerUnit].flatMap {
             try parseDouble($0, fieldName: "Outcome Per Unit", rowNumber: rowIndex + 1)
         }
-        
+
         let investorShare = try fieldValues[.investorShare].flatMap {
             try parseDouble($0, fieldName: "Investor Share", rowNumber: rowIndex + 1)
         }
-        
+
         let feePercentage = try fieldValues[.feePercentage].flatMap {
             try parseDouble($0, fieldName: "Fee Percentage", rowNumber: rowIndex + 1)
         }
-        
+
         let notes = fieldValues[.notes]
-        
-        let createdDate = try fieldValues[.date].flatMap { 
-            try parseDate($0, rowNumber: rowIndex + 1) 
+
+        let createdDate = try fieldValues[.date].flatMap {
+            try parseDate($0, rowNumber: rowIndex + 1)
         } ?? Date()
-        
+
         return try SavedCalculation(
             name: name,
             calculationType: calculationType,
@@ -332,33 +331,33 @@ class CSVImportService {
             notes: notes
         )
     }
-    
+
     /// Parses a string to Double with error handling
     private func parseDouble(_ value: String, fieldName: String, rowNumber: Int) throws -> Double? {
         let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedValue.isEmpty else { return nil }
-        
+
         // Remove common currency symbols and formatting
         let cleanValue = trimmedValue.replacingOccurrences(of: "[$,€£¥%\\s]", with: "", options: .regularExpression)
-        
+
         guard let doubleValue = Double(cleanValue) else {
             throw ImportError.invalidNumberFormat(row: rowNumber, field: fieldName, value: value)
         }
-        
+
         return doubleValue
     }
-    
+
     /// Parses a string to Date with error handling
     private func parseDate(_ value: String, rowNumber: Int) throws -> Date? {
         let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedValue.isEmpty else { return nil }
-        
+
         for formatter in Self.dateFormatters {
             if let date = formatter.date(from: trimmedValue) {
                 return date
             }
         }
-        
+
         throw ImportError.invalidDateFormat(row: rowNumber, value: value)
     }
 }
@@ -385,9 +384,9 @@ enum CalculationField: String, CaseIterable {
     case feePercentage = "Fee Percentage (%)"
     case notes = "Notes"
     case date = "Date"
-    
+
     var displayName: String {
-        return self.rawValue
+        return rawValue
     }
 }
 
@@ -412,7 +411,7 @@ struct ImportValidationResult {
     let validationErrors: [ImportValidationError]
     let totalRows: Int
     let validRows: Int
-    
+
     var hasErrors: Bool { !validationErrors.isEmpty }
     var successRate: Double { totalRows > 0 ? Double(validRows) / Double(totalRows) : 0.0 }
 }
@@ -435,24 +434,24 @@ enum ImportError: LocalizedError {
     case unsupportedFormat
     case corruptedFile
     case missingRequiredFields([String])
-    
+
     var errorDescription: String? {
         switch self {
         case .fileAccessDenied:
             return "Unable to access the selected file. Please check file permissions."
         case .emptyFile:
             return "The selected file is empty."
-        case .parseError(let message):
+        case let .parseError(message):
             return "Failed to parse file: \(message)"
-        case .invalidNumberFormat(let row, let field, let value):
+        case let .invalidNumberFormat(row, field, value):
             return "Invalid number format in row \(row) for field '\(field)': '\(value)'"
-        case .invalidDateFormat(let row, let value):
+        case let .invalidDateFormat(row, value):
             return "Invalid date format in row \(row): '\(value)'"
         case .unsupportedFormat:
             return "File format not supported. Please use CSV or Excel files."
         case .corruptedFile:
             return "File appears to be corrupted or unreadable."
-        case .missingRequiredFields(let fields):
+        case let .missingRequiredFields(fields):
             return "Missing required fields: \(fields.joined(separator: ", "))"
         }
     }

@@ -8,6 +8,7 @@
 import Foundation
 
 // MARK: - Validation Errors
+
 enum FollowOnInvestmentValidationError: LocalizedError {
     case invalidAmount
     case invalidRelativeAmount
@@ -15,7 +16,7 @@ enum FollowOnInvestmentValidationError: LocalizedError {
     case invalidIRR
     case futureDateRequired
     case invalidRelativeTime
-    
+
     var errorDescription: String? {
         switch self {
         case .invalidAmount:
@@ -48,12 +49,13 @@ struct FollowOnInvestment: Identifiable, Codable, Equatable {
     var valuation: String // Either computed based on IRR or specified directly
     var irr: String // Used for computed valuation
     var initialInvestmentDate: Date // Reference date for relative timing
-    
-    init(id: UUID = UUID(), timingType: TimingType = .absoluteDate, date: Date = Date(), 
-         relativeAmount: String = "1", relativeUnit: TimeUnit = .years, 
+
+    init(id: UUID = UUID(), timingType: TimingType = .absoluteDate, date: Date = Date(),
+         relativeAmount: String = "1", relativeUnit: TimeUnit = .years,
          investmentType: InvestmentType = .buy, amount: String = "0",
          valuationMode: ValuationMode = .tagAlong, valuationType: ValuationType = .computed,
-         valuation: String = "0", irr: String = "0", initialInvestmentDate: Date = Date()) {
+         valuation: String = "0", irr: String = "0", initialInvestmentDate: Date = Date())
+    {
         self.id = id
         self.timingType = timingType
         self.date = date
@@ -67,7 +69,7 @@ struct FollowOnInvestment: Identifiable, Codable, Equatable {
         self.irr = irr
         self.initialInvestmentDate = initialInvestmentDate
     }
-    
+
     // Computed property to get the actual investment date
     var investmentDate: Date {
         switch timingType {
@@ -86,16 +88,16 @@ struct FollowOnInvestment: Identifiable, Codable, Equatable {
             }
         }
     }
-    
+
     // MARK: - Validation Methods
-    
+
     /// Validates the follow-on investment for data integrity
     func validate() throws {
         // Validate investment amount
         guard let amountValue = Double(amount), amountValue > 0 else {
             throw FollowOnInvestmentValidationError.invalidAmount
         }
-        
+
         // Validate timing
         switch timingType {
         case .absoluteDate:
@@ -103,13 +105,13 @@ struct FollowOnInvestment: Identifiable, Codable, Equatable {
             guard date > initialInvestmentDate else {
                 throw FollowOnInvestmentValidationError.futureDateRequired
             }
-            
+
         case .relativeTime:
             guard let relativeValue = Double(relativeAmount), relativeValue > 0 else {
                 throw FollowOnInvestmentValidationError.invalidRelativeAmount
             }
         }
-        
+
         // Validate valuation based on mode
         switch valuationMode {
         case .custom:
@@ -119,7 +121,7 @@ struct FollowOnInvestment: Identifiable, Codable, Equatable {
                 }
             } else {
                 // For computed valuation, validate IRR
-                guard let irrValue = Double(irr), irrValue > -100 && irrValue < 1000 else {
+                guard let irrValue = Double(irr), irrValue > -100, irrValue < 1000 else {
                     throw FollowOnInvestmentValidationError.invalidIRR
                 }
             }
@@ -128,7 +130,7 @@ struct FollowOnInvestment: Identifiable, Codable, Equatable {
             break
         }
     }
-    
+
     /// Checks if the follow-on investment has valid data
     var isValid: Bool {
         do {
@@ -138,24 +140,24 @@ struct FollowOnInvestment: Identifiable, Codable, Equatable {
             return false
         }
     }
-    
+
     /// Returns the numeric amount value
     var numericAmount: Double? {
         return Double(amount)
     }
-    
+
     /// Returns the numeric valuation value
     var numericValuation: Double? {
         return Double(valuation)
     }
-    
+
     /// Returns the numeric IRR value
     var numericIRR: Double? {
         return Double(irr)
     }
-    
+
     /// Returns the numeric relative amount value
     var numericRelativeAmount: Double? {
         return Double(relativeAmount)
     }
-} 
+}

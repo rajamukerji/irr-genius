@@ -5,8 +5,8 @@
 //  CloudKit sync settings and management UI
 //
 
-import SwiftUI
 import CloudKit
+import SwiftUI
 
 struct CloudKitSyncSettingsView: View {
     @EnvironmentObject var dataManager: DataManager
@@ -14,7 +14,7 @@ struct CloudKitSyncSettingsView: View {
     @State private var selectedConflict: SyncConflict?
     @State private var showingSyncError = false
     @State private var syncErrorMessage = ""
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // CloudKit Status Section
@@ -38,7 +38,7 @@ struct CloudKitSyncSettingsView: View {
                         }
                     ))
                 }
-                
+
                 if dataManager.isCloudKitEnabled {
                     VStack(alignment: .leading, spacing: 8) {
                         // Sync Status
@@ -50,7 +50,7 @@ struct CloudKitSyncSettingsView: View {
                                 .foregroundColor(.secondary)
                             Spacer()
                         }
-                        
+
                         // Last Sync Date
                         if let lastSync = dataManager.lastSyncDate {
                             HStack {
@@ -62,7 +62,7 @@ struct CloudKitSyncSettingsView: View {
                                 Spacer()
                             }
                         }
-                        
+
                         // Sync Progress
                         if dataManager.isSyncing {
                             VStack(alignment: .leading, spacing: 4) {
@@ -86,7 +86,7 @@ struct CloudKitSyncSettingsView: View {
             .padding()
             .background(Color(.systemGray6))
             .cornerRadius(12)
-            
+
             // Manual Sync Button
             if dataManager.isCloudKitEnabled {
                 Button(action: {
@@ -106,7 +106,7 @@ struct CloudKitSyncSettingsView: View {
                 }
                 .disabled(dataManager.isSyncing)
             }
-            
+
             // Conflict Resolution Section
             if !dataManager.pendingConflicts.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
@@ -124,11 +124,11 @@ struct CloudKitSyncSettingsView: View {
                             .foregroundColor(.white)
                             .cornerRadius(8)
                     }
-                    
+
                     Text("Some calculations have conflicting changes that need to be resolved.")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     Button("Resolve Conflicts") {
                         showingConflictResolution = true
                     }
@@ -138,16 +138,16 @@ struct CloudKitSyncSettingsView: View {
                 .background(Color.orange.opacity(0.1))
                 .cornerRadius(12)
             }
-            
+
             // CloudKit Information
             VStack(alignment: .leading, spacing: 8) {
                 Text("About iCloud Sync")
                     .font(.headline)
-                
+
                 Text("When enabled, your calculations and projects are automatically synchronized across all your devices using iCloud. Your data is encrypted and stored securely in your personal iCloud account.")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 if !dataManager.isCloudKitEnabled {
                     Text("• Requires iCloud account\n• Uses your iCloud storage quota\n• Automatic sync every 5 minutes\n• Offline-first with conflict resolution")
                         .font(.caption)
@@ -158,7 +158,7 @@ struct CloudKitSyncSettingsView: View {
             .padding()
             .background(Color(.systemGray6))
             .cornerRadius(12)
-            
+
             Spacer()
         }
         .padding()
@@ -172,20 +172,20 @@ struct CloudKitSyncSettingsView: View {
             }
         }
         .alert("Sync Error", isPresented: $showingSyncError) {
-            Button("OK") { }
+            Button("OK") {}
         } message: {
             Text(syncErrorMessage)
         }
         .onReceive(dataManager.$syncStatus) { status in
-            if case .error(let error) = status {
+            if case let .error(error) = status {
                 syncErrorMessage = error.localizedDescription
                 showingSyncError = true
             }
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var syncStatusIcon: String {
         switch dataManager.syncStatus {
         case .idle:
@@ -198,7 +198,7 @@ struct CloudKitSyncSettingsView: View {
             return "exclamationmark.circle.fill"
         }
     }
-    
+
     private var syncStatusColor: Color {
         switch dataManager.syncStatus {
         case .idle:
@@ -211,27 +211,27 @@ struct CloudKitSyncSettingsView: View {
             return .red
         }
     }
-    
+
     private var syncStatusText: String {
         switch dataManager.syncStatus {
         case .idle:
             return "Ready to sync"
         case .syncing:
             return "Syncing..."
-        case .success(let date):
+        case let .success(date):
             return "Last synced \(relativeDateFormatter.localizedString(for: date, relativeTo: Date()))"
-        case .error(let error):
+        case let .error(error):
             return "Sync failed: \(error.localizedDescription)"
         }
     }
-    
+
     private var syncDateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
         return formatter
     }
-    
+
     private var relativeDateFormatter: RelativeDateTimeFormatter {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
@@ -245,7 +245,7 @@ struct ConflictResolutionView: View {
     let conflicts: [SyncConflict]
     let onResolve: (SyncConflict, ConflictResolution) -> Void
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationView {
             List(conflicts, id: \.localRecord.id) { conflict in
@@ -270,7 +270,7 @@ struct ConflictRowView: View {
     let conflict: SyncConflict
     let onResolve: (SyncConflict, ConflictResolution) -> Void
     @State private var showingDetails = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Conflict Header
@@ -289,12 +289,12 @@ struct ConflictRowView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
             }
-            
+
             // Conflict Description
             Text(conflictDescription)
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             // Resolution Buttons
             HStack(spacing: 12) {
                 Button("Use Local") {
@@ -302,13 +302,13 @@ struct ConflictRowView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                
+
                 Button("Use Remote") {
                     onResolve(conflict, .useRemote)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                
+
                 Button("Merge") {
                     onResolve(conflict, .merge)
                 }
@@ -321,12 +321,12 @@ struct ConflictRowView: View {
             ConflictDetailsView(conflict: conflict)
         }
     }
-    
+
     private var conflictDescription: String {
         switch conflict.conflictType {
         case .modificationDate:
             return "Both local and remote versions were modified at the same time."
-        case .dataConflict(let fields):
+        case let .dataConflict(fields):
             return "Conflicting data in: \(fields.joined(separator: ", "))"
         }
     }
@@ -337,7 +337,7 @@ struct ConflictRowView: View {
 struct ConflictDetailsView: View {
     let conflict: SyncConflict
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -347,19 +347,19 @@ struct ConflictDetailsView: View {
                         Text("Local Version")
                             .font(.headline)
                             .foregroundColor(.blue)
-                        
+
                         CalculationDetailsView(calculation: conflict.localRecord)
                     }
                     .padding()
                     .background(Color.blue.opacity(0.1))
                     .cornerRadius(12)
-                    
+
                     // Remote Version
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Remote Version")
                             .font(.headline)
                             .foregroundColor(.green)
-                        
+
                         CalculationDetailsView(calculation: conflict.remoteRecord)
                     }
                     .padding()
@@ -385,66 +385,66 @@ struct ConflictDetailsView: View {
 
 struct CalculationDetailsView: View {
     let calculation: SavedCalculation
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             DetailRow(label: "Name", value: calculation.name)
             DetailRow(label: "Type", value: calculation.calculationType.displayName)
             DetailRow(label: "Modified", value: calculation.modifiedDate, formatter: dateFormatter)
-            
+
             if let initialInvestment = calculation.initialInvestment {
                 DetailRow(label: "Initial Investment", value: initialInvestment, formatter: currencyFormatter)
             }
-            
+
             if let outcomeAmount = calculation.outcomeAmount {
                 DetailRow(label: "Outcome Amount", value: outcomeAmount, formatter: currencyFormatter)
             }
-            
+
             if let timeInMonths = calculation.timeInMonths {
                 DetailRow(label: "Time (Months)", value: timeInMonths, formatter: numberFormatter)
             }
-            
+
             if let irr = calculation.irr {
                 DetailRow(label: "IRR", value: irr, formatter: percentFormatter)
             }
-            
+
             if let result = calculation.calculatedResult {
                 DetailRow(label: "Result", value: result, formatter: resultFormatter)
             }
-            
+
             if let notes = calculation.notes, !notes.isEmpty {
                 DetailRow(label: "Notes", value: notes)
             }
         }
     }
-    
+
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter
     }
-    
+
     private var currencyFormatter: NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         return formatter
     }
-    
+
     private var numberFormatter: NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 2
         return formatter
     }
-    
+
     private var percentFormatter: NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .percent
         formatter.maximumFractionDigits = 2
         return formatter
     }
-    
+
     private var resultFormatter: NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
@@ -458,27 +458,27 @@ struct CalculationDetailsView: View {
 struct DetailRow: View {
     let label: String
     let value: String
-    
+
     init(label: String, value: String) {
         self.label = label
         self.value = value
     }
-    
+
     init(label: String, value: Int, formatter: NumberFormatter) {
         self.label = label
         self.value = formatter.string(from: NSNumber(value: value)) ?? "\(value)"
     }
-    
+
     init(label: String, value: Double, formatter: NumberFormatter) {
         self.label = label
         self.value = formatter.string(from: NSNumber(value: value)) ?? "\(value)"
     }
-    
+
     init(label: String, value: Date, formatter: DateFormatter) {
         self.label = label
         self.value = formatter.string(from: value)
     }
-    
+
     var body: some View {
         HStack {
             Text(label)

@@ -16,14 +16,14 @@ struct PortfolioSummaryCard: View {
     let followOnInvestments: [FollowOnInvestment]
     let validationErrors: [String]
     @Binding var showingValidationDetails: Bool
-    
+
     var body: some View {
         VStack(spacing: 12) {
             HStack {
                 Text("Portfolio Summary")
                     .font(.headline)
                 Spacer()
-                
+
                 if !validationErrors.isEmpty {
                     Button(action: { showingValidationDetails.toggle() }) {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -31,7 +31,7 @@ struct PortfolioSummaryCard: View {
                     }
                 }
             }
-            
+
             VStack(spacing: 6) {
                 // Initial investment metrics
                 HStack {
@@ -40,7 +40,7 @@ struct PortfolioSummaryCard: View {
                     Text("\(NumberFormatting.formatNumber(Double(numberOfUnits) ?? 0))")
                         .fontWeight(.medium)
                 }
-                
+
                 HStack {
                     Text("Expected Successful Units:")
                     Spacer()
@@ -48,7 +48,7 @@ struct PortfolioSummaryCard: View {
                         .fontWeight(.medium)
                         .foregroundColor(.green)
                 }
-                
+
                 if !followOnInvestments.isEmpty {
                     HStack {
                         Text("Follow-on Units:")
@@ -56,7 +56,7 @@ struct PortfolioSummaryCard: View {
                         Text("\(NumberFormatting.formatNumber(totalFollowOnUnits))")
                             .fontWeight(.medium)
                     }
-                    
+
                     HStack {
                         Text("Total Portfolio Units:")
                         Spacer()
@@ -65,16 +65,16 @@ struct PortfolioSummaryCard: View {
                             .foregroundColor(.blue)
                     }
                 }
-                
+
                 Divider()
-                
+
                 HStack {
                     Text("Total Investment:")
                     Spacer()
                     Text(NumberFormatting.formatCurrency(totalInvestment))
                         .fontWeight(.medium)
                 }
-                
+
                 if averageUnitPrice > 0 {
                     HStack {
                         Text("Average Unit Price:")
@@ -83,7 +83,7 @@ struct PortfolioSummaryCard: View {
                             .fontWeight(.medium)
                     }
                 }
-                
+
                 if !followOnInvestments.isEmpty {
                     HStack {
                         Text("Investment Batches:")
@@ -110,7 +110,7 @@ struct PortfolioSummaryCard_Previews: PreviewProvider {
                 numberOfUnits: "10000",
                 totalUnits: 8000,
                 totalFollowOnUnits: 2000,
-                totalInvestment: 120000,
+                totalInvestment: 120_000,
                 averageUnitPrice: 12.0,
                 followOnInvestments: [FollowOnInvestment(
                     timingType: .absoluteDate,
@@ -125,7 +125,7 @@ struct PortfolioSummaryCard_Previews: PreviewProvider {
                 validationErrors: [],
                 showingValidationDetails: .constant(false)
             )
-            
+
             PortfolioSummaryCard(
                 numberOfUnits: "5000",
                 totalUnits: 4000,

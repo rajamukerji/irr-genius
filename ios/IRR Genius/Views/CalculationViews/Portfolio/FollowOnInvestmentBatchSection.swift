@@ -12,15 +12,15 @@ struct FollowOnInvestmentBatchSection: View {
     @Binding var showingBatchDetails: Bool
     @Binding var showingAddInvestment: Bool
     @Binding var selectedBatchIndex: Int?
-    
+
     var body: some View {
         VStack(spacing: 12) {
             HStack {
                 Text("Follow-on Investment Batches")
                     .font(.headline)
-                
+
                 Spacer()
-                
+
                 if !followOnInvestments.isEmpty {
                     Button(action: { showingBatchDetails.toggle() }) {
                         Image(systemName: showingBatchDetails ? "eye.slash" : "eye")
@@ -28,14 +28,14 @@ struct FollowOnInvestmentBatchSection: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                
+
                 Button(action: { showingAddInvestment = true }) {
                     Image(systemName: "plus.circle.fill")
                         .font(.title2)
                         .foregroundColor(.blue)
                 }
             }
-            
+
             if followOnInvestments.isEmpty {
                 EmptyFollowOnInvestmentView()
             } else {
@@ -61,7 +61,7 @@ struct FollowOnInvestmentBatchSection_Previews: PreviewProvider {
                 showingAddInvestment: .constant(false),
                 selectedBatchIndex: .constant(nil)
             )
-            
+
             // With investments
             FollowOnInvestmentBatchSection(
                 followOnInvestments: .constant([
@@ -74,7 +74,7 @@ struct FollowOnInvestmentBatchSection_Previews: PreviewProvider {
                         amount: "25000",
                         valuationMode: .custom,
                         valuation: "15"
-                    )
+                    ),
                 ]),
                 showingBatchDetails: .constant(true),
                 showingAddInvestment: .constant(false),

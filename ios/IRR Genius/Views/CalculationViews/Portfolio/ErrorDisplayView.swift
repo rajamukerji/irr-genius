@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ErrorDisplayView: View {
     let errorMessage: String?
-    
+
     var body: some View {
         if let errorMessage = errorMessage {
             VStack(alignment: .leading, spacing: 8) {
@@ -20,7 +20,7 @@ struct ErrorDisplayView: View {
                         .font(.headline)
                         .foregroundColor(.red)
                 }
-                
+
                 Text(errorMessage)
                     .font(.caption)
                     .foregroundColor(.red)

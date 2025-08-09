@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import SwiftUI
 import Network
+import SwiftUI
 
 // MARK: - Error Recovery Framework
 
@@ -35,7 +35,7 @@ extension RetryableOperation {
                     return false
                 }
             }
-            
+
             let nsError = error as NSError
             // Retry on temporary system errors
             return nsError.domain == NSCocoaErrorDomain && nsError.code == NSFileReadNoSuchFileError
@@ -48,67 +48,67 @@ class ErrorRecoveryService: ObservableObject {
     @Published var isRetrying: Bool = false
     @Published var retryCount: Int = 0
     @Published var lastError: Error?
-    
+
     private let networkMonitor = NWPathMonitor()
     private let networkQueue = DispatchQueue(label: "NetworkMonitor")
     @Published var isNetworkAvailable: Bool = true
-    
+
     init() {
         startNetworkMonitoring()
     }
-    
+
     deinit {
         networkMonitor.cancel()
     }
-    
+
     /// Executes a retryable operation with automatic retry logic
     func executeWithRetry<T: RetryableOperation>(_ operation: T) async throws -> T.Result {
         var lastError: Error?
-        
-        for attempt in 0...operation.maxRetries {
+
+        for attempt in 0 ... operation.maxRetries {
             do {
                 isRetrying = attempt > 0
                 retryCount = attempt
-                
+
                 let result = try await operation.execute()
-                
+
                 // Success - reset state
                 isRetrying = false
                 retryCount = 0
                 lastError = nil
-                
+
                 return result
-                
+
             } catch {
                 lastError = error
                 self.lastError = error
-                
+
                 // Don't retry on the last attempt
                 if attempt == operation.maxRetries {
                     break
                 }
-                
+
                 // Check if we should retry this error
                 if !operation.shouldRetry(error) {
                     break
                 }
-                
+
                 // Wait before retrying with exponential backoff
                 let delay = operation.retryDelay * pow(2.0, Double(attempt))
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
             }
         }
-        
+
         // All retries failed
         isRetrying = false
         throw lastError ?? NSError(domain: "ErrorRecoveryService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown error"])
     }
-    
+
     /// Manually retry the last failed operation
     func retryLastOperation<T: RetryableOperation>(_ operation: T) async throws -> T.Result {
         return try await executeWithRetry(operation)
     }
-    
+
     /// Checks if an error is recoverable
     func isRecoverable(_ error: Error) -> Bool {
         if let urlError = error as? URLError {
@@ -119,7 +119,7 @@ class ErrorRecoveryService: ObservableObject {
                 return false
             }
         }
-        
+
         let nsError = error as NSError
         // Recoverable system errors
         switch nsError.code {
@@ -129,7 +129,7 @@ class ErrorRecoveryService: ObservableObject {
             return false
         }
     }
-    
+
     /// Provides recovery suggestions for different error types
     func getRecoverySuggestion(for error: Error) -> String? {
         if let urlError = error as? URLError {
@@ -144,7 +144,7 @@ class ErrorRecoveryService: ObservableObject {
                 return "Network error occurred. Please try again"
             }
         }
-        
+
         let nsError = error as NSError
         switch nsError.code {
         case NSFileReadNoSuchFileError:
@@ -155,7 +155,7 @@ class ErrorRecoveryService: ObservableObject {
             return "System error occurred. Please try again"
         }
     }
-    
+
     private func startNetworkMonitoring() {
         networkMonitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
@@ -172,11 +172,11 @@ class ErrorRecoveryService: ObservableObject {
 struct SaveCalculationOperation: RetryableOperation {
     let calculation: SavedCalculation
     let repository: CalculationRepository
-    
-    func execute() async throws -> Void {
+
+    func execute() async throws {
         try await repository.saveCalculation(calculation)
     }
-    
+
     var maxRetries: Int { 3 }
     var retryDelay: TimeInterval { 0.5 }
 }
@@ -184,11 +184,11 @@ struct SaveCalculationOperation: RetryableOperation {
 /// Retryable operation for loading calculations
 struct LoadCalculationsOperation: RetryableOperation {
     let repository: CalculationRepository
-    
+
     func execute() async throws -> [SavedCalculation] {
         return try await repository.loadCalculations()
     }
-    
+
     var maxRetries: Int { 3 }
     var retryDelay: TimeInterval { 0.5 }
 }
@@ -196,14 +196,14 @@ struct LoadCalculationsOperation: RetryableOperation {
 /// Retryable operation for cloud sync
 struct CloudSyncOperation: RetryableOperation {
     let syncService: CloudKitSyncService
-    
-    func execute() async throws -> Void {
+
+    func execute() async throws {
         try await syncService.syncCalculations()
     }
-    
+
     var maxRetries: Int { 5 }
     var retryDelay: TimeInterval { 2.0 }
-    
+
     var shouldRetry: (Error) -> Bool {
         return { error in
             // Retry on network errors and CloudKit temporary errors
@@ -215,7 +215,7 @@ struct CloudSyncOperation: RetryableOperation {
                     return false
                 }
             }
-            
+
             // CloudKit specific errors that are retryable
             let nsError = error as NSError
             if nsError.domain == "CKErrorDomain" {
@@ -226,7 +226,7 @@ struct CloudSyncOperation: RetryableOperation {
                     return false
                 }
             }
-            
+
             return false
         }
     }
@@ -236,14 +236,14 @@ struct CloudSyncOperation: RetryableOperation {
 struct FileImportOperation: RetryableOperation {
     let fileURL: URL
     let importService: CSVImportService
-    
+
     func execute() async throws -> ImportResult {
         return try await importService.importCSV(from: fileURL)
     }
-    
+
     var maxRetries: Int { 2 }
     var retryDelay: TimeInterval { 1.0 }
-    
+
     var shouldRetry: (Error) -> Bool {
         return { error in
             // Only retry on file access errors, not parsing errors
@@ -257,11 +257,11 @@ struct FileImportOperation: RetryableOperation {
 struct PDFExportOperation: RetryableOperation {
     let calculation: SavedCalculation
     let exportService: PDFExportService
-    
+
     func execute() async throws -> URL {
         return try await exportService.exportToPDF(calculation)
     }
-    
+
     var maxRetries: Int { 2 }
     var retryDelay: TimeInterval { 1.0 }
 }
@@ -271,12 +271,12 @@ struct CSVExcelExportOperation: RetryableOperation {
     let calculations: [SavedCalculation]
     let exportService: CSVExcelExportService
     let format: ExportFormat
-    
+
     enum ExportFormat {
         case csv
         case excel
     }
-    
+
     func execute() async throws -> URL {
         switch format {
         case .csv:
@@ -285,7 +285,7 @@ struct CSVExcelExportOperation: RetryableOperation {
             return try await exportService.exportToExcel(calculations)
         }
     }
-    
+
     var maxRetries: Int { 2 }
     var retryDelay: TimeInterval { 1.0 }
 }
@@ -298,36 +298,36 @@ struct RetryView: View {
     let onRetry: () async -> Void
     let onCancel: () -> Void
     let isRetrying: Bool
-    
+
     @StateObject private var errorRecovery = ErrorRecoveryService()
-    
+
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.largeTitle)
                 .foregroundColor(.orange)
-            
+
             Text("Operation Failed")
                 .font(.headline)
-            
+
             Text(error.localizedDescription)
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
-            
+
             if let suggestion = errorRecovery.getRecoverySuggestion(for: error) {
                 Text(suggestion)
                     .font(.caption)
                     .foregroundColor(.blue)
                     .multilineTextAlignment(.center)
             }
-            
+
             HStack(spacing: 12) {
                 Button("Cancel") {
                     onCancel()
                 }
                 .buttonStyle(.bordered)
-                
+
                 Button("Retry") {
                     Task {
                         await onRetry()
@@ -336,7 +336,7 @@ struct RetryView: View {
                 .buttonStyle(.borderedProminent)
                 .disabled(isRetrying)
             }
-            
+
             if isRetrying {
                 HStack {
                     ProgressView()
@@ -361,13 +361,13 @@ struct AutoRetryIndicator: View {
     let attempt: Int
     let maxAttempts: Int
     let isRetrying: Bool
-    
+
     var body: some View {
         if isRetrying {
             HStack(spacing: 8) {
                 ProgressView()
                     .scaleEffect(0.8)
-                
+
                 Text("Retrying... (\(attempt)/\(maxAttempts))")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -385,13 +385,13 @@ struct AutoRetryIndicator: View {
 /// Network status indicator
 struct NetworkStatusView: View {
     @ObservedObject var errorRecovery: ErrorRecoveryService
-    
+
     var body: some View {
         if !errorRecovery.isNetworkAvailable {
             HStack {
                 Image(systemName: "wifi.slash")
                     .foregroundColor(.red)
-                
+
                 Text("No Internet Connection")
                     .font(.caption)
                     .foregroundColor(.red)
@@ -412,13 +412,13 @@ struct NetworkStatusView: View {
 class OfflineOperationQueue: ObservableObject {
     @Published var pendingOperations: [OfflineOperation] = []
     @Published var isProcessingQueue: Bool = false
-    
+
     private let errorRecovery = ErrorRecoveryService()
-    
+
     /// Adds an operation to the offline queue
     func enqueue(_ operation: OfflineOperation) {
         pendingOperations.append(operation)
-        
+
         // Try to process immediately if online
         if errorRecovery.isNetworkAvailable {
             Task {
@@ -426,15 +426,15 @@ class OfflineOperationQueue: ObservableObject {
             }
         }
     }
-    
+
     /// Processes all pending operations
     func processQueue() async {
-        guard !isProcessingQueue && errorRecovery.isNetworkAvailable else { return }
-        
+        guard !isProcessingQueue, errorRecovery.isNetworkAvailable else { return }
+
         isProcessingQueue = true
-        
+
         var remainingOperations: [OfflineOperation] = []
-        
+
         for operation in pendingOperations {
             do {
                 try await operation.execute()
@@ -444,11 +444,11 @@ class OfflineOperationQueue: ObservableObject {
                 remainingOperations.append(operation)
             }
         }
-        
+
         pendingOperations = remainingOperations
         isProcessingQueue = false
     }
-    
+
     /// Clears all pending operations
     func clearQueue() {
         pendingOperations.removeAll()
@@ -469,11 +469,11 @@ struct OfflineSaveOperation: OfflineOperation {
     let calculation: SavedCalculation
     let repository: CalculationRepository
     let createdAt = Date()
-    
+
     var description: String {
         return "Save calculation: \(calculation.name)"
     }
-    
+
     func execute() async throws {
         try await repository.saveCalculation(calculation)
     }
@@ -484,11 +484,11 @@ struct OfflineSyncOperation: OfflineOperation {
     let id = UUID()
     let syncService: CloudKitSyncService
     let createdAt = Date()
-    
+
     var description: String {
         return "Sync calculations to cloud"
     }
-    
+
     func execute() async throws {
         try await syncService.syncCalculations()
     }

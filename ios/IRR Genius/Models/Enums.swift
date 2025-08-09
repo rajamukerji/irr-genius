@@ -40,4 +40,4 @@ enum TimeUnit: String, CaseIterable, Codable {
     case days = "Days"
     case months = "Months"
     case years = "Years"
-} 
+}

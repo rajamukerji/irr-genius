@@ -19,40 +19,40 @@ extension Formatter {
 }
 
 // Number formatting utilities
-struct NumberFormatting {
+enum NumberFormatting {
     static func formatWithCommas(_ value: Double, fractionDigits: Int = 2) -> String {
         Formatter.withSeparator.maximumFractionDigits = fractionDigits
         return Formatter.withSeparator.string(from: NSNumber(value: value)) ?? String(format: "%.*f", fractionDigits, value)
     }
-    
+
     static func formatCurrencyInput(_ input: String) -> String {
         // Remove all non-digit characters except decimal point
         let cleaned = input.replacingOccurrences(of: "[^0-9.]", with: "", options: .regularExpression)
-        
+
         // Ensure only one decimal point
         let components = cleaned.components(separatedBy: ".")
         if components.count > 2 {
             return components[0] + "." + components[1]
         }
-        
+
         // Add commas for thousands
         if let number = Double(cleaned) {
             return formatWithCommas(number)
         }
-        
+
         return cleaned
     }
-    
+
     static func formatNumberInput(_ input: String) -> String {
         // Remove all non-digit characters except decimal point
         return input.replacingOccurrences(of: "[^0-9.]", with: "", options: .regularExpression)
     }
-    
+
     static func formatNumber(_ value: Double) -> String {
         return formatWithCommas(value, fractionDigits: 0)
     }
-    
+
     static func formatCurrency(_ value: Double) -> String {
         return "$" + formatWithCommas(value)
     }
-} 
+}

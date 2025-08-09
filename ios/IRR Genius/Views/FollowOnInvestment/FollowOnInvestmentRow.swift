@@ -10,11 +10,11 @@ import SwiftUI
 struct FollowOnInvestmentRow: View {
     @Binding var investment: FollowOnInvestment
     let onDelete: () -> Void
-    
+
     private var dateDisplay: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        
+
         switch investment.timingType {
         case .absoluteDate:
             return formatter.string(from: investment.date)
@@ -23,7 +23,7 @@ struct FollowOnInvestmentRow: View {
             return "\(investment.relativeAmount) \(investment.relativeUnit.rawValue.lowercased()) from initial (\(formatter.string(from: calculatedDate)))"
         }
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -31,31 +31,31 @@ struct FollowOnInvestmentRow: View {
                     Text("\(investment.investmentType.rawValue) - \(investment.amount)")
                         .font(.headline)
                         .foregroundColor(.primary)
-                    
+
                     Text(dateDisplay)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Button(action: onDelete) {
                     Image(systemName: "trash")
                         .foregroundColor(.red)
                 }
                 .buttonStyle(.plain)
             }
-            
+
             if investment.valuationMode == .custom {
                 HStack {
                     Text("Valuation:")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     Text(investment.valuation)
                         .font(.caption)
                         .fontWeight(.medium)
-                    
+
                     Spacer()
                 }
             } else {
@@ -63,7 +63,7 @@ struct FollowOnInvestmentRow: View {
                     Text("Tag-along (follows initial IRR)")
                         .font(.caption)
                         .foregroundColor(.blue)
-                    
+
                     Spacer()
                 }
             }
@@ -76,4 +76,4 @@ struct FollowOnInvestmentRow: View {
                 .stroke(Color(.systemGray4), lineWidth: 1)
         )
     }
-} 
+}

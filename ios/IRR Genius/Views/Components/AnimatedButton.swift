@@ -13,9 +13,9 @@ struct AnimatedButton: View {
     let isLoading: Bool
     let isDisabled: Bool
     let action: () -> Void
-    
+
     @State private var isPressed = false
-    
+
     init(
         _ title: String,
         icon: String? = nil,
@@ -33,10 +33,10 @@ struct AnimatedButton: View {
         self.isDisabled = isDisabled
         self.action = action
     }
-    
+
     var body: some View {
         Button(action: {
-            if !isDisabled && !isLoading {
+            if !isDisabled, !isLoading {
                 action()
             }
         }) {
@@ -49,7 +49,7 @@ struct AnimatedButton: View {
                     Image(systemName: icon)
                         .font(size.font)
                 }
-                
+
                 if !title.isEmpty {
                     Text(title)
                         .font(size.font)
@@ -82,12 +82,12 @@ struct AnimatedButton: View {
             isPressed = pressing
         }, perform: {})
     }
-    
+
     private var backgroundColor: Color {
         if isDisabled {
             return Color.backgroundTertiary
         }
-        
+
         switch style {
         case .primary:
             return .primaryBlue
@@ -99,12 +99,12 @@ struct AnimatedButton: View {
             return .error
         }
     }
-    
+
     private var foregroundColor: Color {
         if isDisabled {
             return .textTertiary
         }
-        
+
         switch style {
         case .primary, .destructive:
             return .white
@@ -114,7 +114,7 @@ struct AnimatedButton: View {
             return .primaryBlue
         }
     }
-    
+
     private var borderColor: Color {
         switch style {
         case .tertiary:
@@ -123,7 +123,7 @@ struct AnimatedButton: View {
             return .clear
         }
     }
-    
+
     private var borderWidth: CGFloat {
         switch style {
         case .tertiary:
@@ -132,12 +132,12 @@ struct AnimatedButton: View {
             return 0
         }
     }
-    
+
     private var shadowColor: Color {
         if isDisabled {
             return .clear
         }
-        
+
         switch style {
         case .primary, .destructive:
             return backgroundColor.opacity(0.3)
@@ -147,7 +147,7 @@ struct AnimatedButton: View {
             return .clear
         }
     }
-    
+
     private var minWidth: CGFloat {
         switch size {
         case .small:
@@ -161,14 +161,15 @@ struct AnimatedButton: View {
 }
 
 // MARK: - Floating Action Button
+
 struct FloatingActionButton: View {
     let icon: String
     let action: () -> Void
     let backgroundColor: Color
     let foregroundColor: Color
-    
+
     @State private var isPressed = false
-    
+
     init(
         icon: String,
         backgroundColor: Color = .primaryBlue,
@@ -180,7 +181,7 @@ struct FloatingActionButton: View {
         self.foregroundColor = foregroundColor
         self.action = action
     }
-    
+
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
@@ -206,16 +207,17 @@ struct FloatingActionButton: View {
 }
 
 // MARK: - Segmented Control
+
 struct AnimatedSegmentedControl<T: Hashable>: View {
     let options: [T]
     let optionLabels: [T: String]
     @Binding var selection: T
-    
+
     @Namespace private var selectionAnimation
-    
+
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(Array(options.enumerated()), id: \.element) { index, option in
+            ForEach(Array(options.enumerated()), id: \.element) { _, option in
                 Button(action: {
                     withAnimation(AnimationStyle.spring) {
                         selection = option
@@ -248,12 +250,13 @@ struct AnimatedSegmentedControl<T: Hashable>: View {
 }
 
 // MARK: - Toggle Switch
+
 struct AnimatedToggle: View {
     @Binding var isOn: Bool
     let label: String?
     let onColor: Color
     let offColor: Color
-    
+
     init(
         _ label: String? = nil,
         isOn: Binding<Bool>,
@@ -261,11 +264,11 @@ struct AnimatedToggle: View {
         offColor: Color = .backgroundTertiary
     ) {
         self.label = label
-        self._isOn = isOn
+        _isOn = isOn
         self.onColor = onColor
         self.offColor = offColor
     }
-    
+
     var body: some View {
         HStack {
             if let label = label {
@@ -274,7 +277,7 @@ struct AnimatedToggle: View {
                     .foregroundColor(.textPrimary)
                 Spacer()
             }
-            
+
             Button(action: {
                 withAnimation(AnimationStyle.spring) {
                     isOn.toggle()
@@ -284,7 +287,7 @@ struct AnimatedToggle: View {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(isOn ? onColor : offColor)
                         .frame(width: 50, height: 30)
-                    
+
                     Circle()
                         .fill(Color.white)
                         .frame(width: 26, height: 26)
@@ -303,15 +306,15 @@ struct AnimatedToggle: View {
         AnimatedButton("Secondary", style: .secondary) {}
         AnimatedButton("Loading", isLoading: true) {}
         AnimatedButton("Disabled", isDisabled: true) {}
-        
+
         FloatingActionButton(icon: "plus") {}
-        
+
         AnimatedSegmentedControl(
             options: ["Option 1", "Option 2", "Option 3"],
             optionLabels: ["Option 1": "First", "Option 2": "Second", "Option 3": "Third"],
             selection: .constant("Option 1")
         )
-        
+
         AnimatedToggle("Enable notifications", isOn: .constant(true))
     }
     .padding()

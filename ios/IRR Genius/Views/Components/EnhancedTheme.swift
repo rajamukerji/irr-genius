@@ -6,32 +6,33 @@
 import SwiftUI
 
 // MARK: - Color Extensions
+
 extension Color {
     // Primary Colors
     static let primaryBlue = Color(red: 0.29, green: 0.56, blue: 0.89) // #4A90E2
     static let primaryGreen = Color(red: 0.31, green: 0.89, blue: 0.76) // #50E3C2
     static let primaryOrange = Color(red: 0.96, green: 0.65, blue: 0.14) // #F5A623
-    
+
     // Semantic Colors
     static let success = Color(red: 0.20, green: 0.78, blue: 0.35) // #34C759
     static let warning = Color(red: 1.00, green: 0.58, blue: 0.00) // #FF9500
     static let error = Color(red: 1.00, green: 0.23, blue: 0.19) // #FF3B30
     static let info = Color(red: 0.35, green: 0.34, blue: 0.84) // #5856D6
-    
+
     // Background Colors
     static let backgroundPrimary = Color(.systemBackground)
     static let backgroundSecondary = Color(.secondarySystemBackground)
     static let backgroundTertiary = Color(.tertiarySystemBackground)
-    
+
     // Text Colors
     static let textPrimary = Color(.label)
     static let textSecondary = Color(.secondaryLabel)
     static let textTertiary = Color(.tertiaryLabel)
-    
+
     // Card Colors
     static let cardBackground = Color(.systemBackground)
     static let cardBorder = Color(.separator)
-    
+
     // Investment Type Colors
     static let investmentPositive = success
     static let investmentNegative = error
@@ -39,27 +40,28 @@ extension Color {
 }
 
 // MARK: - Font Extensions
+
 extension Font {
     // Display Fonts
     static let displayLarge = Font.system(size: 57, weight: .regular)
     static let displayMedium = Font.system(size: 45, weight: .regular)
     static let displaySmall = Font.system(size: 36, weight: .regular)
-    
+
     // Headline Fonts
     static let headlineLarge = Font.system(size: 32, weight: .regular)
     static let headlineMedium = Font.system(size: 28, weight: .regular)
     static let headlineSmall = Font.system(size: 24, weight: .regular)
-    
+
     // Title Fonts
     static let titleLarge = Font.system(size: 22, weight: .medium)
     static let titleMedium = Font.system(size: 16, weight: .medium)
     static let titleSmall = Font.system(size: 14, weight: .medium)
-    
+
     // Body Fonts
     static let bodyLarge = Font.system(size: 16, weight: .regular)
     static let bodyMedium = Font.system(size: 14, weight: .regular)
     static let bodySmall = Font.system(size: 12, weight: .regular)
-    
+
     // Label Fonts
     static let labelLarge = Font.system(size: 14, weight: .medium)
     static let labelMedium = Font.system(size: 12, weight: .medium)
@@ -67,7 +69,8 @@ extension Font {
 }
 
 // MARK: - Spacing System
-struct Spacing {
+
+enum Spacing {
     static let xs: CGFloat = 4
     static let sm: CGFloat = 8
     static let md: CGFloat = 16
@@ -78,7 +81,8 @@ struct Spacing {
 }
 
 // MARK: - Corner Radius System
-struct CornerRadius {
+
+enum CornerRadius {
     static let xs: CGFloat = 4
     static let sm: CGFloat = 8
     static let md: CGFloat = 12
@@ -88,12 +92,13 @@ struct CornerRadius {
 }
 
 // MARK: - Shadow System
+
 struct ShadowStyle {
     let color: Color
     let radius: CGFloat
     let x: CGFloat
     let y: CGFloat
-    
+
     static let none = ShadowStyle(color: .clear, radius: 0, x: 0, y: 0)
     static let small = ShadowStyle(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
     static let medium = ShadowStyle(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
@@ -102,7 +107,8 @@ struct ShadowStyle {
 }
 
 // MARK: - Animation System
-struct AnimationStyle {
+
+enum AnimationStyle {
     static let quick = Animation.easeInOut(duration: 0.2)
     static let smooth = Animation.easeInOut(duration: 0.3)
     static let slow = Animation.easeInOut(duration: 0.5)
@@ -111,11 +117,12 @@ struct AnimationStyle {
 }
 
 // MARK: - View Modifiers
+
 struct CardStyle: ViewModifier {
     let shadow: ShadowStyle
     let cornerRadius: CGFloat
     let backgroundColor: Color
-    
+
     init(
         shadow: ShadowStyle = .medium,
         cornerRadius: CGFloat = CornerRadius.md,
@@ -125,7 +132,7 @@ struct CardStyle: ViewModifier {
         self.cornerRadius = cornerRadius
         self.backgroundColor = backgroundColor
     }
-    
+
     func body(content: Content) -> some View {
         content
             .background(backgroundColor)
@@ -146,15 +153,15 @@ struct ButtonStyle: ViewModifier {
         case tertiary
         case destructive
     }
-    
+
     let style: Style
     let size: Size
-    
+
     enum Size {
         case small
         case medium
         case large
-        
+
         var padding: EdgeInsets {
             switch self {
             case .small:
@@ -165,7 +172,7 @@ struct ButtonStyle: ViewModifier {
                 return EdgeInsets(top: Spacing.md, leading: Spacing.lg, bottom: Spacing.md, trailing: Spacing.lg)
             }
         }
-        
+
         var font: Font {
             switch self {
             case .small:
@@ -177,12 +184,12 @@ struct ButtonStyle: ViewModifier {
             }
         }
     }
-    
+
     init(style: Style = .primary, size: Size = .medium) {
         self.style = style
         self.size = size
     }
-    
+
     func body(content: Content) -> some View {
         content
             .font(size.font)
@@ -197,7 +204,7 @@ struct ButtonStyle: ViewModifier {
                 y: 1
             )
     }
-    
+
     private var backgroundColor: Color {
         switch style {
         case .primary:
@@ -210,7 +217,7 @@ struct ButtonStyle: ViewModifier {
             return .error
         }
     }
-    
+
     private var foregroundColor: Color {
         switch style {
         case .primary, .destructive:
@@ -221,7 +228,7 @@ struct ButtonStyle: ViewModifier {
             return .primaryBlue
         }
     }
-    
+
     private var shadowColor: Color {
         switch style {
         case .primary, .destructive:
@@ -237,12 +244,12 @@ struct ButtonStyle: ViewModifier {
 struct InputFieldStyle: ViewModifier {
     let isError: Bool
     let isFocused: Bool
-    
+
     init(isError: Bool = false, isFocused: Bool = false) {
         self.isError = isError
         self.isFocused = isFocused
     }
-    
+
     func body(content: Content) -> some View {
         content
             .padding(Spacing.md)
@@ -255,7 +262,7 @@ struct InputFieldStyle: ViewModifier {
             .animation(AnimationStyle.quick, value: isFocused)
             .animation(AnimationStyle.quick, value: isError)
     }
-    
+
     private var borderColor: Color {
         if isError {
             return .error
@@ -265,7 +272,7 @@ struct InputFieldStyle: ViewModifier {
             return .cardBorder
         }
     }
-    
+
     private var borderWidth: CGFloat {
         if isError || isFocused {
             return 2
@@ -276,6 +283,7 @@ struct InputFieldStyle: ViewModifier {
 }
 
 // MARK: - View Extensions
+
 extension View {
     func cardStyle(
         shadow: ShadowStyle = .medium,
@@ -284,29 +292,29 @@ extension View {
     ) -> some View {
         modifier(CardStyle(shadow: shadow, cornerRadius: cornerRadius, backgroundColor: backgroundColor))
     }
-    
+
     func buttonStyle(
         style: ButtonStyle.Style = .primary,
         size: ButtonStyle.Size = .medium
     ) -> some View {
         modifier(ButtonStyle(style: style, size: size))
     }
-    
+
     func inputFieldStyle(isError: Bool = false, isFocused: Bool = false) -> some View {
         modifier(InputFieldStyle(isError: isError, isFocused: isFocused))
     }
-    
+
     func fadeInOut(isVisible: Bool) -> some View {
         opacity(isVisible ? 1 : 0)
             .animation(AnimationStyle.smooth, value: isVisible)
     }
-    
+
     func slideInOut(isVisible: Bool, edge: Edge = .bottom) -> some View {
         offset(y: isVisible ? 0 : (edge == .bottom ? 50 : -50))
             .opacity(isVisible ? 1 : 0)
             .animation(AnimationStyle.spring, value: isVisible)
     }
-    
+
     func scaleEffect(isPressed: Bool) -> some View {
         scaleEffect(isPressed ? 0.95 : 1.0)
             .animation(AnimationStyle.quick, value: isPressed)
@@ -314,6 +322,7 @@ extension View {
 }
 
 // MARK: - Status Indicator
+
 struct StatusIndicator: View {
     enum Status {
         case success
@@ -321,7 +330,7 @@ struct StatusIndicator: View {
         case error
         case info
         case loading
-        
+
         var color: Color {
             switch self {
             case .success:
@@ -336,7 +345,7 @@ struct StatusIndicator: View {
                 return .primaryBlue
             }
         }
-        
+
         var icon: String {
             switch self {
             case .success:
@@ -352,23 +361,23 @@ struct StatusIndicator: View {
             }
         }
     }
-    
+
     let status: Status
     let message: String
     let isVisible: Bool
-    
+
     var body: some View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: status.icon)
                 .foregroundColor(status.color)
                 .rotationEffect(.degrees(status == .loading ? 360 : 0))
                 .animation(
-                    status == .loading ? 
-                    Animation.linear(duration: 1).repeatForever(autoreverses: false) : 
-                    .none,
+                    status == .loading ?
+                        Animation.linear(duration: 1).repeatForever(autoreverses: false) :
+                        .none,
                     value: status == .loading
                 )
-            
+
             Text(message)
                 .font(.bodyMedium)
                 .foregroundColor(.textPrimary)
@@ -385,11 +394,12 @@ struct StatusIndicator: View {
 }
 
 // MARK: - Progress Indicator
+
 struct ProgressIndicator: View {
     let progress: Double
     let color: Color
     let backgroundColor: Color
-    
+
     init(
         progress: Double,
         color: Color = .primaryBlue,
@@ -399,13 +409,13 @@ struct ProgressIndicator: View {
         self.color = color
         self.backgroundColor = backgroundColor
     }
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
                 Rectangle()
                     .fill(backgroundColor)
-                
+
                 Rectangle()
                     .fill(color)
                     .frame(width: geometry.size.width * CGFloat(progress))

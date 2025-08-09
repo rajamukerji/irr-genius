@@ -12,7 +12,7 @@ enum AppTab: String, CaseIterable {
     case saved = "Saved"
     case projects = "Projects"
     case settings = "Settings"
-    
+
     var systemImage: String {
         switch self {
         case .calculator:
@@ -30,7 +30,7 @@ enum AppTab: String, CaseIterable {
 struct MainTabView: View {
     @StateObject private var dataManager = DataManager()
     @State private var selectedTab: AppTab = .calculator
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             CalculatorTabView()
@@ -38,19 +38,19 @@ struct MainTabView: View {
                     Label(AppTab.calculator.rawValue, systemImage: AppTab.calculator.systemImage)
                 }
                 .tag(AppTab.calculator)
-            
+
             SavedCalculationsView()
                 .tabItem {
                     Label(AppTab.saved.rawValue, systemImage: AppTab.saved.systemImage)
                 }
                 .tag(AppTab.saved)
-            
+
             ProjectsView()
                 .tabItem {
                     Label(AppTab.projects.rawValue, systemImage: AppTab.projects.systemImage)
                 }
                 .tag(AppTab.projects)
-            
+
             SettingsView()
                 .tabItem {
                     Label(AppTab.settings.rawValue, systemImage: AppTab.settings.systemImage)
@@ -62,16 +62,16 @@ struct MainTabView: View {
             handleDeepLink(url)
         }
     }
-    
+
     private func handleDeepLink(_ url: URL) {
         // Handle deep linking to saved calculations
         // URL format: irrgenius://calculation/{id}
         guard url.scheme == "irrgenius",
               url.host == "calculation" else { return }
-        
+
         let pathComponents = url.pathComponents
         if pathComponents.count > 1 {
-            let _ = pathComponents[1]
+            _ = pathComponents[1]
             // Navigate to saved tab and load specific calculation
             selectedTab = .saved
             // TODO: Implement navigation to specific calculation

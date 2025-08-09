@@ -11,43 +11,43 @@ struct LoadCalculationView: View {
     @EnvironmentObject var dataManager: DataManager
     @Binding var isPresented: Bool
     let onCalculationSelected: (SavedCalculation) -> Void
-    
+
     @State private var searchText = ""
     @State private var selectedCalculationType: CalculationMode?
     @State private var selectedProject: Project?
     @State private var showingDuplicateAlert = false
     @State private var calculationToDuplicate: SavedCalculation?
-    
+
     var filteredCalculations: [SavedCalculation] {
         dataManager.calculations.filter { calculation in
-            let matchesSearch = searchText.isEmpty || 
+            let matchesSearch = searchText.isEmpty ||
                 calculation.name.localizedCaseInsensitiveContains(searchText) ||
                 (calculation.notes?.localizedCaseInsensitiveContains(searchText) ?? false)
-            
-            let matchesType = selectedCalculationType == nil || 
+
+            let matchesType = selectedCalculationType == nil ||
                 calculation.calculationType == selectedCalculationType
-            
-            let matchesProject = selectedProject == nil || 
+
+            let matchesProject = selectedProject == nil ||
                 calculation.projectId == selectedProject?.id
-            
+
             return matchesSearch && matchesType && matchesProject
         }
     }
-    
+
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
                 // Search and Filters
                 VStack(spacing: 12) {
                     SearchBar(text: $searchText)
-                    
+
                     HStack(spacing: 12) {
                         // Calculation Type Filter
                         Menu {
                             Button("All Types") {
                                 selectedCalculationType = nil
                             }
-                            
+
                             ForEach(CalculationMode.allCases, id: \.self) { mode in
                                 Button(mode.displayName) {
                                     selectedCalculationType = mode
@@ -65,13 +65,13 @@ struct LoadCalculationView: View {
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
                         }
-                        
+
                         // Project Filter
                         Menu {
                             Button("All Projects") {
                                 selectedProject = nil
                             }
-                            
+
                             ForEach(dataManager.projects) { project in
                                 Button(project.name) {
                                     selectedProject = project
@@ -89,26 +89,26 @@ struct LoadCalculationView: View {
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
                         }
-                        
+
                         Spacer()
                     }
                 }
                 .padding()
                 .background(Color(.systemBackground))
-                
+
                 Divider()
-                
+
                 // Calculations List
                 if filteredCalculations.isEmpty {
                     VStack(spacing: 16) {
                         Image(systemName: "folder")
                             .font(.system(size: 48))
                             .foregroundColor(.secondary)
-                        
+
                         Text("No calculations found")
                             .font(.headline)
                             .foregroundColor(.secondary)
-                        
+
                         if !searchText.isEmpty {
                             Text("Try adjusting your search or filters")
                                 .font(.caption)
@@ -149,7 +149,7 @@ struct LoadCalculationView: View {
             }
         }
         .alert("Duplicate Calculation", isPresented: $showingDuplicateAlert) {
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
             Button("Duplicate") {
                 if let calculation = calculationToDuplicate {
                     Task {
@@ -168,7 +168,7 @@ struct CalculationLoadRow: View {
     let onLoad: () -> Void
     let onDuplicate: () -> Void
     let onViewHistory: () -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -176,14 +176,14 @@ struct CalculationLoadRow: View {
                     Text(calculation.name)
                         .font(.headline)
                         .lineLimit(1)
-                    
+
                     Text(calculation.calculationType.displayName)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing, spacing: 4) {
                     if let result = calculation.calculatedResult {
                         Text(formatResult(result, for: calculation.calculationType))
@@ -191,20 +191,20 @@ struct CalculationLoadRow: View {
                             .fontWeight(.semibold)
                             .foregroundColor(.blue)
                     }
-                    
+
                     Text(calculation.modifiedDate, style: .date)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             if let notes = calculation.notes, !notes.isEmpty {
                 Text(notes)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
             }
-            
+
             if !calculation.tags.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
@@ -221,32 +221,32 @@ struct CalculationLoadRow: View {
                     .padding(.horizontal, 1)
                 }
             }
-            
+
             HStack(spacing: 12) {
                 Button("Load") {
                     onLoad()
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                
+
                 Button("Duplicate") {
                     onDuplicate()
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                
+
                 Button("History") {
                     onViewHistory()
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                
+
                 Spacer()
             }
         }
         .padding(.vertical, 8)
     }
-    
+
     private func formatResult(_ result: Double, for calculationType: CalculationMode) -> String {
         switch calculationType {
         case .calculateIRR, .calculateBlendedIRR, .portfolioUnitInvestment:
@@ -259,15 +259,15 @@ struct CalculationLoadRow: View {
 
 struct SearchBar: View {
     @Binding var text: String
-    
+
     var body: some View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
-            
+
             TextField("Search calculations...", text: $text)
                 .textFieldStyle(PlainTextFieldStyle())
-            
+
             if !text.isEmpty {
                 Button(action: { text = "" }) {
                     Image(systemName: "xmark.circle.fill")
