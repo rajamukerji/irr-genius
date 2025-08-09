@@ -21,6 +21,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.irrgenius.android.data.DataManager
 import com.irrgenius.android.data.models.CalculationMode
+import com.irrgenius.android.data.models.SavedCalculation
 import com.irrgenius.android.ui.components.*
 import com.irrgenius.android.ui.screens.*
 import com.irrgenius.android.ui.theme.IRRGeniusTheme
@@ -53,6 +54,7 @@ fun MainTabScreen() {
     val navController = rememberNavController()
     val context = androidx.compose.ui.platform.LocalContext.current
     val dataManager = remember { DataManager(context) }
+    var calculationToLoad by remember { mutableStateOf<SavedCalculation?>(null) }
     
     Scaffold(
         bottomBar = {
@@ -85,10 +87,30 @@ fun MainTabScreen() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(AppTab.CALCULATOR.route) {
-                CalculatorTabScreen()
+                CalculatorTabScreen(
+                    calculationToLoad = calculationToLoad
+                )
+                // Clear the calculation after loading to prevent re-loading
+                LaunchedEffect(calculationToLoad) {
+                    if (calculationToLoad != null) {
+                        calculationToLoad = null
+                    }
+                }
             }
             composable(AppTab.SAVED.route) {
-                SavedCalculationsScreen(dataManager = dataManager)
+                SavedCalculationsScreen(
+                    dataManager = dataManager,
+                    onLoadCalculation = { calculation ->
+                        calculationToLoad = calculation
+                        navController.navigate(AppTab.CALCULATOR.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
             composable(AppTab.PROJECTS.route) {
                 ProjectsScreen(dataManager = dataManager)
@@ -96,8 +118,25 @@ fun MainTabScreen() {
             composable(AppTab.SETTINGS.route) {
                 SettingsScreen(
                     dataManager = dataManager,
-                    onNavigateToCloudSync = { /* TODO: implement */ },
-                    onNavigateToImport = { /* TODO: implement */ }
+                    onNavigateToCloudSync = { navController.navigate("cloud_sync") },
+                    onNavigateToImport = { navController.navigate("import_data") }
+                )
+            }
+            composable("cloud_sync") {
+                CloudSyncSettingsScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("import_data") {
+                ImportDataScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onImportComplete = { calculations ->
+                        // Add imported calculations to the data manager
+                        calculations.forEach { calculation ->
+                            dataManager.calculations.add(calculation)
+                        }
+                        navController.popBackStack()
+                    }
                 )
             }
         }
@@ -106,8 +145,15 @@ fun MainTabScreen() {
 
 @Composable
 fun CalculatorTabScreen(
-    viewModel: MainViewModel = viewModel()
+    viewModel: MainViewModel = viewModel(),
+    calculationToLoad: SavedCalculation? = null
 ) {
+    // Load calculation when one is provided
+    LaunchedEffect(calculationToLoad) {
+        calculationToLoad?.let { calculation ->
+            viewModel.loadCalculation(calculation)
+        }
+    }
     val uiState by viewModel.uiState.collectAsState()
     val saveDialogData by viewModel.autoSaveManager.saveDialogData.collectAsState()
     val projects by viewModel.autoSaveManager.projects.collectAsState()

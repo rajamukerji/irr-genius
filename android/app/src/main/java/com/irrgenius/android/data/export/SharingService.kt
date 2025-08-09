@@ -22,11 +22,16 @@ class SharingService(private val context: Context) {
     suspend fun shareCalculationAsPDF(calculation: SavedCalculation) {
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement PDF export and sharing
                 android.util.Log.d("SharingService", "Sharing calculation as PDF: ${calculation.name}")
                 
-                // Simulate processing
-                kotlinx.coroutines.delay(1000)
+                // For now, generate a text-based PDF content
+                val pdfFile = createPDFFile(calculation)
+                shareFile(
+                    file = pdfFile,
+                    mimeType = "application/pdf",
+                    subject = "IRR Calculation: ${calculation.name}",
+                    text = "Sharing IRR calculation results for ${calculation.name}"
+                )
                 
             } catch (e: Exception) {
                 throw SharingException("Failed to share calculation: ${e.message}", e)
@@ -40,11 +45,15 @@ class SharingService(private val context: Context) {
     suspend fun shareMultipleCalculationsAsPDF(calculations: List<SavedCalculation>) {
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement multiple calculations PDF export and sharing
                 android.util.Log.d("SharingService", "Sharing ${calculations.size} calculations as PDF")
                 
-                // Simulate processing
-                kotlinx.coroutines.delay(1000)
+                val pdfFile = createMultiplePDFFile(calculations)
+                shareFile(
+                    file = pdfFile,
+                    mimeType = "application/pdf",
+                    subject = "IRR Calculations Report (${calculations.size} calculations)",
+                    text = "Sharing consolidated IRR calculations report with ${calculations.size} calculations"
+                )
                 
             } catch (e: Exception) {
                 throw SharingException("Failed to share calculations: ${e.message}", e)
@@ -58,11 +67,15 @@ class SharingService(private val context: Context) {
     suspend fun shareCalculationAsCSV(calculation: SavedCalculation) {
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement CSV export and sharing
                 android.util.Log.d("SharingService", "Sharing calculation as CSV: ${calculation.name}")
                 
-                // Simulate processing
-                kotlinx.coroutines.delay(500)
+                val csvFile = exportCalculationToCSV(calculation)
+                shareFile(
+                    file = csvFile,
+                    mimeType = "text/csv",
+                    subject = "IRR Calculation Data: ${calculation.name}",
+                    text = "Sharing CSV data for IRR calculation: ${calculation.name}"
+                )
                 
             } catch (e: Exception) {
                 throw SharingException("Failed to share calculation as CSV: ${e.message}", e)
@@ -76,11 +89,15 @@ class SharingService(private val context: Context) {
     suspend fun shareMultipleCalculationsAsCSV(calculations: List<SavedCalculation>) {
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement multiple calculations CSV export and sharing
                 android.util.Log.d("SharingService", "Sharing ${calculations.size} calculations as CSV")
                 
-                // Simulate processing
-                kotlinx.coroutines.delay(1000)
+                val csvFile = exportCalculationsToCSV(calculations)
+                shareFile(
+                    file = csvFile,
+                    mimeType = "text/csv",
+                    subject = "IRR Calculations Data (${calculations.size} calculations)",
+                    text = "Sharing CSV data for ${calculations.size} IRR calculations"
+                )
                 
             } catch (e: Exception) {
                 throw SharingException("Failed to share calculations as CSV: ${e.message}", e)
@@ -301,6 +318,84 @@ class SharingService(private val context: Context) {
         return cacheDir
     }
     
+    /**
+     * Creates a PDF file for a single calculation (simple text-based implementation)
+     */
+    private suspend fun createPDFFile(calculation: SavedCalculation): File {
+        return withContext(Dispatchers.IO) {
+            // For now, create a simple text file with .pdf extension
+            // In production, you'd use a proper PDF library like iTextPDF
+            val pdfContent = generatePDFContent(listOf(calculation))
+            val filename = "${calculation.name.replace(" ", "_")}.pdf"
+            val file = File(getCacheDirectory(), filename)
+            file.writeText(pdfContent)
+            file
+        }
+    }
+    
+    /**
+     * Creates a PDF file for multiple calculations
+     */
+    private suspend fun createMultiplePDFFile(calculations: List<SavedCalculation>): File {
+        return withContext(Dispatchers.IO) {
+            val pdfContent = generatePDFContent(calculations)
+            val filename = "IRR_Calculations_Report_${System.currentTimeMillis()}.pdf"
+            val file = File(getCacheDirectory(), filename)
+            file.writeText(pdfContent)
+            file
+        }
+    }
+    
+    /**
+     * Generates PDF content (simplified text-based format)
+     */
+    private fun generatePDFContent(calculations: List<SavedCalculation>): String {
+        val content = StringBuilder()
+        
+        content.append("IRR GENIUS CALCULATION REPORT\n")
+        content.append("=" .repeat(50) + "\n\n")
+        content.append("Generated: ${java.time.LocalDateTime.now()}\n")
+        content.append("Number of Calculations: ${calculations.size}\n\n")
+        
+        calculations.forEachIndexed { index, calculation ->
+            content.append("CALCULATION ${index + 1}\n")
+            content.append("-".repeat(30) + "\n")
+            content.append("Name: ${calculation.name}\n")
+            content.append("Type: ${calculation.calculationType.name.replace("_", " ")}\n")
+            content.append("Created: ${calculation.createdDate}\n")
+            content.append("Modified: ${calculation.modifiedDate}\n")
+            content.append("\n")
+            
+            content.append("FINANCIAL DATA:\n")
+            calculation.initialInvestment?.let { content.append("Initial Investment: $${String.format("%.2f", it)}\n") }
+            calculation.outcomeAmount?.let { content.append("Outcome Amount: $${String.format("%.2f", it)}\n") }
+            calculation.timeInMonths?.let { content.append("Time Period: ${String.format("%.1f", it)} months\n") }
+            calculation.irr?.let { content.append("IRR: ${String.format("%.2f", it)}%\n") }
+            calculation.unitPrice?.let { content.append("Unit Price: $${String.format("%.2f", it)}\n") }
+            calculation.successRate?.let { content.append("Success Rate: ${String.format("%.1f", it)}%\n") }
+            calculation.outcomePerUnit?.let { content.append("Outcome Per Unit: $${String.format("%.2f", it)}\n") }
+            calculation.investorShare?.let { content.append("Investor Share: ${String.format("%.1f", it)}%\n") }
+            calculation.feePercentage?.let { content.append("Fee Percentage: ${String.format("%.2f", it)}%\n") }
+            calculation.calculatedResult?.let { content.append("Calculated Result: ${String.format("%.2f", it)}%\n") }
+            content.append("\n")
+            
+            if (!calculation.notes.isNullOrBlank()) {
+                content.append("NOTES:\n")
+                content.append("${calculation.notes}\n\n")
+            }
+            
+            val tags = calculation.getTagsFromJson()
+            if (tags.isNotEmpty()) {
+                content.append("TAGS: ${tags.joinToString(", ")}\n")
+            }
+            
+            content.append("\n")
+            content.append("=" .repeat(50) + "\n\n")
+        }
+        
+        return content.toString()
+    }
+
     /**
      * Checks if external storage is available for writing
      */

@@ -21,6 +21,7 @@ fun SettingsScreen(
     onNavigateToCloudSync: () -> Unit,
     onNavigateToImport: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val isSyncEnabled by dataManager.isSyncEnabled.collectAsState()
     val syncStatus by dataManager.syncStatus.collectAsState()
     val pendingConflicts by dataManager.pendingConflicts.collectAsState()
@@ -76,14 +77,18 @@ fun SettingsScreen(
                         icon = Icons.Default.Share,
                         title = "Export All Calculations",
                         description = "Export all calculations to a file",
-                        onClick = { /* TODO: Implement bulk export */ }
+                        onClick = { 
+                            if (dataManager.calculations.isNotEmpty()) {
+                                dataManager.exportCalculations(dataManager.calculations.toList())
+                            }
+                        }
                     )
                     
                     SettingsActionItem(
                         icon = Icons.Default.Add,
                         title = "Import from File",
                         description = "Import calculations from CSV or Excel",
-                        onClick = { /* TODO: Implement import */ }
+                        onClick = onNavigateToImport
                     )
                 }
             }
@@ -101,7 +106,28 @@ fun SettingsScreen(
                         icon = Icons.Default.Star,
                         title = "Rate App",
                         description = "Rate us on the Play Store",
-                        onClick = { /* TODO: Implement app rating */ }
+                        onClick = { 
+                            try {
+                                val intent = android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse("market://details?id=com.irrgenius.android")
+                                )
+                                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                // Fallback to web browser
+                                try {
+                                    val intent = android.content.Intent(
+                                        android.content.Intent.ACTION_VIEW,
+                                        android.net.Uri.parse("https://play.google.com/store/apps/details?id=com.irrgenius.android")
+                                    )
+                                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    context.startActivity(intent)
+                                } catch (e2: Exception) {
+                                    android.util.Log.e("SettingsScreen", "Could not open app rating", e2)
+                                }
+                            }
+                        }
                     )
                 }
             }

@@ -25,7 +25,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedCalculationsScreen(
-    dataManager: DataManager
+    dataManager: DataManager,
+    onLoadCalculation: ((SavedCalculation) -> Unit)? = null
 ) {
     var searchText by remember { mutableStateOf("") }
     var showingImportSheet by remember { mutableStateOf(false) }
@@ -157,7 +158,7 @@ fun SavedCalculationsScreen(
                         calculation = calculation,
                         onDelete = { dataManager.deleteCalculation(calculation) },
                         onExport = { dataManager.exportCalculation(calculation) },
-                        onLoad = { /* TODO: Load calculation into calculator */ }
+                        onLoad = { onLoadCalculation?.invoke(calculation) }
                     )
                 }
             }
