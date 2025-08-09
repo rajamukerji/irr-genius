@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Project README
+    url: https://github.com/rajamukerji/irr-genius#readme
+    about: Start here for setup, structure, and platform details.
+  - name: Contributor Guide (AGENTS.md)
+    url: https://github.com/rajamukerji/irr-genius/blob/main/AGENTS.md
+    about: Read guidelines for coding, tests, and PRs.
+
