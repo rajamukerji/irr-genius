@@ -1,0 +1,100 @@
+name: Release Builds
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      build_android_aab:
+        description: 'Build Android AAB on manual run'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  android-release:
+    name: Android Assemble Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Assemble AAB (Release)
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.build_android_aab == 'true'
+        working-directory: android
+        run: ./gradlew --no-daemon bundleRelease
+
+      - name: Configure Play credentials (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          mkdir -p android/fastlane
+          echo "$PLAY_JSON" > android/fastlane/play.json
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_JSON }}
+
+      - name: Upload to Play Internal via Fastlane (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: bundle exec fastlane android beta
+
+      - name: Upload AAB artifact
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.build_android_aab == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: irrgenius-android-aab
+          path: android/app/build/outputs/bundle/release/*.aab
+
+  ios-release:
+    name: iOS Archive (unsigned)
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Xcode version
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Fastlane iOS tests
+        working-directory: ios
+        run: bundle exec fastlane tests
+
+      - name: Fastlane iOS beta (TestFlight)
+        working-directory: ios
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.ASC_KEY }}
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: bundle exec fastlane beta
+
+      # Note: Upload to TestFlight is handled by Fastlane. Artifacts are optional.

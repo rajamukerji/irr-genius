@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "pre-commit: running formatters"
+
+has_cmd() { command -v "$1" >/dev/null 2>&1; }
+
+# iOS: SwiftFormat
+if has_cmd swiftformat; then
+  echo "• SwiftFormat → ios/"
+  swiftformat ios --quiet || {
+    echo "SwiftFormat found issues. Run 'swiftformat ios' to fix." >&2
+    exit 1
+  }
+  git add -A ios || true
+else
+  echo "• SwiftFormat not found; skipping iOS. Install: brew install swiftformat"
+fi
+
+# Android: ktlint
+if has_cmd ktlint; then
+  echo "• ktlint -F → android/**/*.kt"
+  ktlint -F "android/**/*.kt" || {
+    echo "ktlint formatting failed. Fix issues before committing." >&2
+    exit 1
+  }
+  git add -A android || true
+else
+  echo "• ktlint not found; skipping Android. Install: brew install ktlint"
+fi
+
+echo "pre-commit: done"
+exit 0
+

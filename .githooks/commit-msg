@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MSG_FILE="$1"
+MSG_CONTENT=$(sed -n '1p' "$MSG_FILE")
+
+CONVENTIONAL_REGEX='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^\)]+\))?(!)?: .+'
+
+if [[ ! "$MSG_CONTENT" =~ $CONVENTIONAL_REGEX ]]; then
+  cat >&2 <<'EOF'
+Commit message must follow Conventional Commits, e.g.:
+  feat(calculator): add blended IRR support
+  fix(android): resolve compose crash on rotate
+  docs: update README with quick start
+
+Format: <type>(optional scope)!?: <short summary>
+Allowed types: build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test
+EOF
+  exit 1
+fi
+
+exit 0
+

@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android Build & ktlint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Install ktlint
+        run: |
+          sudo curl -sSL -o /usr/local/bin/ktlint \
+            https://github.com/pinterest/ktlint/releases/download/1.2.1/ktlint
+          sudo chmod +x /usr/local/bin/ktlint
+
+      - name: Gradle ktlintCheck, build and test
+        working-directory: android
+        run: |
+          ./gradlew --version
+          ./gradlew ktlintCheck build test --stacktrace --no-daemon
+
+  ios:
+    name: iOS Build & Tests
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install SwiftFormat (optional)
+        run: |
+          brew update
+          brew install swiftformat || true
+
+      - name: List Xcode
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Build and test (iOS Simulator)
+        run: |
+          xcodebuild \
+            -project "ios/IRR Genius.xcodeproj" \
+            -scheme "IRR Genius" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            clean test | xcpretty
+        env:
+          NSUnbufferedIO: "YES"
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+

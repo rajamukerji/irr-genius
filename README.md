@@ -1,5 +1,8 @@
 # IRR Genius
 
+[![CI](https://github.com/rajamukerji/irr-genius/actions/workflows/ci.yml/badge.svg)](https://github.com/rajamukerji/irr-genius/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/rajamukerji/irr-genius?include_prereleases&sort=semver)](https://github.com/rajamukerji/irr-genius/releases)
+
 A cross-platform Internal Rate of Return calculator for iOS and Android, designed for investors and financial professionals.
 
 ## 📱 Platforms
@@ -275,6 +278,15 @@ Design specifications and assets are located in `shared/assets/`:
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🧾 Changelog & Releases
+- Changelog: see [CHANGELOG.md](CHANGELOG.md) for version history.
+- Tagging a release (SemVer):
+  ```bash
+  git tag -a vX.Y.Z -m "release: vX.Y.Z"
+  git push origin vX.Y.Z
+  ```
+- CI will publish Android to Play Internal and iOS to TestFlight for tagged versions.
 
 ## 🤝 Contributing
 

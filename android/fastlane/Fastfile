@@ -1,0 +1,28 @@
+fastlane_version "2.0"
+
+default_platform(:android)
+
+platform :android do
+  desc "Run unit tests"
+  lane :tests do
+    gradle(task: "test")
+  end
+
+  desc "Build release bundle and upload to Play Internal"
+  lane :beta do
+    gradle(task: "bundle", build_type: "Release")
+    supply(
+      track: "internal",
+      aab: "app/build/outputs/bundle/release/app-release.aab"
+    )
+  end
+
+  desc "Promote from internal to production"
+  lane :release do
+    supply(
+      track: "production",
+      release_status: "completed"
+    )
+  end
+end
+

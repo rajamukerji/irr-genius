@@ -1,0 +1,3 @@
+json_key_file("fastlane/play.json") # TODO: path to Google Play service account JSON
+package_name("com.irrgenius.android")
+

@@ -1,0 +1,49 @@
+fastlane_version "2.0"
+
+default_platform(:ios)
+
+platform :ios do
+  before_all do
+    # Use App Store Connect API key from environment if provided in CI
+    if ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'] && ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'] && ENV['APP_STORE_CONNECT_API_KEY_KEY']
+      @api_key = app_store_connect_api_key(
+        key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
+        issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
+        key: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
+        is_key_content_base64: false
+      )
+    end
+  end
+
+  desc "Run unit and UI tests"
+  lane :tests do
+    run_tests(
+      project: "IRR Genius.xcodeproj",
+      scheme: "IRR Genius",
+      devices: ["iPhone 15"]
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    build_app(
+      project: "IRR Genius.xcodeproj",
+      scheme: "IRR Genius",
+      export_method: "app-store"
+    )
+    upload_to_testflight(api_key: @api_key)
+  end
+
+  desc "Submit to App Store (manual review)"
+  lane :release do
+    build_app(
+      project: "IRR Genius.xcodeproj",
+      scheme: "IRR Genius",
+      export_method: "app-store"
+    )
+    upload_to_app_store(
+      api_key: @api_key,
+      submit_for_review: false
+    )
+  end
+end

@@ -2,10 +2,28 @@
 <Scheme
    LastUpgradeVersion = "1640"
    version = "1.7">
-   <BuildAction
+  <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES"
       buildArchitectures = "Automatic">
+      <PreActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "SwiftFormat on Build"
+               scriptText = "if command -v swiftformat &gt;/dev/null; then\n  swiftformat \&quot;${SRCROOT}\&quot; --quiet || exit 1\nelse\n  echo 'SwiftFormat not installed; skipping'\nfi">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "353A6BAF2E14B15200A54170"
+                     BuildableName = "IRR Genius.app"
+                     BlueprintName = "IRR Genius"
+                     ReferencedContainer = "container:IRR Genius.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PreActions>
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"

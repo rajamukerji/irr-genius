@@ -103,3 +103,22 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
+
+// ktlint integration via CLI (requires ktlint installed locally)
+tasks.register<Exec>("ktlintCheck") {
+    group = "verification"
+    description = "Run ktlint on Kotlin sources"
+    workingDir = rootProject.rootDir
+    commandLine("sh", "-c", "ktlint \"android/**/*.kt\"")
+}
+
+tasks.register<Exec>("ktlintFormat") {
+    group = "formatting"
+    description = "Auto-format Kotlin sources with ktlint"
+    workingDir = rootProject.rootDir
+    commandLine("sh", "-c", "ktlint -F \"android/**/*.kt\"")
+}
+
+// Wire formatting and checks into common task graph
+tasks.named("preBuild").configure { dependsOn("ktlintFormat") }
+tasks.named("check").configure { dependsOn("ktlintCheck") }

@@ -1,0 +1,7 @@
+app_identifier("com.irrgenius.ios") # TODO: set actual bundle identifier
+apple_id("your-apple-id@example.com") # TODO: set Apple ID email
+
+# Team information
+itc_team_id("YOUR_ITC_TEAM_ID") # App Store Connect Team ID
+team_id("YOUR_DEV_TEAM_ID")     # Apple Developer Team ID
+

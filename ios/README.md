@@ -44,6 +44,8 @@ open "IRR Genius.xcodeproj"
 2. Press `⌘+R` to build and run
 3. Or use Product → Run from the menu
 
+Note: The shared scheme runs a pre-build action that formats the `ios/` codebase with SwiftFormat (if installed). Install with `brew install swiftformat`.
+
 ### Running Tests
 ```bash
 # Unit tests
@@ -242,6 +244,14 @@ See [REFACTORING_GUIDE.md](../shared/docs/REFACTORING_GUIDE.md) for details on t
 - [ ] Supports dark mode
 - [ ] Accessible for VoiceOver users
 - [ ] Performance optimized
+
+### Contributor Checklist
+- [ ] Branch from `main`; use Conventional Commits (e.g., `feat:`, `fix:`).
+- [ ] Build and run on iOS 17+ simulators and at least one device profile.
+- [ ] Run tests (⌘U) and verify deterministic financial results match `shared/specs/CALCULATIONS.md`.
+- [ ] Verify light/dark mode, Dynamic Type, and basic VoiceOver labels.
+- [ ] No secrets or CloudKit credentials committed; entitlements configured locally only.
+- [ ] Update screenshots or GIFs for UI changes and note test plan in PR.
 
 ## 📚 Resources
 

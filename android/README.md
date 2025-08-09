@@ -29,6 +29,16 @@ Native Android application built with Kotlin and Jetpack Compose for calculating
 ./gradlew connectedAndroidTest
 ```
 
+### Linting & Formatting
+```bash
+# Auto-format Kotlin before build (wired to preBuild)
+./gradlew ktlintFormat
+
+# Static check (wired to check)
+./gradlew ktlintCheck
+```
+Requires `ktlint` installed locally (e.g., `brew install ktlint`). The `preBuild` task will run `ktlintFormat` automatically when available.
+
 ## 🏛️ Architecture
 
 - **MVVM Pattern** with Jetpack Compose
@@ -48,3 +58,14 @@ Complete feature parity with iOS version:
 ## 📚 Documentation
 
 See [main README](../README.md) for complete documentation and feature details.
+
+## 🤝 Contributing to Android
+
+### Contributor Checklist
+- [ ] Branch from `main`; use Conventional Commits (e.g., `feat:`, `fix:`, `docs:`).
+- [ ] Build succeeds with Java 17+ (`./gradlew build`) and app runs on API 26 and latest emulator.
+- [ ] Tests pass: `./gradlew test` and, when applicable, `./gradlew connectedAndroidTest`.
+- [ ] Verify light/dark theme and basic accessibility labels/content descriptions.
+- [ ] Apply Android Studio formatting and idiomatic Kotlin/Compose patterns.
+- [ ] No keystores, API keys, or secrets committed; keep local configs out of VCS.
+- [ ] For UI changes, include before/after screenshots and a brief test plan in the PR.
