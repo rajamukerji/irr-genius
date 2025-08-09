@@ -8,7 +8,7 @@
 
 ## Build, Test, and Development Commands
 ```bash
-# iOS
+# iOS (requires SwiftFormat: brew install swiftformat)
 cd ios && open "IRR Genius.xcodeproj"   # Build/run in Xcode (⌘R), tests (⌘U)
 
 # Android
@@ -17,8 +17,10 @@ cd android && ./gradlew build            # Assemble and run checks
 ./gradlew test                           # JVM unit tests
 ./gradlew connectedAndroidTest           # Instrumented tests
 ```
-Requirements: Java 17+, Gradle 8, AGP 8.1.4, Kotlin 1.9 (per README).
-Notes: Xcode scheme runs SwiftFormat as a pre-build action; Android Gradle `preBuild` runs `ktlintFormat` if available.
+Requirements: 
+- iOS: SwiftFormat (required - install via `brew install swiftformat`)
+- Android: Java 17+, Gradle 8, AGP 8.1.4, Kotlin 1.9 (per README)
+Notes: Xcode scheme runs SwiftFormat as a pre-build action (build fails if not installed); Android Gradle `preBuild` runs `ktlintFormat` if available.
 
 ## Coding Style & Naming Conventions
 - Swift: Follow standard Swift API Design Guidelines and SwiftUI patterns (MVVM). Types `PascalCase` (e.g., `SavedCalculation`), properties/methods `lowerCamelCase`. Prefer explicit access control. Use Xcode’s formatter.

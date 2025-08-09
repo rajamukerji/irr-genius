@@ -8,6 +8,7 @@ Native iOS application built with Swift and SwiftUI for calculating Internal Rat
 - **macOS**: 14.0 or later (Mac Catalyst support)
 - **Xcode**: 15.0 or later
 - **Swift**: 5.9 or later
+- **SwiftFormat**: Required for building (install via `brew install swiftformat`)
 
 ## 🏗️ Project Structure
 
@@ -33,6 +34,12 @@ IRR Genius/
 
 ## 🚀 Getting Started
 
+### Prerequisites
+Install SwiftFormat before building:
+```bash
+brew install swiftformat
+```
+
 ### Opening the Project
 ```bash
 cd ios/
@@ -40,11 +47,12 @@ open "IRR Genius.xcodeproj"
 ```
 
 ### Building and Running
-1. Select target device or simulator
-2. Press `⌘+R` to build and run
-3. Or use Product → Run from the menu
+1. Ensure SwiftFormat is installed (see Prerequisites above)
+2. Select target device or simulator
+3. Press `⌘+R` to build and run
+4. Or use Product → Run from the menu
 
-Note: The shared scheme runs a pre-build action that formats the `ios/` codebase with SwiftFormat (if installed). Install with `brew install swiftformat`.
+**Important**: The project includes a pre-build action that automatically formats the Swift codebase using SwiftFormat. The build will fail if SwiftFormat is not installed.
 
 ### Running Tests
 ```bash
@@ -136,6 +144,12 @@ Run tests with coverage to ensure quality:
 ```
 
 ## 🔧 Development Setup
+
+### Prerequisites
+Ensure you have SwiftFormat installed:
+```bash
+brew install swiftformat
+```
 
 ### Xcode Configuration
 1. Set development team in project settings
