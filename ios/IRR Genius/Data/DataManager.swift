@@ -279,8 +279,7 @@ class DataManager: ObservableObject {
     /// Generates a default name for a calculation
     private func generateDefaultName(for calculation: SavedCalculation) -> String {
         let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
+        formatter.dateFormat = "MMM dd yyyy HH-mm"  // Uses safe characters: "Dec 20 2024 15-45"
 
         let typeString = calculation.calculationType.displayName
         let dateString = formatter.string(from: calculation.createdDate)
