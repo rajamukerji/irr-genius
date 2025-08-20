@@ -678,10 +678,25 @@ struct ContentView: View {
         case .portfolioUnitInvestment:
             portfolioInitialInvestment = formatCurrency(calculation.initialInvestment)
             portfolioUnitPrice = formatCurrency(calculation.unitPrice)
-            portfolioNumberOfUnits = formatNumber(calculation.outcomePerUnit) // Using outcomePerUnit as number of units
+            portfolioOutcomePerUnit = formatCurrency(calculation.outcomePerUnit) // FIXED: Use correct field
             portfolioSuccessRate = formatNumber(calculation.successRate)
+            portfolioInvestorShare = formatNumber(calculation.investorShare) // FIXED: Load investor share
             portfolioTimeInMonths = formatNumber(calculation.timeInMonths)
             portfolioFollowOnInvestments = calculation.followOnInvestments ?? []
+            
+            // Calculate number of units from initial investment and unit price
+            if let initial = calculation.initialInvestment, let unitPrice = calculation.unitPrice, unitPrice > 0 {
+                let units = initial / unitPrice
+                portfolioNumberOfUnits = formatNumber(units)
+            }
+            
+            // For fee percentages, we need to reverse the combined fee calculation
+            // For now, use simplified approach - distribute the combined fee evenly
+            if let combinedFee = calculation.feePercentage {
+                portfolioTopLineFees = formatNumber(combinedFee / 2) // Simplified distribution
+                portfolioManagementFees = formatNumber(combinedFee / 2)
+            }
+            
             calculatedResult = calculation.calculatedResult
         }
 

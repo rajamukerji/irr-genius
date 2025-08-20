@@ -540,6 +540,11 @@ class DataManager: ObservableObject {
                 )
 
             case .portfolioUnitInvestment:
+                // Calculate aggregate fee percentage for storage (combine top-line fees with management fees)
+                let topLineFees = (inputs["Top-Line Fees (%)"] as? Double) ?? 0
+                let managementFees = (inputs["Management Fees (%)"] as? Double) ?? 40
+                let combinedFeePercentage = topLineFees + (managementFees * (1 - topLineFees / 100))
+                
                 return try SavedCalculation(
                     name: "Untitled Portfolio Unit Investment",
                     calculationType: calculationType,
@@ -548,6 +553,9 @@ class DataManager: ObservableObject {
                     followOnInvestments: inputs["Follow-on Investments"] as? [FollowOnInvestment],
                     unitPrice: inputs["Unit Price"] as? Double,
                     successRate: inputs["Success Rate (%)"] as? Double,
+                    outcomePerUnit: inputs["Expected Outcome per Unit"] as? Double,
+                    investorShare: inputs["Investor Share (%)"] as? Double,
+                    feePercentage: combinedFeePercentage,
                     calculatedResult: result,
                     growthPoints: growthPoints
                 )
