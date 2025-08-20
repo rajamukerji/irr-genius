@@ -23,7 +23,7 @@ struct AutoSaveConfiguration {
         isEnabled: true,
         saveDelay: 1.0,
         draftSaveInterval: 30.0,
-        showSaveDialog: true
+        showSaveDialog: false
     )
 }
 

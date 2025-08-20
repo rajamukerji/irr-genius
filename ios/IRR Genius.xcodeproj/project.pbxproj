@@ -247,10 +247,11 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/swiftformat-output",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export PATH=\"$PATH:/opt/homebrew/bin\"\nif which swiftformat >/dev/null; then\n  echo \"SwiftFormat found, but skipping due to sandboxing restrictions\"\n  # swiftformat --quiet \"$SRCROOT/IRR Genius\"\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n";
+			shellScript = "export PATH=\"$PATH:/opt/homebrew/bin\"\nif which swiftformat >/dev/null; then\n  echo \"SwiftFormat found, but skipping due to sandboxing restrictions\"\n  # swiftformat --quiet \"$SRCROOT/IRR Genius\"\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n# Create output file to satisfy dependency analysis\nmkdir -p \"$(dirname \"$SCRIPT_OUTPUT_FILE_0\")\"\ntouch \"$SCRIPT_OUTPUT_FILE_0\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
