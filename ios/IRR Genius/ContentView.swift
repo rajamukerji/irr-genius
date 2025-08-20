@@ -708,6 +708,14 @@ struct ContentView: View {
 
     private func formatNumber(_ value: Double?) -> String {
         guard let value = value else { return "" }
-        return String(format: "%.0f", value)
+        // Preserve decimal places for values that have them
+        if value.truncatingRemainder(dividingBy: 1) == 0 {
+            // Whole number - format without decimals
+            return String(format: "%.0f", value)
+        } else {
+            // Has decimal places - preserve up to 2 decimal places, remove trailing zeros
+            let formatted = String(format: "%.2f", value)
+            return formatted.replacingOccurrences(of: #"\.?0+$"#, with: "", options: .regularExpression)
+        }
     }
 }
