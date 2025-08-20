@@ -690,12 +690,9 @@ struct ContentView: View {
                 portfolioNumberOfUnits = formatNumber(units)
             }
             
-            // For fee percentages, we need to reverse the combined fee calculation
-            // For now, use simplified approach - distribute the combined fee evenly
-            if let combinedFee = calculation.feePercentage {
-                portfolioTopLineFees = formatNumber(combinedFee / 2) // Simplified distribution
-                portfolioManagementFees = formatNumber(combinedFee / 2)
-            }
+            // Load fee structure from separate fields
+            portfolioTopLineFees = formatNumber(calculation.outcomeAmount) // Top-line fees stored in outcomeAmount
+            portfolioManagementFees = formatNumber(calculation.feePercentage) // Management fees stored in feePercentage
             
             calculatedResult = calculation.calculatedResult
         }
