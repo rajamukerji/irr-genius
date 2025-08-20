@@ -512,6 +512,86 @@ fun PortfolioUnitInvestmentView(
                 isHighlighted = true
             )
             
+            // Financial Outcome Metrics
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Portfolio Financial Outcomes",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    
+                    // Calculate outcomes using proper fee structure
+                    val initialInvestment = uiState.portfolioInitialInvestment.toDoubleOrNull() ?: 0.0
+                    val numberOfUnits = uiState.portfolioNumberOfUnits.toDoubleOrNull() ?: 0.0
+                    val successRate = (uiState.portfolioSuccessRate.toDoubleOrNull() ?: 100.0) / 100.0
+                    val outcomePerUnit = uiState.portfolioOutcomePerUnit.toDoubleOrNull() ?: 0.0
+                    val topLineFees = (uiState.portfolioTopLineFees.toDoubleOrNull() ?: 0.0) / 100.0
+                    val managementFees = (uiState.portfolioManagementFees.toDoubleOrNull() ?: 40.0) / 100.0
+                    val investorShare = (uiState.portfolioInvestorShare.toDoubleOrNull() ?: 42.5) / 100.0
+                    
+                    val successfulUnits = numberOfUnits * successRate
+                    val grossOutcome = successfulUnits * outcomePerUnit
+                    val afterTopLineFees = grossOutcome * (1 - topLineFees)
+                    val plaintiffCounselShare = afterTopLineFees * managementFees
+                    val netInvestorOutcome = plaintiffCounselShare * investorShare
+                    val roiMultiple = if (initialInvestment > 0) netInvestorOutcome / initialInvestment else 0.0
+                    
+                    // Financial outcomes row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ResultCard(
+                            label = "Total Expected Outcome",
+                            value = NumberFormatter.formatCurrency(grossOutcome),
+                            modifier = Modifier.weight(1f)
+                        )
+                        
+                        ResultCard(
+                            label = "Net to Investor",
+                            value = NumberFormatter.formatCurrency(netInvestorOutcome),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    
+                    // ROI Multiple
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "ROI Multiple:",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "${NumberFormatter.formatNumber(roiMultiple)}x",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+            
             // Save Button
             Button(
                 onClick = {
