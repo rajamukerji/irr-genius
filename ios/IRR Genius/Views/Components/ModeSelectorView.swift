@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ModeSelectorView: View {
     @Binding var selectedMode: CalculationMode
-    
+
     // Short display names for segmented picker to prevent truncation
     private func displayName(for mode: CalculationMode) -> String {
         switch mode {

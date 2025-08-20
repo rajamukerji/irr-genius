@@ -99,6 +99,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 353A6BD12E14B15400A54170 /* Build configuration list for PBXNativeTarget "IRR Genius" */;
 			buildPhases = (
+				353A6BF02E14B15500A54170 /* SwiftFormat */,
 				353A6BAC2E14B15200A54170 /* Sources */,
 				353A6BAD2E14B15200A54170 /* Frameworks */,
 				353A6BAE2E14B15200A54170 /* Resources */,
@@ -230,6 +231,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		353A6BF02E14B15500A54170 /* SwiftFormat */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/IRR Genius",
+			);
+			name = SwiftFormat;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export PATH=\"$PATH:/opt/homebrew/bin\"\nif which swiftformat >/dev/null; then\n  echo \"SwiftFormat found, but skipping due to sandboxing restrictions\"\n  # swiftformat --quiet \"$SRCROOT/IRR Genius\"\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		353A6BAC2E14B15200A54170 /* Sources */ = {

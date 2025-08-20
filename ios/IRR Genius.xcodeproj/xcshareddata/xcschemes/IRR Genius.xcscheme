@@ -6,24 +6,6 @@
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES"
       buildArchitectures = "Automatic">
-      <PreActions>
-         <ExecutionAction
-            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
-            <ActionContent
-               title = "SwiftFormat on Build"
-               scriptText = "if command -v swiftformat >/dev/null; then&#10;  swiftformat &quot;${SRCROOT}&quot; --quiet || exit 1&#10;else&#10;  echo 'SwiftFormat not installed; skipping'&#10;fi">
-               <EnvironmentBuildable>
-                  <BuildableReference
-                     BuildableIdentifier = "primary"
-                     BlueprintIdentifier = "353A6BAF2E14B15200A54170"
-                     BuildableName = "IRR Genius.app"
-                     BlueprintName = "IRR Genius"
-                     ReferencedContainer = "container:IRR Genius.xcodeproj">
-                  </BuildableReference>
-               </EnvironmentBuildable>
-            </ActionContent>
-         </ExecutionAction>
-      </PreActions>
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"

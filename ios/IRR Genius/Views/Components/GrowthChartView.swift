@@ -46,6 +46,7 @@ struct GrowthChartView: View {
                             }
                         }
                     }
+                    .chartXScale(domain: .automatic(includesZero: false))
                     .chartYAxis {
                         AxisMarks(values: .automatic) { value in
                             AxisGridLine()
@@ -57,6 +58,7 @@ struct GrowthChartView: View {
                             }
                         }
                     }
+                    .chartYScale(domain: .automatic(includesZero: true))
                     .frame(height: 200)
 
                     // Draggable overlay
