@@ -63,7 +63,7 @@ struct PortfolioInputFieldsSection: View {
                 text: $initialInvestment,
                 formatType: InputField.FormatType.currency
             )
-            .onChange(of: initialInvestment) { _ in
+            .onChange(of: initialInvestment) {
                 numberOfUnits = calculatedUnits
             }
 
@@ -74,7 +74,7 @@ struct PortfolioInputFieldsSection: View {
                     text: $unitPrice,
                     formatType: .currency
                 )
-                .onChange(of: unitPrice) { _ in
+                .onChange(of: unitPrice) {
                     numberOfUnits = calculatedUnits
                 }
 
