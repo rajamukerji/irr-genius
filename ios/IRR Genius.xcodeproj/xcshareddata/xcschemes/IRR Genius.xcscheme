@@ -2,7 +2,7 @@
 <Scheme
    LastUpgradeVersion = "1640"
    version = "1.7">
-  <BuildAction
+   <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES"
       buildArchitectures = "Automatic">
@@ -11,7 +11,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "SwiftFormat on Build"
-               scriptText = "if command -v swiftformat &gt;/dev/null; then\n  swiftformat \&quot;${SRCROOT}\&quot; --quiet || exit 1\nelse\n  echo 'SwiftFormat not installed; skipping'\nfi">
+               scriptText = "if command -v swiftformat >/dev/null; then&#10;  swiftformat &quot;${SRCROOT}&quot; --quiet || exit 1&#10;else&#10;  echo 'SwiftFormat not installed; skipping'&#10;fi">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
