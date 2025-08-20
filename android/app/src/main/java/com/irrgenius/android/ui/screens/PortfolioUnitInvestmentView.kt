@@ -59,6 +59,40 @@ fun PortfolioUnitInvestmentView(
                     fontWeight = FontWeight.Medium
                 )
                 
+                // Investment Type Selector
+                Text(
+                    text = "Investment Type",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("litigation", "patent", "debt").forEach { type ->
+                        Button(
+                            onClick = { viewModel.updatePortfolioInputs(investmentType = type) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (uiState.portfolioInvestmentType == type) 
+                                    MaterialTheme.colorScheme.primary 
+                                else 
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = if (uiState.portfolioInvestmentType == type) 
+                                    MaterialTheme.colorScheme.onPrimary 
+                                else 
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = type.capitalize(),
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
+                
                 InputField(
                     label = "Initial Investment Amount",
                     value = uiState.portfolioInitialInvestment,
@@ -84,39 +118,131 @@ fun PortfolioUnitInvestmentView(
                         errorMessage = "Unit price must be greater than 0"
                     )
                     
+                    // Auto-calculated units display
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Number of Units",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = uiState.portfolioNumberOfUnits.ifEmpty { "0.00" },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(12.dp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     InputField(
-                        label = "Number of Units",
-                        value = uiState.portfolioNumberOfUnits,
-                        onValueChange = { viewModel.updatePortfolioInputs(numberOfUnits = it) },
+                        label = "Success Rate",
+                        value = uiState.portfolioSuccessRate,
+                        onValueChange = { viewModel.updatePortfolioInputs(successRate = it) },
+                        fieldType = InputFieldType.NUMBER,
+                        suffix = "%",
+                        modifier = Modifier.weight(1f),
+                        isError = uiState.portfolioSuccessRate.isNotEmpty() && 
+                                  ((uiState.portfolioSuccessRate.toDoubleOrNull() ?: 0.0) <= 0 ||
+                                   (uiState.portfolioSuccessRate.toDoubleOrNull() ?: 0.0) > 100),
+                        errorMessage = "Success rate must be between 0 and 100"
+                    )
+                    
+                    InputField(
+                        label = "Time Period",
+                        value = uiState.portfolioTimeInMonths,
+                        onValueChange = { viewModel.updatePortfolioInputs(timeInMonths = it) },
+                        fieldType = InputFieldType.NUMBER,
+                        suffix = "months",
+                        modifier = Modifier.weight(1f),
+                        isError = uiState.portfolioTimeInMonths.isNotEmpty() && 
+                                  (uiState.portfolioTimeInMonths.toDoubleOrNull() ?: 0.0) <= 0,
+                        errorMessage = "Time period must be greater than 0"
+                    )
+                }
+                
+                // Dynamic label based on investment type
+                val outcomeLabel = when (uiState.portfolioInvestmentType) {
+                    "litigation" -> "Expected Settlement per Case"
+                    "patent" -> "Revenue per Patent"
+                    else -> "Outcome per Unit"
+                }
+                
+                InputField(
+                    label = outcomeLabel,
+                    value = uiState.portfolioOutcomePerUnit,
+                    onValueChange = { viewModel.updatePortfolioInputs(outcomePerUnit = it) },
+                    fieldType = InputFieldType.CURRENCY,
+                    isError = uiState.portfolioOutcomePerUnit.isNotEmpty() && 
+                              (uiState.portfolioOutcomePerUnit.toDoubleOrNull() ?: 0.0) <= 0,
+                    errorMessage = "Outcome per unit must be greater than 0"
+                )
+                
+                // Fee Structure Section
+                Text(
+                    text = "Fee Structure",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val topLineFeeLabel = when (uiState.portfolioInvestmentType) {
+                        "litigation" -> "MDL Committee Fee"
+                        else -> "Top-Line Fee"
+                    }
+                    
+                    InputField(
+                        label = "$topLineFeeLabel (%)",
+                        value = uiState.portfolioTopLineFees,
+                        onValueChange = { viewModel.updatePortfolioInputs(topLineFees = it) },
                         fieldType = InputFieldType.NUMBER,
                         modifier = Modifier.weight(1f),
-                        isError = uiState.portfolioNumberOfUnits.isNotEmpty() && 
-                                  (uiState.portfolioNumberOfUnits.toDoubleOrNull() ?: 0.0) <= 0,
-                        errorMessage = "Number of units must be greater than 0"
+                        isError = uiState.portfolioTopLineFees.isNotEmpty() && 
+                                  ((uiState.portfolioTopLineFees.toDoubleOrNull() ?: 0.0) < 0 ||
+                                   (uiState.portfolioTopLineFees.toDoubleOrNull() ?: 0.0) > 100),
+                        errorMessage = "Fee must be between 0 and 100"
+                    )
+                    
+                    InputField(
+                        label = "Plaintiff Counsel (%)",
+                        value = uiState.portfolioManagementFees,
+                        onValueChange = { viewModel.updatePortfolioInputs(managementFees = it) },
+                        fieldType = InputFieldType.NUMBER,
+                        modifier = Modifier.weight(1f),
+                        isError = uiState.portfolioManagementFees.isNotEmpty() && 
+                                  ((uiState.portfolioManagementFees.toDoubleOrNull() ?: 0.0) < 0 ||
+                                   (uiState.portfolioManagementFees.toDoubleOrNull() ?: 0.0) > 100),
+                        errorMessage = "Fee must be between 0 and 100"
                     )
                 }
                 
                 InputField(
-                    label = "Success Rate",
-                    value = uiState.portfolioSuccessRate,
-                    onValueChange = { viewModel.updatePortfolioInputs(successRate = it) },
+                    label = "Investor Share (%)",
+                    value = uiState.portfolioInvestorShare,
+                    onValueChange = { viewModel.updatePortfolioInputs(investorShare = it) },
                     fieldType = InputFieldType.NUMBER,
-                    suffix = "%",
-                    isError = uiState.portfolioSuccessRate.isNotEmpty() && 
-                              ((uiState.portfolioSuccessRate.toDoubleOrNull() ?: 0.0) <= 0 ||
-                               (uiState.portfolioSuccessRate.toDoubleOrNull() ?: 0.0) > 100),
-                    errorMessage = "Success rate must be between 0 and 100"
-                )
-                
-                InputField(
-                    label = "Time Period",
-                    value = uiState.portfolioTimeInMonths,
-                    onValueChange = { viewModel.updatePortfolioInputs(timeInMonths = it) },
-                    fieldType = InputFieldType.NUMBER,
-                    suffix = "months",
-                    isError = uiState.portfolioTimeInMonths.isNotEmpty() && 
-                              (uiState.portfolioTimeInMonths.toDoubleOrNull() ?: 0.0) <= 0,
-                    errorMessage = "Time period must be greater than 0"
+                    isError = uiState.portfolioInvestorShare.isNotEmpty() && 
+                              ((uiState.portfolioInvestorShare.toDoubleOrNull() ?: 0.0) < 0 ||
+                               (uiState.portfolioInvestorShare.toDoubleOrNull() ?: 0.0) > 100),
+                    errorMessage = "Investor share must be between 0 and 100"
                 )
             }
         }
@@ -773,10 +899,10 @@ private fun validatePortfolioInputs(uiState: MainUiState): List<String> {
         errors.add("Unit price must be greater than 0")
     }
     
-    if (uiState.portfolioNumberOfUnits.isEmpty()) {
-        errors.add("Number of units is required")
-    } else if ((uiState.portfolioNumberOfUnits.toDoubleOrNull() ?: 0.0) <= 0) {
-        errors.add("Number of units must be greater than 0")
+    if (uiState.portfolioOutcomePerUnit.isEmpty()) {
+        errors.add("Outcome per unit is required")
+    } else if ((uiState.portfolioOutcomePerUnit.toDoubleOrNull() ?: 0.0) <= 0) {
+        errors.add("Outcome per unit must be greater than 0")
     }
     
     if (uiState.portfolioSuccessRate.isEmpty()) {
@@ -794,6 +920,22 @@ private fun validatePortfolioInputs(uiState: MainUiState): List<String> {
         errors.add("Time period must be greater than 0")
     }
     
+    // Validate fee structure
+    val topLineFees = uiState.portfolioTopLineFees.toDoubleOrNull()
+    if (topLineFees != null && (topLineFees < 0 || topLineFees > 100)) {
+        errors.add("Top-line fees must be between 0 and 100")
+    }
+    
+    val managementFees = uiState.portfolioManagementFees.toDoubleOrNull()
+    if (managementFees != null && (managementFees < 0 || managementFees > 100)) {
+        errors.add("Management fees must be between 0 and 100")
+    }
+    
+    val investorShare = uiState.portfolioInvestorShare.toDoubleOrNull()
+    if (investorShare != null && (investorShare < 0 || investorShare > 100)) {
+        errors.add("Investor share must be between 0 and 100")
+    }
+    
     // Validate follow-on investments
     uiState.portfolioFollowOnInvestments.forEachIndexed { index, investment ->
         try {
@@ -809,13 +951,19 @@ private fun validatePortfolioInputs(uiState: MainUiState): List<String> {
 private fun isPortfolioInputValid(uiState: MainUiState): Boolean {
     return uiState.portfolioInitialInvestment.isNotEmpty() &&
            uiState.portfolioUnitPrice.isNotEmpty() &&
-           uiState.portfolioNumberOfUnits.isNotEmpty() &&
+           uiState.portfolioOutcomePerUnit.isNotEmpty() &&
            uiState.portfolioSuccessRate.isNotEmpty() &&
            uiState.portfolioTimeInMonths.isNotEmpty() &&
            (uiState.portfolioInitialInvestment.toDoubleOrNull() ?: 0.0) > 0 &&
            (uiState.portfolioUnitPrice.toDoubleOrNull() ?: 0.0) > 0 &&
-           (uiState.portfolioNumberOfUnits.toDoubleOrNull() ?: 0.0) > 0 &&
+           (uiState.portfolioOutcomePerUnit.toDoubleOrNull() ?: 0.0) > 0 &&
            (uiState.portfolioSuccessRate.toDoubleOrNull() ?: 0.0) > 0 &&
            (uiState.portfolioSuccessRate.toDoubleOrNull() ?: 0.0) <= 100 &&
-           (uiState.portfolioTimeInMonths.toDoubleOrNull() ?: 0.0) > 0
+           (uiState.portfolioTimeInMonths.toDoubleOrNull() ?: 0.0) > 0 &&
+           (uiState.portfolioTopLineFees.toDoubleOrNull() ?: 0.0) >= 0 &&
+           (uiState.portfolioTopLineFees.toDoubleOrNull() ?: 0.0) <= 100 &&
+           (uiState.portfolioManagementFees.toDoubleOrNull() ?: 0.0) >= 0 &&
+           (uiState.portfolioManagementFees.toDoubleOrNull() ?: 0.0) <= 100 &&
+           (uiState.portfolioInvestorShare.toDoubleOrNull() ?: 0.0) >= 0 &&
+           (uiState.portfolioInvestorShare.toDoubleOrNull() ?: 0.0) <= 100
 }

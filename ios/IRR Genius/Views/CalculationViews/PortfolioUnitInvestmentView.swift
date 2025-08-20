@@ -15,6 +15,11 @@ struct PortfolioUnitInvestmentView: View {
     @Binding var numberOfUnits: String
     @Binding var successRate: String
     @Binding var timeInMonths: String
+    @Binding var outcomePerUnit: String
+    @Binding var topLineFees: String
+    @Binding var managementFees: String
+    @Binding var investorShare: String
+    @Binding var investmentType: String
     @Binding var followOnInvestments: [FollowOnInvestment]
     @Binding var calculatedResult: Double?
     @Binding var isCalculating: Bool
@@ -131,7 +136,12 @@ struct PortfolioUnitInvestmentView: View {
                 unitPrice: $unitPrice,
                 numberOfUnits: $numberOfUnits,
                 successRate: $successRate,
-                timeInMonths: $timeInMonths
+                timeInMonths: $timeInMonths,
+                outcomePerUnit: $outcomePerUnit,
+                topLineFees: $topLineFees,
+                managementFees: $managementFees,
+                investorShare: $investorShare,
+                investmentType: $investmentType
             )
 
             // Portfolio summary

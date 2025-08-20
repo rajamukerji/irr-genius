@@ -38,9 +38,14 @@ struct ContentView: View {
     // Portfolio Unit Investment inputs
     @State private var portfolioInitialInvestment: String = ""
     @State private var portfolioUnitPrice: String = ""
-    @State private var portfolioNumberOfUnits: String = ""
+    @State private var portfolioNumberOfUnits: String = ""  // This will be auto-calculated
     @State private var portfolioSuccessRate: String = "100"
     @State private var portfolioTimeInMonths: String = ""
+    @State private var portfolioOutcomePerUnit: String = ""  // New: Expected outcome per successful unit
+    @State private var portfolioTopLineFees: String = "0"    // New: MDL/top-line fees
+    @State private var portfolioManagementFees: String = "40" // New: Plaintiff counsel fees
+    @State private var portfolioInvestorShare: String = "42.5" // New: Investor's share
+    @State private var portfolioInvestmentType: String = "litigation" // New: Investment type
     @State private var portfolioInitialDate: Date = .init()
     @State private var portfolioFollowOnInvestments: [FollowOnInvestment] = []
     @State private var showingAddPortfolioInvestment = false
@@ -201,6 +206,11 @@ struct ContentView: View {
                 numberOfUnits: $portfolioNumberOfUnits,
                 successRate: $portfolioSuccessRate,
                 timeInMonths: $portfolioTimeInMonths,
+                outcomePerUnit: $portfolioOutcomePerUnit,
+                topLineFees: $portfolioTopLineFees,
+                managementFees: $portfolioManagementFees,
+                investorShare: $portfolioInvestorShare,
+                investmentType: $portfolioInvestmentType,
                 followOnInvestments: $portfolioFollowOnInvestments,
                 calculatedResult: $calculatedResult,
                 isCalculating: $isCalculating,
@@ -381,18 +391,30 @@ struct ContentView: View {
     private func calculatePortfolioUnitInvestment() {
         let cleanInitial = portfolioInitialInvestment.replacingOccurrences(of: ",", with: "")
         let cleanUnitPrice = portfolioUnitPrice.replacingOccurrences(of: ",", with: "")
+        let cleanOutcomePerUnit = portfolioOutcomePerUnit.replacingOccurrences(of: ",", with: "")
 
         guard let initialInvestment = Double(cleanInitial),
               let unitPrice = Double(cleanUnitPrice),
-              let numberOfUnits = Double(portfolioNumberOfUnits),
+              let outcomePerUnit = Double(cleanOutcomePerUnit),
               let successRate = Double(portfolioSuccessRate),
+              let topLineFees = Double(portfolioTopLineFees),
+              let managementFees = Double(portfolioManagementFees),
+              let investorShare = Double(portfolioInvestorShare),
               let months = Double(portfolioTimeInMonths),
-              initialInvestment > 0, unitPrice > 0, numberOfUnits > 0,
-              successRate > 0, successRate <= 100, months > 0
+              initialInvestment > 0, unitPrice > 0, outcomePerUnit > 0,
+              successRate > 0, successRate <= 100, 
+              topLineFees >= 0, topLineFees <= 100,
+              managementFees >= 0, managementFees <= 100,
+              investorShare >= 0, investorShare <= 100,
+              months > 0
         else {
             errorMessage = "Please enter valid numbers"
             return
         }
+
+        // Auto-calculate number of units
+        let numberOfUnits = initialInvestment / unitPrice
+        portfolioNumberOfUnits = String(format: "%.2f", numberOfUnits)
 
         // Validate follow-on investments
         for investment in portfolioFollowOnInvestments {
@@ -413,35 +435,28 @@ struct ContentView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let years = months / 12.0
-            let successRateDecimal = successRate / 100.0
-            let successfulUnits = numberOfUnits * successRateDecimal
+            
+            // Calculate successful units
+            let successfulUnits = numberOfUnits * (successRate / 100.0)
+            
+            // Calculate gross outcome
+            let grossOutcome = successfulUnits * outcomePerUnit
+            
+            // Apply top-line fees (MDL committee fees, etc.)
+            let afterTopLineFees = grossOutcome * (1 - topLineFees / 100.0)
+            
+            // Apply management fees (plaintiff counsel share)
+            let plaintiffCounselShare = afterTopLineFees * (managementFees / 100.0)
+            
+            // Apply investor share
+            let netInvestorOutcome = plaintiffCounselShare * (investorShare / 100.0)
 
-            // Calculate total investment including follow-ons
-            let followOnTotal = portfolioFollowOnInvestments.compactMap { investment in
-                Double(investment.amount.replacingOccurrences(of: ",", with: ""))
-            }.reduce(0, +)
-            let totalInvestment = initialInvestment + followOnTotal
-
-            // Calculate expected outcome based on successful units
-            // Simplified calculation: assume 2x return on successful units
-            let expectedOutcome = successfulUnits * unitPrice * 2.0
-
-            // Calculate portfolio IRR
-            let portfolioIRR = if portfolioFollowOnInvestments.isEmpty {
-                IRRCalculator.calculateIRRValue(
-                    initialInvestment: totalInvestment,
-                    outcomeAmount: expectedOutcome,
-                    timeInYears: years
-                )
-            } else {
-                // Use blended IRR calculation for complex scenarios
-                IRRCalculator.calculateBlendedIRRValue(
-                    initialInvestment: initialInvestment,
-                    followOnInvestments: portfolioFollowOnInvestments,
-                    finalValuation: expectedOutcome,
-                    totalTimeInYears: years
-                )
-            }
+            // Calculate portfolio IRR with proper fee structure
+            let portfolioIRR = IRRCalculator.calculateIRRValue(
+                initialInvestment: initialInvestment,
+                outcomeAmount: netInvestorOutcome,
+                timeInYears: years
+            )
 
             calculatedResult = portfolioIRR
             isCalculating = false

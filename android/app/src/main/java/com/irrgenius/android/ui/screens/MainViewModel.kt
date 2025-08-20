@@ -45,9 +45,14 @@ data class MainUiState(
     // Portfolio Unit Investment inputs
     val portfolioInitialInvestment: String = "",
     val portfolioUnitPrice: String = "",
-    val portfolioNumberOfUnits: String = "",
+    val portfolioNumberOfUnits: String = "",  // This will be auto-calculated
     val portfolioSuccessRate: String = "100",
     val portfolioTimeInMonths: String = "",
+    val portfolioOutcomePerUnit: String = "",  // New: Expected outcome per successful unit
+    val portfolioTopLineFees: String = "0",    // New: MDL/top-line fees
+    val portfolioManagementFees: String = "40", // New: Plaintiff counsel fees
+    val portfolioInvestorShare: String = "42.5", // New: Investor's share
+    val portfolioInvestmentType: String = "litigation", // New: Investment type
     val portfolioInitialDate: LocalDate = LocalDate.now(),
     val portfolioFollowOnInvestments: List<FollowOnInvestment> = emptyList(),
     val portfolioResult: Double? = null,
@@ -128,15 +133,42 @@ class MainViewModel : ViewModel() {
         numberOfUnits: String? = null,
         successRate: String? = null,
         timeInMonths: String? = null,
+        outcomePerUnit: String? = null,
+        topLineFees: String? = null,
+        managementFees: String? = null,
+        investorShare: String? = null,
+        investmentType: String? = null,
         initialDate: LocalDate? = null
     ) {
-        _uiState.value = _uiState.value.copy(
-            portfolioInitialInvestment = initialInvestment ?: _uiState.value.portfolioInitialInvestment,
-            portfolioUnitPrice = unitPrice ?: _uiState.value.portfolioUnitPrice,
-            portfolioNumberOfUnits = numberOfUnits ?: _uiState.value.portfolioNumberOfUnits,
-            portfolioSuccessRate = successRate ?: _uiState.value.portfolioSuccessRate,
-            portfolioTimeInMonths = timeInMonths ?: _uiState.value.portfolioTimeInMonths,
-            portfolioInitialDate = initialDate ?: _uiState.value.portfolioInitialDate
+        // Auto-calculate units when investment or price changes
+        val currentState = _uiState.value
+        var updatedNumberOfUnits = numberOfUnits ?: currentState.portfolioNumberOfUnits
+        
+        val newInitialInvestment = initialInvestment ?: currentState.portfolioInitialInvestment
+        val newUnitPrice = unitPrice ?: currentState.portfolioUnitPrice
+        
+        // Auto-calculate units if investment or unit price changed
+        if (initialInvestment != null || unitPrice != null) {
+            val investment = newInitialInvestment.toDoubleOrNull() ?: 0.0
+            val price = newUnitPrice.toDoubleOrNull() ?: 0.0
+            if (investment > 0 && price > 0) {
+                val calculatedUnits = investment / price
+                updatedNumberOfUnits = String.format("%.2f", calculatedUnits)
+            }
+        }
+        
+        _uiState.value = currentState.copy(
+            portfolioInitialInvestment = newInitialInvestment,
+            portfolioUnitPrice = newUnitPrice,
+            portfolioNumberOfUnits = updatedNumberOfUnits,
+            portfolioSuccessRate = successRate ?: currentState.portfolioSuccessRate,
+            portfolioTimeInMonths = timeInMonths ?: currentState.portfolioTimeInMonths,
+            portfolioOutcomePerUnit = outcomePerUnit ?: currentState.portfolioOutcomePerUnit,
+            portfolioTopLineFees = topLineFees ?: currentState.portfolioTopLineFees,
+            portfolioManagementFees = managementFees ?: currentState.portfolioManagementFees,
+            portfolioInvestorShare = investorShare ?: currentState.portfolioInvestorShare,
+            portfolioInvestmentType = investmentType ?: currentState.portfolioInvestmentType,
+            portfolioInitialDate = initialDate ?: currentState.portfolioInitialDate
         )
         updateInputTracking()
     }
@@ -284,43 +316,35 @@ class MainViewModel : ViewModel() {
     private fun calculatePortfolioUnitInvestment() {
         val initialInvestment = _uiState.value.portfolioInitialInvestment.toDoubleOrNull() ?: return
         val unitPrice = _uiState.value.portfolioUnitPrice.toDoubleOrNull() ?: return
-        val numberOfUnits = _uiState.value.portfolioNumberOfUnits.toDoubleOrNull() ?: return
+        val outcomePerUnit = _uiState.value.portfolioOutcomePerUnit.toDoubleOrNull() ?: return
         val successRate = (_uiState.value.portfolioSuccessRate.toDoubleOrNull() ?: 100.0) / 100.0
+        val topLineFees = (_uiState.value.portfolioTopLineFees.toDoubleOrNull() ?: 0.0) / 100.0
+        val managementFees = (_uiState.value.portfolioManagementFees.toDoubleOrNull() ?: 40.0) / 100.0
+        val investorShare = (_uiState.value.portfolioInvestorShare.toDoubleOrNull() ?: 42.5) / 100.0
         val timeInMonths = _uiState.value.portfolioTimeInMonths.toDoubleOrNull() ?: return
         
-        // Calculate expected successful units
+        // Auto-calculate number of units from investment amount and unit price
+        val numberOfUnits = initialInvestment / unitPrice
+        
+        // Calculate successful units
         val successfulUnits = numberOfUnits * successRate
         
-        // Calculate total investment including follow-ons
-        val totalInvestment = initialInvestment + _uiState.value.portfolioFollowOnInvestments.sumOf { it.amount }
+        // Calculate gross outcome
+        val grossOutcome = successfulUnits * outcomePerUnit
         
-        // For portfolio unit investment, we calculate the IRR based on:
-        // - Total investment (initial + follow-ons)
-        // - Expected outcome based on successful units and their exit value
-        // - Time period
+        // Apply top-line fees (MDL committee fees, etc.)
+        val afterTopLineFees = grossOutcome * (1 - topLineFees)
         
-        // Simplified calculation: assume exit value is based on unit appreciation
-        // In a real scenario, this would be more complex with different exit valuations per batch
+        // Apply management fees (plaintiff counsel share)
+        val plaintiffCounselShare = afterTopLineFees * managementFees
+        
+        // Apply investor share
+        val netInvestorOutcome = plaintiffCounselShare * investorShare
+        
         val years = timeInMonths / 12.0
         
-        // Calculate portfolio IRR using blended approach with follow-on investments
-        val portfolioIRR = if (_uiState.value.portfolioFollowOnInvestments.isEmpty()) {
-            // Simple case: just initial investment
-            val expectedOutcome = successfulUnits * unitPrice * 2.0 // Assume 2x return for simplicity
-            calculator.calculateIRRValue(initialInvestment, expectedOutcome, years)
-        } else {
-            // Complex case: use blended IRR calculation with follow-on investments
-            // Convert portfolio follow-ons to standard follow-on investments for calculation
-            val expectedOutcome = (successfulUnits + _uiState.value.portfolioFollowOnInvestments.sumOf { 
-                it.amount / it.customValuation 
-            }) * unitPrice * 2.0 // Simplified outcome calculation
-            
-            calculator.calculateBlendedIRR(
-                initialInvestment, expectedOutcome, years,
-                _uiState.value.portfolioFollowOnInvestments,
-                _uiState.value.portfolioInitialDate
-            )
-        }
+        // Calculate portfolio IRR with proper fee structure
+        val portfolioIRR = calculator.calculateIRRValue(initialInvestment, netInvestorOutcome, years)
         
         // Generate growth points for portfolio
         val points = if (_uiState.value.portfolioFollowOnInvestments.isEmpty()) {
