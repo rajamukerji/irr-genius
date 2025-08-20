@@ -35,7 +35,7 @@ class CoreDataCalculationRepository: CalculationRepository {
 
                 // Update entity properties
                 entity.name = calculation.name
-                entity.calculationType = Int16(calculation.calculationType.rawValue.hashValue)
+                entity.calculationType = Int16(CalculationMode.allCases.firstIndex(of: calculation.calculationType) ?? 0)
                 entity.modifiedDate = calculation.modifiedDate
                 entity.notes = calculation.notes
                 entity.tags = calculation.tagsJSON
@@ -165,8 +165,10 @@ class CoreDataCalculationRepository: CalculationRepository {
             }
         }
 
-        // Convert calculation type with better mapping
-        let calculationType = CalculationMode.allCases.first { $0.rawValue.hashValue == Int(entity.calculationType) } ?? .calculateIRR
+        // Convert calculation type using index
+        let calculationType = Int(entity.calculationType) < CalculationMode.allCases.count 
+            ? CalculationMode.allCases[Int(entity.calculationType)] 
+            : .calculateIRR
 
         // Parse tags using the proper JSON method
         let tags = SavedCalculation.tags(from: entity.tags)
