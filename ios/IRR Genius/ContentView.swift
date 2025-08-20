@@ -594,22 +594,29 @@ struct ContentView: View {
         case .portfolioUnitInvestment:
             guard let initial = Double(portfolioInitialInvestment.replacingOccurrences(of: ",", with: "")),
                   let unitPrice = Double(portfolioUnitPrice.replacingOccurrences(of: ",", with: "")),
+                  let outcomePerUnit = Double(portfolioOutcomePerUnit.replacingOccurrences(of: ",", with: "")),
                   let numberOfUnits = Double(portfolioNumberOfUnits),
                   let successRate = Double(portfolioSuccessRate),
+                  let topLineFees = Double(portfolioTopLineFees),
+                  let managementFees = Double(portfolioManagementFees),
+                  let investorShare = Double(portfolioInvestorShare),
                   let monthsDouble = Double(portfolioTimeInMonths),
-                  initial > 0, unitPrice > 0, numberOfUnits > 0, successRate > 0 else { return nil }
+                  initial > 0, unitPrice > 0, outcomePerUnit > 0, numberOfUnits > 0, successRate > 0 else { return nil }
             let months = Int(monthsDouble)
             guard months > 0 else { return nil }
 
-            let successRateDecimal = successRate / 100.0
-            let successfulUnits = numberOfUnits * successRateDecimal
-            let expectedOutcome = successfulUnits * unitPrice * 2.0 // Simplified 2x return
+            // Calculate net investor outcome using proper fee structure
+            let successfulUnits = numberOfUnits * (successRate / 100.0)
+            let grossOutcome = successfulUnits * outcomePerUnit
+            let afterTopLineFees = grossOutcome * (1 - topLineFees / 100.0)
+            let plaintiffCounselShare = afterTopLineFees * (managementFees / 100.0)
+            let netInvestorOutcome = plaintiffCounselShare * (investorShare / 100.0)
 
             if portfolioFollowOnInvestments.isEmpty {
                 let years = Double(months) / 12.0
                 let irr = IRRCalculator.calculateIRRValue(
                     initialInvestment: initial,
-                    outcomeAmount: expectedOutcome,
+                    outcomeAmount: netInvestorOutcome,
                     timeInYears: years
                 ) / 100.0
                 return IRRCalculator.growthPoints(initial: initial, rate: irr, months: months)
@@ -617,7 +624,7 @@ struct ContentView: View {
                 return IRRCalculator.growthPointsWithFollowOn(
                     initial: initial,
                     followOnInvestments: portfolioFollowOnInvestments,
-                    finalValuation: expectedOutcome,
+                    finalValuation: netInvestorOutcome,
                     months: months
                 )
             }

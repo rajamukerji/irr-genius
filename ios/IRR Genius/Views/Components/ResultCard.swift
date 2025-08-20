@@ -65,6 +65,63 @@ struct ResultCard: View {
                     .foregroundColor(.blue)
             }
 
+            // Additional portfolio metrics
+            if mode == .portfolioUnitInvestment {
+                VStack(spacing: 12) {
+                    let initialInvestment = inputs["Initial Investment"] ?? 0
+                    let successfulUnits = (inputs["Number of Units"] ?? 0) * ((inputs["Success Rate (%)"] ?? 100) / 100.0)
+                    let outcomePerUnit = inputs["Expected Outcome per Unit"] ?? 0
+                    let topLineFees = (inputs["Top-Line Fees (%)"] ?? 0) / 100.0
+                    let managementFees = (inputs["Management Fees (%)"] ?? 40) / 100.0
+                    let investorShare = (inputs["Investor Share (%)"] ?? 42.5) / 100.0
+                    
+                    let grossOutcome = successfulUnits * outcomePerUnit
+                    let afterTopLineFees = grossOutcome * (1 - topLineFees)
+                    let plaintiffCounselShare = afterTopLineFees * managementFees
+                    let netInvestorOutcome = plaintiffCounselShare * investorShare
+                    let roiMultiple = initialInvestment > 0 ? netInvestorOutcome / initialInvestment : 0
+                    
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Total Expected Outcome")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(formatCurrency(grossOutcome))
+                                .font(.title3)
+                                .fontWeight(.medium)
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("Net to Investor")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(formatCurrency(netInvestorOutcome))
+                                .font(.title3)
+                                .fontWeight(.medium)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    
+                    HStack {
+                        Text("ROI Multiple:")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text("\(String(format: "%.2f", roiMultiple))x")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
+            }
+            
             // Inputs used
             VStack(alignment: .leading, spacing: 8) {
                 Text("Inputs Used:")
@@ -223,5 +280,12 @@ struct ResultCard: View {
         }
         
         return points
+    }
+    
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.maximumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: value)) ?? String(format: "$%.0f", value)
     }
 }
