@@ -520,15 +520,23 @@ struct ContentView: View {
         case .portfolioUnitInvestment:
             let cleanInitial = portfolioInitialInvestment.replacingOccurrences(of: ",", with: "")
             let cleanUnitPrice = portfolioUnitPrice.replacingOccurrences(of: ",", with: "")
+            let cleanOutcomePerUnit = portfolioOutcomePerUnit.replacingOccurrences(of: ",", with: "")
             let months = Double(portfolioTimeInMonths) ?? 0
             let units = Double(portfolioNumberOfUnits) ?? 0
             let successRate = Double(portfolioSuccessRate) ?? 100
             let successfulUnits = units * (successRate / 100.0)
+            let topLineFees = Double(portfolioTopLineFees) ?? 0
+            let managementFees = Double(portfolioManagementFees) ?? 40
+            let investorShare = Double(portfolioInvestorShare) ?? 42.5
             return [
                 "Initial Investment": Double(cleanInitial) ?? 0,
                 "Unit Price": Double(cleanUnitPrice) ?? 0,
                 "Number of Units": units,
                 "Success Rate (%)": successRate,
+                "Expected Outcome per Unit": Double(cleanOutcomePerUnit) ?? 0,
+                "Top-Line Fees (%)": topLineFees,
+                "Management Fees (%)": managementFees,
+                "Investor Share (%)": investorShare,
                 "Expected Successful Units": successfulUnits,
                 "Time Period (Months)": months,
                 "Time Period (Years)": months / 12.0,

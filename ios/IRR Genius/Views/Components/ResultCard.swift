@@ -192,6 +192,7 @@ struct ResultCard: View {
                     successRate: inputs["Success Rate (%)"],
                     outcomePerUnit: inputs["Expected Outcome per Unit"],
                     investorShare: inputs["Investor Share (%)"],
+                    feePercentage: inputs["Top-Line Fees (%)"],
                     calculatedResult: result,
                     growthPoints: growthPoints
                 )
