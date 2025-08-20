@@ -117,6 +117,32 @@ class DataManager: ObservableObject {
         draftSaveTimer = nil
     }
 
+    // MARK: - Public Initialization
+    
+    /// Ensures DataManager is fully initialized - can be called multiple times safely
+    func initializeIfNeeded() async {
+        // If we're already loaded (even if calculations is empty, that's valid), return immediately
+        if loadingState == .idle {
+            return
+        }
+        
+        // If we're currently loading, wait for it to complete
+        if loadingState.isLoading {
+            // Poll until loading is complete (with timeout)
+            let startTime = Date()
+            let timeout: TimeInterval = 10.0
+            
+            while loadingState.isLoading && Date().timeIntervalSince(startTime) < timeout {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            return
+        }
+        
+        // Otherwise, trigger initialization
+        await loadInitialData()
+        await setupCloudKitSync()
+    }
+
     // MARK: - CloudKit Sync Setup
 
     private func setupCloudKitSync() async {

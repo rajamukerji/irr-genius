@@ -11,7 +11,7 @@ import SwiftUI
 struct IRR_GeniusApp: App {
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            AppRootView()
         }
     }
 }
