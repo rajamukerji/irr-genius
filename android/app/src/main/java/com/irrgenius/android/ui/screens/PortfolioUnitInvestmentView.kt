@@ -512,6 +512,26 @@ fun PortfolioUnitInvestmentView(
                 isHighlighted = true
             )
             
+            // Save Button
+            Button(
+                onClick = {
+                    val calculation = createPortfolioCalculationFromInputs(uiState, result)
+                    viewModel.autoSaveManager.showSaveDialog(calculation)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add, // Would use save icon in real app
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Save Calculation")
+            }
+            
             // Unit-Based Metrics Grid
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -966,4 +986,28 @@ private fun isPortfolioInputValid(uiState: MainUiState): Boolean {
            (uiState.portfolioManagementFees.toDoubleOrNull() ?: 0.0) <= 100 &&
            (uiState.portfolioInvestorShare.toDoubleOrNull() ?: 0.0) >= 0 &&
            (uiState.portfolioInvestorShare.toDoubleOrNull() ?: 0.0) <= 100
+}
+
+private fun createPortfolioCalculationFromInputs(uiState: MainUiState, result: Double): SavedCalculation {
+    return SavedCalculation(
+        id = java.util.UUID.randomUUID().toString(),
+        name = "Untitled Portfolio Unit Investment",
+        calculationType = CalculationMode.PORTFOLIO_UNIT_INVESTMENT,
+        createdDate = java.time.LocalDateTime.now(),
+        modifiedDate = java.time.LocalDateTime.now(),
+        projectId = null,
+        initialInvestment = uiState.portfolioInitialInvestment.toDoubleOrNull(),
+        outcomeAmount = null,
+        timeInMonths = uiState.portfolioTimeInMonths.toDoubleOrNull(),
+        irr = null,
+        unitPrice = uiState.portfolioUnitPrice.toDoubleOrNull(),
+        successRate = uiState.portfolioSuccessRate.toDoubleOrNull(),
+        outcomePerUnit = uiState.portfolioOutcomePerUnit.toDoubleOrNull(),
+        investorShare = uiState.portfolioInvestorShare.toDoubleOrNull(),
+        feePercentage = uiState.portfolioTopLineFees.toDoubleOrNull(),
+        calculatedResult = result,
+        growthPointsJson = null, // Could serialize uiState.growthPoints to JSON if needed
+        notes = null,
+        tags = null // Could serialize tags to JSON if needed
+    )
 }

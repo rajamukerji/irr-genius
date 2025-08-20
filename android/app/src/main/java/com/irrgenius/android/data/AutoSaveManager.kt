@@ -203,7 +203,7 @@ class AutoSaveManager : ViewModel() {
     /**
      * Shows save dialog for the calculation
      */
-    private fun showSaveDialog(calculation: SavedCalculation) {
+    fun showSaveDialog(calculation: SavedCalculation) {
         _saveDialogData.value = SaveDialogData(
             name = generateDefaultName(calculation),
             projectId = null,
