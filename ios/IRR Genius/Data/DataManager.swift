@@ -84,12 +84,13 @@ class DataManager: ObservableObject {
     init(repositoryManager: RepositoryManager = RepositoryManager()) {
         self.repositoryManager = repositoryManager
         setupAutoSave()
-        // CloudKit setup will happen lazily when cloudKitSyncService is first accessed
-        loadInitialData()
-
-        // Setup CloudKit sync after initialization
-        DispatchQueue.main.async {
-            self.setupCloudKitSync()
+        
+        // Defer expensive operations to avoid blocking app launch
+        Task { @MainActor in
+            // Small delay to allow UI to render first
+            try? await Task.sleep(for: .milliseconds(100))
+            await self.loadInitialData()
+            await self.setupCloudKitSync()
         }
     }
 
@@ -118,7 +119,7 @@ class DataManager: ObservableObject {
 
     // MARK: - CloudKit Sync Setup
 
-    private func setupCloudKitSync() {
+    private func setupCloudKitSync() async {
         // Observe CloudKit sync service properties
         cloudKitSyncService.$syncStatus
             .receive(on: DispatchQueue.main)
@@ -143,16 +144,22 @@ class DataManager: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Check if CloudKit is available and enabled
+        // Check if CloudKit is available and enabled (done asynchronously)
         isCloudKitEnabled = cloudKitSyncService.isCloudKitAvailable && UserDefaults.standard.bool(forKey: "CloudKitSyncEnabled")
     }
 
     // MARK: - Data Loading
 
-    private func loadInitialData() {
-        Task {
-            await loadCalculations()
-            await loadProjects()
+    private func loadInitialData() async {
+        // Set loading state to give user feedback
+        loadingState = .loading(message: "Loading data...")
+        
+        await loadCalculations()
+        await loadProjects()
+        
+        // Reset loading state when done
+        if loadingState.isLoading {
+            loadingState = .idle
         }
     }
 
@@ -230,7 +237,7 @@ class DataManager: ObservableObject {
     }
 
     /// Shows save dialog for the calculation
-    private func showSaveDialog(for calculation: SavedCalculation) {
+    func showSaveDialog(for calculation: SavedCalculation) {
         saveDialogData = SaveDialogData(
             name: generateDefaultName(for: calculation),
             projectId: nil,

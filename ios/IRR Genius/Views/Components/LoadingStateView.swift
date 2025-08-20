@@ -14,6 +14,13 @@ enum LoadingState: Equatable {
     case loading(message: String)
     case success(message: String)
     case error(message: String)
+    
+    var isLoading: Bool {
+        if case .loading = self {
+            return true
+        }
+        return false
+    }
 }
 
 // MARK: - Loading Overlay View
