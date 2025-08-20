@@ -18,6 +18,7 @@ struct GrowthChartView: View {
             Text("Growth Over Time")
                 .font(.headline)
                 .foregroundColor(.primary)
+            
 
             GeometryReader { geo in
                 ZStack {
@@ -46,7 +47,7 @@ struct GrowthChartView: View {
                             }
                         }
                     }
-                    .chartXScale(domain: .automatic(includesZero: false))
+                    .chartXScale(domain: (data.map { $0.month }.min() ?? 0)...(data.map { $0.month }.max() ?? 1))
                     .chartYAxis {
                         AxisMarks(values: .automatic) { value in
                             AxisGridLine()
@@ -58,7 +59,7 @@ struct GrowthChartView: View {
                             }
                         }
                     }
-                    .chartYScale(domain: .automatic(includesZero: true))
+                    .chartYScale(domain: 0...(data.map { $0.value }.max() ?? 1))
                     .frame(height: 200)
 
                     // Draggable overlay
