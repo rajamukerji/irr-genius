@@ -436,29 +436,68 @@ struct ContentView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let years = months / 12.0
             
-            // Calculate successful units
-            let successfulUnits = numberOfUnits * (successRate / 100.0)
-            
-            // Calculate gross outcome
-            let grossOutcome = successfulUnits * outcomePerUnit
-            
-            // Apply top-line fees (MDL committee fees, etc.)
-            let afterTopLineFees = grossOutcome * (1 - topLineFees / 100.0)
-            
-            // Apply management fees (plaintiff counsel share)
-            let plaintiffCounselShare = afterTopLineFees * (managementFees / 100.0)
-            
-            // Apply investor share
-            let netInvestorOutcome = plaintiffCounselShare * (investorShare / 100.0)
+            if portfolioFollowOnInvestments.isEmpty {
+                // Simple portfolio calculation without follow-on investments
+                let successfulUnits = numberOfUnits * (successRate / 100.0)
+                let grossOutcome = successfulUnits * outcomePerUnit
+                
+                // Apply top-line fees first (e.g., MDL committee fees)
+                let afterTopLineFees = grossOutcome * (1 - topLineFees / 100.0)
+                
+                // Apply management fees to the remaining amount
+                let afterManagementFees = afterTopLineFees * (1 - managementFees / 100.0)
+                
+                // Apply investor share to get final net outcome
+                let netInvestorOutcome = afterManagementFees * (investorShare / 100.0)
 
-            // Calculate portfolio IRR with proper fee structure
-            let portfolioIRR = IRRCalculator.calculateIRRValue(
-                initialInvestment: initialInvestment,
-                outcomeAmount: netInvestorOutcome,
-                timeInYears: years
-            )
+                let portfolioIRR = IRRCalculator.calculateIRRValue(
+                    initialInvestment: initialInvestment,
+                    outcomeAmount: netInvestorOutcome,
+                    timeInYears: years
+                )
 
-            calculatedResult = portfolioIRR
+                calculatedResult = portfolioIRR
+            } else {
+                // Calculate blended IRR with follow-on investments
+                
+                // Calculate total units including follow-on investments
+                var totalInitialUnits = numberOfUnits
+                var totalInvestment = initialInvestment
+                
+                // Add follow-on investment units
+                for investment in portfolioFollowOnInvestments {
+                    let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
+                    let cleanUnitPrice = investment.valuation.replacingOccurrences(of: ",", with: "")
+                    
+                    if let amount = Double(cleanAmount), let unitPrice = Double(cleanUnitPrice), unitPrice > 0 {
+                        let followOnUnits = amount / unitPrice
+                        totalInitialUnits += followOnUnits
+                        totalInvestment += amount
+                    }
+                }
+                
+                // Calculate total successful units across all batches
+                let totalSuccessfulUnits = totalInitialUnits * (successRate / 100.0)
+                
+                // Calculate total gross outcome
+                let totalGrossOutcome = totalSuccessfulUnits * outcomePerUnit
+                
+                // Apply fee structure to total outcome
+                let afterTopLineFees = totalGrossOutcome * (1 - topLineFees / 100.0)
+                let afterManagementFees = afterTopLineFees * (1 - managementFees / 100.0)
+                let netInvestorOutcome = afterManagementFees * (investorShare / 100.0)
+                
+                // Use blended IRR calculation for proper time-weighting
+                let portfolioIRR = IRRCalculator.calculateBlendedIRRValue(
+                    initialInvestment: initialInvestment,
+                    followOnInvestments: portfolioFollowOnInvestments,
+                    finalValuation: netInvestorOutcome,
+                    totalTimeInYears: years
+                )
+
+                calculatedResult = portfolioIRR
+            }
+            
             isCalculating = false
             showingResult = true
 
@@ -468,7 +507,7 @@ struct ContentView: View {
             dataManager.handleCalculationCompleted(
                 calculationType: selectedMode,
                 inputs: inputs,
-                result: portfolioIRR,
+                result: calculatedResult ?? 0,
                 growthPoints: growthPoints
             )
         }
@@ -524,20 +563,39 @@ struct ContentView: View {
             let months = Double(portfolioTimeInMonths) ?? 0
             let units = Double(portfolioNumberOfUnits) ?? 0
             let successRate = Double(portfolioSuccessRate) ?? 100
-            let successfulUnits = units * (successRate / 100.0)
             let topLineFees = Double(portfolioTopLineFees) ?? 0
             let managementFees = Double(portfolioManagementFees) ?? 40
             let investorShare = Double(portfolioInvestorShare) ?? 42.5
+            
+            // Calculate total investment and units including follow-on investments
+            var totalInvestment = Double(cleanInitial) ?? 0
+            var totalUnits = units
+            
+            for investment in portfolioFollowOnInvestments {
+                let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
+                let cleanUnitPrice = investment.valuation.replacingOccurrences(of: ",", with: "")
+                
+                if let amount = Double(cleanAmount), let unitPrice = Double(cleanUnitPrice), unitPrice > 0 {
+                    let followOnUnits = amount / unitPrice
+                    totalInvestment += amount
+                    totalUnits += followOnUnits
+                }
+            }
+            
+            let totalSuccessfulUnits = totalUnits * (successRate / 100.0)
+            
             return [
                 "Initial Investment": Double(cleanInitial) ?? 0,
+                "Total Investment": totalInvestment,
                 "Unit Price": Double(cleanUnitPrice) ?? 0,
                 "Number of Units": units,
+                "Total Units": totalUnits,
                 "Success Rate (%)": successRate,
                 "Expected Outcome per Unit": Double(cleanOutcomePerUnit) ?? 0,
                 "Top-Line Fees (%)": topLineFees,
                 "Management Fees (%)": managementFees,
                 "Investor Share (%)": investorShare,
-                "Expected Successful Units": successfulUnits,
+                "Expected Successful Units": totalSuccessfulUnits,
                 "Time Period (Months)": months,
                 "Time Period (Years)": months / 12.0,
                 "Follow-on Batches": Double(portfolioFollowOnInvestments.count),
@@ -605,14 +663,16 @@ struct ContentView: View {
             let months = Int(monthsDouble)
             guard months > 0 else { return nil }
 
-            // Calculate net investor outcome using proper fee structure
-            let successfulUnits = numberOfUnits * (successRate / 100.0)
-            let grossOutcome = successfulUnits * outcomePerUnit
-            let afterTopLineFees = grossOutcome * (1 - topLineFees / 100.0)
-            let plaintiffCounselShare = afterTopLineFees * (managementFees / 100.0)
-            let netInvestorOutcome = plaintiffCounselShare * (investorShare / 100.0)
-
             if portfolioFollowOnInvestments.isEmpty {
+                // Simple portfolio calculation without follow-on investments
+                let successfulUnits = numberOfUnits * (successRate / 100.0)
+                let grossOutcome = successfulUnits * outcomePerUnit
+                
+                // Apply fees correctly
+                let afterTopLineFees = grossOutcome * (1 - topLineFees / 100.0)
+                let afterManagementFees = afterTopLineFees * (1 - managementFees / 100.0)
+                let netInvestorOutcome = afterManagementFees * (investorShare / 100.0)
+                
                 let years = Double(months) / 12.0
                 let irr = IRRCalculator.calculateIRRValue(
                     initialInvestment: initial,
@@ -621,6 +681,27 @@ struct ContentView: View {
                 ) / 100.0
                 return IRRCalculator.growthPoints(initial: initial, rate: irr, months: months)
             } else {
+                // Calculate total units including follow-on investments
+                var totalInitialUnits = numberOfUnits
+                
+                // Add follow-on investment units
+                for investment in portfolioFollowOnInvestments {
+                    let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
+                    let cleanUnitPrice = investment.valuation.replacingOccurrences(of: ",", with: "")
+                    
+                    if let amount = Double(cleanAmount), let unitPrice = Double(cleanUnitPrice), unitPrice > 0 {
+                        let followOnUnits = amount / unitPrice
+                        totalInitialUnits += followOnUnits
+                    }
+                }
+                
+                // Calculate total successful units and net outcome
+                let totalSuccessfulUnits = totalInitialUnits * (successRate / 100.0)
+                let totalGrossOutcome = totalSuccessfulUnits * outcomePerUnit
+                let afterTopLineFees = totalGrossOutcome * (1 - topLineFees / 100.0)
+                let afterManagementFees = afterTopLineFees * (1 - managementFees / 100.0)
+                let netInvestorOutcome = afterManagementFees * (investorShare / 100.0)
+                
                 return IRRCalculator.growthPointsWithFollowOn(
                     initial: initial,
                     followOnInvestments: portfolioFollowOnInvestments,

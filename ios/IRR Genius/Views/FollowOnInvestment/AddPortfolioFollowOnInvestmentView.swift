@@ -13,20 +13,19 @@ struct AddPortfolioFollowOnInvestmentView: View {
     let initialInvestmentDate: Date
 
     @State private var investmentType: InvestmentType = .buy
-    @State private var amount: String = ""
+    @State private var investmentAmount: String = ""
     @State private var unitPrice: String = ""
-    @State private var numberOfUnits: String = ""
     @State private var timingType: TimingType = .absoluteDate
     @State private var date: Date = .init()
     @State private var relativeAmount: String = "1"
     @State private var relativeUnit: TimeUnit = .years
     @State private var errorMessage: String?
 
-    // Computed property for amount calculation
-    private var calculatedAmount: Double {
-        let units = Double(numberOfUnits) ?? 0
+    // Computed property for number of units calculation
+    private var calculatedUnits: Double {
+        let amount = Double(investmentAmount.replacingOccurrences(of: ",", with: "")) ?? 0
         let price = Double(unitPrice.replacingOccurrences(of: ",", with: "")) ?? 0
-        return units * price
+        return price > 0 ? amount / price : 0
     }
 
     var body: some View {
@@ -41,6 +40,17 @@ struct AddPortfolioFollowOnInvestmentView: View {
                     .pickerStyle(.segmented)
 
                     VStack(alignment: .leading, spacing: 8) {
+                        Text("Investment Amount")
+                            .font(.headline)
+                        TextField("Amount to invest", text: $investmentAmount)
+                            .keyboardType(.decimalPad)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .onChange(of: investmentAmount) { _, newValue in
+                                investmentAmount = NumberFormatting.formatCurrencyInput(newValue)
+                            }
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
                         Text("Unit Price")
                             .font(.headline)
                         TextField("Price per unit", text: $unitPrice)
@@ -48,26 +58,13 @@ struct AddPortfolioFollowOnInvestmentView: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .onChange(of: unitPrice) { _, newValue in
                                 unitPrice = NumberFormatting.formatCurrencyInput(newValue)
-                                updateAmount()
                             }
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Number of Units")
                             .font(.headline)
-                        TextField("Units to purchase", text: $numberOfUnits)
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .onChange(of: numberOfUnits) { _, newValue in
-                                numberOfUnits = NumberFormatting.formatNumberInput(newValue)
-                                updateAmount()
-                            }
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Total Investment Amount")
-                            .font(.headline)
-                        Text(NumberFormatting.formatCurrency(calculatedAmount))
+                        Text(NumberFormatting.formatNumber(calculatedUnits))
                             .font(.title2)
                             .fontWeight(.medium)
                             .foregroundColor(.blue)
@@ -86,12 +83,12 @@ struct AddPortfolioFollowOnInvestmentView: View {
                         DatePicker("Investment Date", selection: $date, displayedComponents: .date)
                     } else {
                         HStack {
-                            TextField("Amount", text: $relativeAmount)
+                            TextField("Time", text: $relativeAmount)
                                 .keyboardType(.decimalPad)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .frame(width: 80)
 
-                            Picker("Unit", selection: $relativeUnit) {
+                            Picker("Time Unit", selection: $relativeUnit) {
                                 ForEach(TimeUnit.allCases, id: \.self) { unit in
                                     Text(unit.rawValue).tag(unit)
                                 }
@@ -131,14 +128,9 @@ struct AddPortfolioFollowOnInvestmentView: View {
         }
     }
 
-    private func updateAmount() {
-        let units = Double(numberOfUnits) ?? 0
-        let price = Double(unitPrice.replacingOccurrences(of: ",", with: "")) ?? 0
-        amount = String(units * price)
-    }
 
     private func isValidInput() -> Bool {
-        guard let units = Double(numberOfUnits), units > 0,
+        guard let amount = Double(investmentAmount.replacingOccurrences(of: ",", with: "")), amount > 0,
               let price = Double(unitPrice.replacingOccurrences(of: ",", with: "")), price > 0
         else {
             return false
@@ -163,6 +155,10 @@ struct AddPortfolioFollowOnInvestmentView: View {
             return
         }
 
+        // Get the clean numeric values for amount and valuation
+        let cleanAmount = investmentAmount.replacingOccurrences(of: ",", with: "")
+        let cleanUnitPrice = unitPrice.replacingOccurrences(of: ",", with: "")
+
         // Create the follow-on investment with unit price as the valuation
         let investment = FollowOnInvestment(
             timingType: timingType,
@@ -170,10 +166,10 @@ struct AddPortfolioFollowOnInvestmentView: View {
             relativeAmount: relativeAmount,
             relativeUnit: relativeUnit,
             investmentType: investmentType,
-            amount: String(calculatedAmount),
+            amount: cleanAmount,
             valuationMode: .custom,
             valuationType: .specified,
-            valuation: unitPrice,
+            valuation: cleanUnitPrice,
             irr: "0",
             initialInvestmentDate: initialInvestmentDate
         )

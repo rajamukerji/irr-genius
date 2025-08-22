@@ -68,18 +68,20 @@ struct ResultCard: View {
             // Additional portfolio metrics
             if mode == .portfolioUnitInvestment {
                 VStack(spacing: 12) {
-                    let initialInvestment = inputs["Initial Investment"] ?? 0
-                    let successfulUnits = (inputs["Number of Units"] ?? 0) * ((inputs["Success Rate (%)"] ?? 100) / 100.0)
+                    let totalInvestment = inputs["Total Investment"] ?? inputs["Initial Investment"] ?? 0
+                    let totalUnits = inputs["Total Units"] ?? inputs["Number of Units"] ?? 0
+                    let successRate = (inputs["Success Rate (%)"] ?? 100) / 100.0
                     let outcomePerUnit = inputs["Expected Outcome per Unit"] ?? 0
                     let topLineFees = (inputs["Top-Line Fees (%)"] ?? 0) / 100.0
                     let managementFees = (inputs["Management Fees (%)"] ?? 40) / 100.0
                     let investorShare = (inputs["Investor Share (%)"] ?? 42.5) / 100.0
                     
-                    let grossOutcome = successfulUnits * outcomePerUnit
+                    let totalSuccessfulUnits = totalUnits * successRate
+                    let grossOutcome = totalSuccessfulUnits * outcomePerUnit
                     let afterTopLineFees = grossOutcome * (1 - topLineFees)
-                    let plaintiffCounselShare = afterTopLineFees * managementFees
-                    let netInvestorOutcome = plaintiffCounselShare * investorShare
-                    let roiMultiple = initialInvestment > 0 ? netInvestorOutcome / initialInvestment : 0
+                    let afterManagementFees = afterTopLineFees * (1 - managementFees)
+                    let netInvestorOutcome = afterManagementFees * investorShare
+                    let roiMultiple = totalInvestment > 0 ? netInvestorOutcome / totalInvestment : 0
                     
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
