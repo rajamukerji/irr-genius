@@ -702,7 +702,7 @@ struct ContentView: View {
                 let afterManagementFees = afterTopLineFees * (1 - managementFees / 100.0)
                 let netInvestorOutcome = afterManagementFees * (investorShare / 100.0)
                 
-                return IRRCalculator.growthPointsWithFollowOn(
+                return IRRCalculator.growthPointsWithPortfolioFollowOn(
                     initial: initial,
                     followOnInvestments: portfolioFollowOnInvestments,
                     finalValuation: netInvestorOutcome,

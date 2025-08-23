@@ -185,6 +185,70 @@ class IRRCalculator {
         return growthPoints
     }
 
+    // MARK: - Portfolio Growth Points with Follow-On
+    
+    static func growthPointsWithPortfolioFollowOn(
+        initial: Double,
+        followOnInvestments: [FollowOnInvestment],
+        finalValuation: Double,
+        months: Int
+    ) -> [GrowthPoint] {
+        var growthPoints: [GrowthPoint] = []
+        
+        // Calculate the blended IRR rate
+        let totalYears = Double(months) / 12.0
+        
+        // For portfolio investments, we need to calculate total invested capital differently
+        // since 'valuation' field contains unit price, not total valuation
+        var totalInvested = initial
+        for investment in followOnInvestments {
+            let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
+            if let amount = Double(cleanAmount) {
+                totalInvested += amount
+            }
+        }
+        
+        // Simple IRR calculation for the portfolio
+        let irr = calculateIRRValue(
+            initialInvestment: totalInvested,
+            outcomeAmount: finalValuation,
+            timeInYears: totalYears
+        ) / 100.0
+        
+        // Sort investments by their actual investment date
+        let sortedInvestments = followOnInvestments.sorted { $0.investmentDate < $1.investmentDate }
+        
+        // Generate monthly growth points
+        for month in 0 ... months {
+            // Start with initial investment growing at IRR
+            var totalValue = initial * pow(1 + irr, Double(month) / 12.0)
+            
+            // Add value from follow-on investments
+            for investment in sortedInvestments {
+                let cleanAmount = investment.amount.replacingOccurrences(of: ",", with: "")
+                guard let amount = Double(cleanAmount) else { continue }
+                
+                // Calculate when this investment was made (months from start)
+                let initialInvestmentDate = investment.initialInvestmentDate
+                let investmentMonth = Calendar.current.dateComponents([.month], from: initialInvestmentDate, to: investment.investmentDate).month ?? 0
+                let investmentMonthFromStart = max(0, investmentMonth)
+                
+                // Only add growth if the investment was made before or at this month
+                if month >= investmentMonthFromStart {
+                    let monthsSinceInvestment = month - investmentMonthFromStart
+                    
+                    // For portfolio investments, all follow-ons grow at the same IRR
+                    let investmentGrowth = amount * pow(1 + irr, Double(monthsSinceInvestment) / 12.0)
+                    totalValue += investmentGrowth
+                }
+            }
+            
+            growthPoints.append(GrowthPoint(month: month, value: totalValue))
+        }
+        
+        return growthPoints
+    }
+    
     // MARK: - Portfolio Unit Investment Calculations
 
     /**
